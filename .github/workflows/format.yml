@@ -1,0 +1,31 @@
+name: format
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  format:
+    name: format
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Install cargo
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        profile: minimal
+        override: true
+
+    - name: Install stylua
+      run: cargo install stylua
+
+    - name: Formatting check
+      run: stylua --check lua/ --config-path=.stylua.toml
