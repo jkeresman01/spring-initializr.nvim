@@ -1,4 +1,4 @@
--- lua/spring_initializer/telescope.lua
+-- lua/spring_initializer/telescope.luateel
 
 local pickers = require("telescope.pickers")
 local finders = require("telescope.finders")
@@ -45,11 +45,21 @@ M.pick_dependencies = function(opts)
                     end,
                 }),
                 sorter = conf.generic_sorter(opts),
+                layout_strategy = "vertical",
+                layout_config = {
+                    prompt_position = "top",
+                    width = 0.5,
+                    height = 0.6,
+                },
                 attach_mappings = function(prompt_bufnr, map)
                     actions.select_default:replace(function()
                         local selection = action_state.get_selected_entry()
                         table.insert(M.selected_dependencies, selection.value.id)
                         vim.notify("Selected Dependency: " .. selection.value.id)
+
+                        -- Update UI display
+                        require("spring-initializr.ui").update_dependency_display()
+
                         actions.close(prompt_bufnr)
                     end)
                     return true
