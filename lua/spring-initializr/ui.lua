@@ -35,48 +35,40 @@ function M.register_focusable(component)
     table.insert(M.focusables, component)
 end
 
+local function get_winid(comp)
+    return comp.winid or (comp.popup and comp.popup.winid)
+end
+
 function M.enable_focus_navigation()
     for _, comp in ipairs(M.focusables) do
         comp:map("n", "<Tab>", function()
             M.current_focus = (M.current_focus % #M.focusables) + 1
-            vim.api.nvim_set_current_win(M.focusables[M.current_focus].winid)
+            vim.api.nvim_set_current_win(get_winid(M.focusables[M.current_focus]))
         end, { noremap = true, nowait = true })
 
         comp:map("n", "<S-Tab>", function()
             M.current_focus = (M.current_focus - 2 + #M.focusables) % #M.focusables + 1
-            vim.api.nvim_set_current_win(M.focusables[M.current_focus].winid)
+            vim.api.nvim_set_current_win(get_winid(M.focusables[M.current_focus]))
         end, { noremap = true, nowait = true })
     end
 end
 
-local function make_title(text)
-    local popup = Popup({
-        border = { style = "none" },
-        size = { height = 1, width = 40 },
-        enter = false,
-        focusable = false,
-        buf_options = { modifiable = true, readonly = false },
-        win_options = { winhighlight = "Normal:NormalFloat,FloatBorder:FloatBorder" },
-    })
+local function make_radio_list(title, values, key)
+    local items = {}
+    for _, v in ipairs(values or {}) do
+        if type(v) == "table" then
+            table.insert(items, { label = v.name, value = v.id })
+        end
+    end
 
-    vim.schedule(function()
-        vim.api.nvim_buf_set_option(popup.bufnr, "modifiable", true)
-        vim.api.nvim_buf_set_lines(popup.bufnr, 0, -1, false, { "  " .. text })
-        vim.api.nvim_buf_set_option(popup.bufnr, "modifiable", false)
-    end)
-
-    return Layout.Box(popup, { size = 1 })
-end
-
-local function make_radio_list(title, items, key)
     local selected = 1
+    M.state.selections[key] = items[selected].value
 
     local popup = Popup({
         border = {
             style = "rounded",
             text = { top = title, top_align = "center" },
         },
-        position = "50%",
         size = { width = 30, height = #items + 2 },
         enter = true,
         focusable = true,
@@ -91,29 +83,29 @@ local function make_radio_list(title, items, key)
         local lines = {}
         for i, item in ipairs(items) do
             local mark = (i == selected) and "(x)" or "( )"
-            table.insert(lines, string.format("%s %s", mark, item))
+            table.insert(lines, string.format("%s %s", mark, item.label))
         end
         vim.api.nvim_buf_set_lines(popup.bufnr, 0, -1, false, lines)
     end
 
     popup:map("n", "<CR>", function()
-        M.state.selections[key] = items[selected]
-        vim.notify(title .. ": " .. items[selected])
+        M.state.selections[key] = items[selected].value
+        vim.notify(title .. ": " .. items[selected].label)
     end, { nowait = true, noremap = true })
 
     popup:map("n", "j", function()
         selected = math.min(selected + 1, #items)
+        M.state.selections[key] = items[selected].value
         render()
     end, { nowait = true, noremap = true })
 
     popup:map("n", "k", function()
         selected = math.max(selected - 1, 1)
+        M.state.selections[key] = items[selected].value
         render()
     end, { nowait = true, noremap = true })
 
-    vim.schedule(function()
-        render()
-    end)
+    vim.schedule(render)
 
     return Layout.Box(popup, { size = #items + 2 })
 end
@@ -136,7 +128,8 @@ local function make_input(title, key, default)
         end,
     })
 
-    M.register_focusable(input.popup)
+    M.state.selections[key] = default or ""
+    M.register_focusable(input)
     return Layout.Box(input, { size = 3 })
 end
 
@@ -172,9 +165,7 @@ local function make_dependency_button()
     popup:map("n", "<CR>", function()
         vim.defer_fn(function()
             telescope_dep.pick_dependencies()
-            vim.defer_fn(function()
-                M.update_dependency_panel()
-            end, 200)
+            vim.defer_fn(M.update_dependency_panel, 200)
         end, 100)
     end, { noremap = true, nowait = true })
 
@@ -187,7 +178,6 @@ local function make_dependency_display()
             style = "rounded",
             text = { top = "Selected Dependencies", top_align = "center" },
         },
-        position = "50%",
         size = { width = 40, height = 10 },
         buf_options = {
             modifiable = true,
@@ -203,21 +193,32 @@ local function make_dependency_display()
     return popup
 end
 
-local function update_dependency_display()
-    local popup = M.state.dependencies_panel
-    if not popup then
-        return
+function M.close()
+    if M.state.layout then
+        pcall(function()
+            M.state.layout:unmount()
+        end)
+        M.state.layout = nil
     end
 
-    local lines = {}
-    for _, dep in ipairs(telescope_dep.selected_dependencies) do
-        table.insert(lines, ("- " .. dep):sub(1, 38))
+    local outer = M.state.outer_popup
+    if outer and vim.api.nvim_win_is_valid(outer.winid) then
+        pcall(vim.api.nvim_win_close, outer.winid, true)
+    end
+    M.state.outer_popup = nil
+
+    for _, comp in ipairs(M.focusables) do
+        local winid = comp.winid or (comp.popup and comp.popup.winid)
+        if winid and vim.api.nvim_win_is_valid(winid) then
+            pcall(vim.api.nvim_win_close, winid, true)
+        end
     end
 
-    vim.api.nvim_buf_set_lines(popup.bufnr, 0, -1, false, lines)
+    M.focusables = {}
+    M.current_focus = 1
 end
 
-M.setup_ui = function()
+function M.setup_ui()
     metadata_loader.fetch_metadata(function(data, err)
         if err or not data then
             vim.notify("Failed to load metadata: " .. (err or "nil"), vim.log.levels.ERROR)
@@ -239,49 +240,31 @@ M.setup_ui = function()
                 },
             })
 
+            M.state.outer_popup = outer_popup
+
             local layout = Layout(
                 outer_popup,
                 Layout.Box({
                     Layout.Box({
-                        make_radio_list("Project Type", data.type and vim.tbl_map(function(v)
-                            return v.name
-                        end, data.type.values or {}) or {}, "project_type"),
-                        make_radio_list("Language", data.language and vim.tbl_map(function(v)
-                            return v.name
-                        end, data.language.values or {}) or {}, "language"),
+                        make_radio_list("Project Type", data.type.values, "project_type"),
+                        make_radio_list("Language", data.language.values, "language"),
                         make_radio_list(
                             "Spring Boot Version",
-                            data.bootVersion
-                                    and vim.tbl_map(function(v)
-                                        return v.name
-                                    end, data.bootVersion.values or {})
-                                or {},
+                            vim.tbl_map(function(v)
+                                return {
+                                    name = v.name,
+                                    id = v.id and v.id:gsub("%.RELEASE$", ""),
+                                }
+                            end, data.bootVersion.values or {}),
                             "boot_version"
                         ),
-                        make_title("Project Metadata"),
                         make_input("Group", "groupId", "com.example"),
                         make_input("Artifact", "artifactId", "demo"),
                         make_input("Name", "name", "demo"),
                         make_input("Description", "description", "Demo project for Spring Boot"),
                         make_input("Package Name", "packageName", "com.example.demo"),
-                        make_radio_list(
-                            "Packaging",
-                            data.packaging
-                                    and vim.tbl_map(function(v)
-                                        return v.name
-                                    end, data.packaging.values or {})
-                                or {},
-                            "packaging"
-                        ),
-                        make_radio_list(
-                            "Java Version",
-                            data.javaVersion
-                                    and vim.tbl_map(function(v)
-                                        return v.name
-                                    end, data.javaVersion.values or {})
-                                or {},
-                            "java_version"
-                        ),
+                        make_radio_list("Packaging", data.packaging.values, "packaging"),
+                        make_radio_list("Java Version", data.javaVersion.values, "java_version"),
                     }, { dir = "col", size = "50%" }),
                     Layout.Box({
                         Layout.Box(make_dependency_button(), { size = "10%" }),
@@ -298,6 +281,18 @@ M.setup_ui = function()
     end)
 end
 
-M.update_dependency_display = update_dependency_display
+function M.update_dependency_display()
+    local popup = M.state.dependencies_panel
+    if not popup then
+        return
+    end
+
+    local lines = {}
+    for _, dep in ipairs(telescope_dep.selected_dependencies) do
+        table.insert(lines, "- " .. dep:sub(1, 38))
+    end
+
+    vim.api.nvim_buf_set_lines(popup.bufnr, 0, -1, false, lines)
+end
 
 return M
