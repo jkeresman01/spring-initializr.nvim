@@ -1,4 +1,13 @@
--- lua/spring_initializer/telescope.luateel
+--
+-- ███╗   ██╗███████╗ ██████╗ ██╗   ██╗██╗███╗   ███╗
+-- ████╗  ██║██╔════╝██╔═══██╗██║   ██║██║████╗ ████║
+-- ██╔██╗ ██║█████╗  ██║   ██║██║   ██║██║██╔████╔██║
+-- ██║╚██╗██║██╔══╝  ██║   ██║╚██╗ ██╔╝██║██║╚██╔╝██║
+-- ██║ ╚████║███████╗╚██████╔╝ ╚████╔╝ ██║██║ ╚═╝ ██║
+-- ╚═╝  ╚═══╝╚══════╝ ╚═════╝   ╚═══╝  ╚═╝╚═╝     ╚═╝
+--
+-- File: metadata.lua
+-- Author: Josip Keresman
 
 local pickers = require("telescope.pickers")
 local finders = require("telescope.finders")
@@ -11,7 +20,6 @@ local M = {}
 
 M.selected_dependencies = {}
 
---- Show Telescope picker with Spring Boot dependencies grouped by category
 M.pick_dependencies = function(opts)
     opts = opts or {}
 
@@ -57,7 +65,6 @@ M.pick_dependencies = function(opts)
                         table.insert(M.selected_dependencies, selection.value.id)
                         vim.notify("Selected Dependency: " .. selection.value.id)
 
-                        -- Update UI display
                         require("spring-initializr.ui").update_dependency_display()
 
                         actions.close(prompt_bufnr)
@@ -67,15 +74,6 @@ M.pick_dependencies = function(opts)
             })
             :find()
     end)
-end
-
---- Register user commands for selecting dependencies
-function M.register()
-    vim.api.nvim_create_user_command("SpringPickDependencies", function()
-        M.pick_dependencies()
-    end, {
-        desc = "Pick Spring Boot dependencies via Telescope",
-    })
 end
 
 return M

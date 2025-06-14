@@ -1,3 +1,14 @@
+--
+-- ███╗   ██╗███████╗ ██████╗ ██╗   ██╗██╗███╗   ███╗
+-- ████╗  ██║██╔════╝██╔═══██╗██║   ██║██║████╗ ████║
+-- ██╔██╗ ██║█████╗  ██║   ██║██║   ██║██║██╔████╔██║
+-- ██║╚██╗██║██╔══╝  ██║   ██║╚██╗ ██╔╝██║██║╚██╔╝██║
+-- ██║ ╚████║███████╗╚██████╔╝ ╚████╔╝ ██║██║ ╚═╝ ██║
+-- ╚═╝  ╚═══╝╚══════╝ ╚═════╝   ╚═══╝  ╚═╝╚═╝     ╚═╝
+--
+-- File: metadata.lua
+-- Author: Josip Keresman
+
 local Job = require("plenary.job")
 
 local M = {}
@@ -18,43 +29,41 @@ M.fetch_metadata = function(callback)
     table.insert(M.state.callbacks, callback)
 
     if M.state.loading then
-        return -- Already fetching
+        return
     end
 
     M.state.loading = true
 
-    require("plenary.job")
-        :new({
-            command = "curl",
-            args = { "-s", "https://start.spring.io/metadata/client" },
+    Job:new({
+        command = "curl",
+        args = { "-s", "https://start.spring.io/metadata/client" },
 
-            on_exit = function(j)
-                local result = j:result()
-                local stderr = j:stderr_result()
-                local output = type(result) == "table" and table.concat(result, "\n") or ""
-                local ok, data = pcall(vim.json.decode, output)
+        on_exit = function(j)
+            local result = j:result()
+            local stderr = j:stderr_result()
+            local output = type(result) == "table" and table.concat(result, "\n") or ""
+            local ok, data = pcall(vim.json.decode, output)
 
-                vim.schedule(function()
-                    M.state.loading = false
+            vim.schedule(function()
+                M.state.loading = false
 
-                    if ok and type(data) == "table" then
-                        M.state.metadata = data
-                        M.state.loaded = true
-                        for _, cb in ipairs(M.state.callbacks) do
-                            cb(data, nil)
-                        end
-                    else
-                        M.state.error = stderr ~= "" and stderr or "Failed to parse Spring metadata"
-                        for _, cb in ipairs(M.state.callbacks) do
-                            cb(nil, M.state.error)
-                        end
+                if ok and type(data) == "table" then
+                    M.state.metadata = data
+                    M.state.loaded = true
+                    for _, cb in ipairs(M.state.callbacks) do
+                        cb(data, nil)
                     end
+                else
+                    M.state.error = stderr ~= "" and stderr or "Failed to parse Spring metadata"
+                    for _, cb in ipairs(M.state.callbacks) do
+                        cb(nil, M.state.error)
+                    end
+                end
 
-                    M.state.callbacks = {}
-                end)
-            end,
-        })
-        :start()
+                M.state.callbacks = {}
+            end)
+        end,
+    }):start()
 end
 
 return M
