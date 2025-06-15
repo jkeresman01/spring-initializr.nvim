@@ -132,6 +132,10 @@ local function make_input(title, key, default)
             winhighlight = "Normal:NormalFloat,FloatBorder:FloatBorder",
         },
     }, {
+        on_change = function(value)
+            M.state.selections[key] = value
+        end,
+
         default_value = default or "",
         on_submit = function(value)
             M.state.selections[key] = value
