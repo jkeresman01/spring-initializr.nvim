@@ -6,20 +6,21 @@
 -- ██║ ╚████║███████╗╚██████╔╝ ╚████╔╝ ██║██║ ╚═╝ ██║
 -- ╚═╝  ╚═══╝╚══════╝ ╚═════╝   ╚═══╝  ╚═╝╚═╝     ╚═╝
 --
--- File: metadata.lua
+-- File: metadata/metadata.lua
 -- Author: Josip Keresman
 
 local Job = require("plenary.job")
+local msg = require("spring-initializr.utils.message")
 
-local M = {}
-
-M.state = {
-    metadata = nil,
-    loaded = false,
-    error = nil,
+local M = {
+    state = {
+        metadata = nil,
+        loaded = false,
+        error = nil,
+    },
 }
 
-M.fetch_metadata = function(callback)
+function M.fetch_metadata(callback)
     if M.state.loaded and M.state.metadata then
         callback(M.state.metadata, nil)
         return
@@ -31,7 +32,6 @@ M.fetch_metadata = function(callback)
     if M.state.loading then
         return
     end
-
     M.state.loading = true
 
     Job:new({

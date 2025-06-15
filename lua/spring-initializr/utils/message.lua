@@ -6,26 +6,27 @@
 -- ██║ ╚████║███████╗╚██████╔╝ ╚████╔╝ ██║██║ ╚═╝ ██║
 -- ╚═╝  ╚═══╝╚══════╝ ╚═════╝   ╚═══╝  ╚═╝╚═╝     ╚═╝
 --
--- File: command.lua
+-- File: utils/message.lua
 -- Author: Josip Keresman
-
-local ui = require("spring-initializr.ui")
-local core = require("spring-initializr.core")
 
 local M = {}
 
-function M.register()
-    vim.api.nvim_create_user_command("SpringInitializr", function()
-        ui.setup_ui()
-    end, {
-        desc = "Open Spring Initializer UI",
-    })
+local notify = vim.notify
 
-    vim.api.nvim_create_user_command("SpringGenerateProject", function()
-        core.generate_project()
-    end, {
-        desc = "Generate Spring Boot project to CWD",
-    })
+M.info = function(msg)
+    notify(msg, vim.log.levels.INFO)
+end
+
+M.warn = function(msg)
+    notify(msg, vim.log.levels.WARN)
+end
+
+M.error = function(msg)
+    notify(msg, vim.log.levels.ERROR)
+end
+
+M.debug = function(msg)
+    notify(msg, vim.log.levels.DEBUG)
 end
 
 return M
