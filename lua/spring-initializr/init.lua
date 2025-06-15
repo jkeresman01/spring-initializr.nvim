@@ -13,8 +13,8 @@ local commands = require("spring-initializr.commands")
 
 local M = {}
 
-function M.setup(config)
-    commands.register(config)
+function M.setup()
+    commands.register()
 end
 
 return M
