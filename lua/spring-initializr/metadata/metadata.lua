@@ -17,8 +17,46 @@ local M = {
         metadata = nil,
         loaded = false,
         error = nil,
+        loading = false,
+        callbacks = {},
     },
 }
+
+local METADATA_URL = "https://start.spring.io/metadata/client"
+
+local function call_callbacks(data, err)
+    for _, cb in ipairs(M.state.callbacks) do
+        cb(data, err)
+    end
+    M.state.callbacks = {}
+end
+
+local function handle_response(result, stderr)
+    local output = type(result) == "table" and table.concat(result, "\n") or ""
+    local ok, decoded = pcall(vim.json.decode, output)
+
+    vim.schedule(function()
+        M.state.loading = false
+        if ok and type(decoded) == "table" then
+            M.state.metadata = decoded
+            M.state.loaded = true
+            call_callbacks(decoded, nil)
+        else
+            M.state.error = stderr ~= "" and stderr or "Failed to parse Spring metadata"
+            call_callbacks(nil, M.state.error)
+        end
+    end)
+end
+
+local function fetch_from_remote()
+    Job:new({
+        command = "curl",
+        args = { "-s", METADATA_URL },
+        on_exit = function(j)
+            handle_response(j:result(), j:stderr_result())
+        end,
+    }):start()
+end
 
 function M.fetch_metadata(callback)
     if M.state.loaded and M.state.metadata then
@@ -26,44 +64,14 @@ function M.fetch_metadata(callback)
         return
     end
 
-    M.state.callbacks = M.state.callbacks or {}
     table.insert(M.state.callbacks, callback)
 
     if M.state.loading then
         return
     end
+
     M.state.loading = true
-
-    Job:new({
-        command = "curl",
-        args = { "-s", "https://start.spring.io/metadata/client" },
-
-        on_exit = function(j)
-            local result = j:result()
-            local stderr = j:stderr_result()
-            local output = type(result) == "table" and table.concat(result, "\n") or ""
-            local ok, data = pcall(vim.json.decode, output)
-
-            vim.schedule(function()
-                M.state.loading = false
-
-                if ok and type(data) == "table" then
-                    M.state.metadata = data
-                    M.state.loaded = true
-                    for _, cb in ipairs(M.state.callbacks) do
-                        cb(data, nil)
-                    end
-                else
-                    M.state.error = stderr ~= "" and stderr or "Failed to parse Spring metadata"
-                    for _, cb in ipairs(M.state.callbacks) do
-                        cb(nil, M.state.error)
-                    end
-                end
-
-                M.state.callbacks = {}
-            end)
-        end,
-    }):start()
+    fetch_from_remote()
 end
 
 return M

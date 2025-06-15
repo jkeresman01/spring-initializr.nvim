@@ -6,7 +6,6 @@
 -- ██║ ╚████║███████╗╚██████╔╝ ╚████╔╝ ██║██║ ╚═╝ ██║
 -- ╚═╝  ╚═══╝╚══════╝ ╚═════╝   ╚═══╝  ╚═╝╚═╝     ╚═╝
 --
--- File: core.lua
 -- File: core/core.lua
 -- Author: Josip Keresman
 
@@ -24,48 +23,52 @@ local function urlencode(str)
     end)
 end
 
-local function build_query(params)
+local function encode_query(params)
     local query = {}
     for k, v in pairs(params) do
-        table.insert(query, urlencode(k) .. "=" .. urlencode(v))
+        table.insert(query, string.format("%s=%s", urlencode(k), urlencode(v)))
     end
     return table.concat(query, "&")
 end
 
-local function get_params()
-    local selections = ui.state.selections
-    local dependencies = table.concat(deps.selected_dependencies or {}, ",")
-
+local function collect_params()
+    local s = ui.state.selections
     return {
-        type = selections.project_type,
-        language = selections.language,
-        bootVersion = selections.boot_version,
-        groupId = selections.groupId,
-        artifactId = selections.artifactId,
-        name = selections.name,
-        description = selections.description,
-        packageName = selections.packageName,
-        packaging = selections.packaging,
-        javaVersion = selections.java_version,
-        dependencies = dependencies,
+        type = s.project_type,
+        language = s.language,
+        bootVersion = s.boot_version,
+        groupId = s.groupId,
+        artifactId = s.artifactId,
+        name = s.name,
+        description = s.description,
+        packageName = s.packageName,
+        packaging = s.packaging,
+        javaVersion = s.java_version,
+        dependencies = table.concat(deps.selected_dependencies or {}, ","),
     }
 end
 
-local function unzip_and_cleanup(zip_path, cwd)
+local function make_download_url(params)
+    return "https://start.spring.io/starter.zip?" .. encode_query(params)
+end
+
+local function notify_success(cwd)
+    ui.close()
+    msg.info("Spring Boot project created in " .. cwd)
+end
+
+local function unzip_file(zip_path, destination, on_done)
     Job:new({
         command = "unzip",
-        args = { "-o", zip_path, "-d", cwd },
+        args = { "-o", zip_path, "-d", destination },
         on_exit = function()
             os.remove(zip_path)
-            vim.schedule(function()
-                ui.close()
-                msg.info("Spring Boot project created in " .. cwd)
-            end)
+            vim.schedule(on_done)
         end,
     }):start()
 end
 
-local function download_project(url, zip_path, cwd)
+local function download_zip(url, zip_path, cwd)
     Job:new({
         command = "curl",
         args = { "-L", url, "-o", zip_path },
@@ -76,22 +79,21 @@ local function download_project(url, zip_path, cwd)
                 end)
                 return
             end
-            vim.schedule(function()
-                unzip_and_cleanup(zip_path, cwd)
+            unzip_file(zip_path, cwd, function()
+                notify_success(cwd)
             end)
         end,
     }):start()
 end
 
 function M.generate_project()
-    local params = get_params()
-    local query = build_query(params)
+    local params = collect_params()
+    local url = make_download_url(params)
     local cwd = vim.fn.getcwd()
     local zip_path = cwd .. "/spring-init.zip"
-    local url = "https://start.spring.io/starter.zip?" .. query
 
     msg.info("Just a second, we are setting things up for you...")
-    download_project(url, zip_path, cwd)
+    download_zip(url, zip_path, cwd)
 end
 
 return M
