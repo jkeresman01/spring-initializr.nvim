@@ -8,10 +8,11 @@
 --
 -- File: ui/deps.lua
 -- Author: Josip Keresman
+--
+-- Manages the UI elements related to Spring Initializr dependency selection.
 
 local Popup = require("nui.popup")
 local Layout = require("nui.layout")
-
 local focus = require("spring-initializr.ui.focus")
 local telescope_dep = require("spring-initializr.telescope.telescope")
 
@@ -21,6 +22,7 @@ local M = {
     },
 }
 
+-- Returns the border config for the "Add Dependencies" button.
 local function button_border()
     return {
         style = "rounded",
@@ -28,6 +30,7 @@ local function button_border()
     }
 end
 
+-- Builds the configuration for the dependencies button popup.
 local function button_popup_config()
     return {
         border = button_border(),
@@ -39,6 +42,10 @@ local function button_popup_config()
     }
 end
 
+-- Binds the Enter key to open the Telescope dependency picker and update display.
+--
+-- @param popup NuiPopup: the button popup instance
+-- @param on_update function: callback to refresh the dependencies list
 local function bind_button_action(popup, on_update)
     popup:map("n", "<CR>", function()
         vim.defer_fn(function()
@@ -48,6 +55,10 @@ local function bind_button_action(popup, on_update)
     end, { noremap = true, nowait = true })
 end
 
+--- Creates a popup button that triggers dependency selection.
+--
+-- @param update_display_fn function: callback to update the dependency display
+-- @return Layout.Box: wrapped button in a layout box
 function M.create_button(update_display_fn)
     local popup = Popup(button_popup_config())
     bind_button_action(popup, update_display_fn)
@@ -55,6 +66,7 @@ function M.create_button(update_display_fn)
     return Layout.Box(popup, { size = 3 })
 end
 
+-- Returns the border config for the dependencies display panel.
 local function display_border()
     return {
         style = "rounded",
@@ -62,6 +74,7 @@ local function display_border()
     }
 end
 
+-- Builds the configuration for the dependencies display popup.
 local function display_popup_config()
     return {
         border = display_border(),
@@ -74,12 +87,18 @@ local function display_popup_config()
     }
 end
 
+--- Creates a popup to display selected dependencies.
+--
+-- @return NuiPopup: popup for showing dependencies
 function M.create_display()
     local popup = Popup(display_popup_config())
     M.state.dependencies_panel = popup
     return popup
 end
 
+-- Renders the currently selected dependencies as a list of lines.
+--
+-- @return table: list of formatted strings
 local function render_dependency_list()
     local lines = { "Selected Dependencies:" }
     for i, dep in ipairs(telescope_dep.selected_dependencies or {}) do
@@ -88,6 +107,7 @@ local function render_dependency_list()
     return lines
 end
 
+--- Updates the dependencies display with currently selected dependencies.
 function M.update_display()
     local panel = M.state.dependencies_panel
     if not panel then

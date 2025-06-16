@@ -8,6 +8,8 @@
 --
 -- File: ui/layout.lua
 -- Author: Josip Keresman
+--
+-- This module constructs the full Spring Initializr layout UI using NUI components.
 
 local Layout = require("nui.layout")
 local Popup = require("nui.popup")
@@ -18,6 +20,9 @@ local deps = require("spring-initializr.ui.deps")
 
 local M = {}
 
+-- Create the outer wrapper popup window
+--
+-- @return Popup: the main floating container
 local function create_outer_popup()
     return Popup({
         border = {
@@ -30,15 +35,28 @@ local function create_outer_popup()
     })
 end
 
+-- Format boot version list to remove ".RELEASE" suffix
+--
+-- @param values table: list of version entries
+-- @return table: transformed list
+local function format_boot_versions(values)
+    return vim.tbl_map(function(v)
+        return { name = v.name, id = v.id and v.id:gsub("%.RELEASE$", "") }
+    end, values or {})
+end
+
+-- Create all radio components
+--
+-- @param metadata table
+-- @param selections table
+-- @return table of Layout.Box components
 local function create_radio_controls(metadata, selections)
     return {
         radios.create_radio("Project Type", metadata.type.values, "project_type", selections),
         radios.create_radio("Language", metadata.language.values, "language", selections),
         radios.create_radio(
             "Spring Boot Version",
-            vim.tbl_map(function(v)
-                return { name = v.name, id = v.id and v.id:gsub("%.RELEASE$", "") }
-            end, metadata.bootVersion.values or {}),
+            format_boot_versions(metadata.bootVersion.values),
             "boot_version",
             selections
         ),
@@ -52,6 +70,10 @@ local function create_radio_controls(metadata, selections)
     }
 end
 
+-- Create all input fields
+--
+-- @param selections table
+-- @return table of Layout.Box components
 local function create_input_controls(selections)
     return {
         inputs.create_input("Group", "groupId", "com.example", selections),
@@ -67,14 +89,21 @@ local function create_input_controls(selections)
     }
 end
 
+-- Create the left-hand UI panel with all user-configurable fields
+--
+-- @param metadata table
+-- @param selections table
+-- @return Layout.Box
 local function create_left_panel(metadata, selections)
     local children = {}
     vim.list_extend(children, create_radio_controls(metadata, selections))
     vim.list_extend(children, create_input_controls(selections))
-
     return Layout.Box(children, { dir = "col", size = "50%" })
 end
 
+-- Create the right-hand panel with dependency management
+--
+-- @return Layout.Box
 local function create_right_panel()
     return Layout.Box({
         Layout.Box(deps.create_button(deps.update_display), { size = "10%" }),
@@ -82,8 +111,14 @@ local function create_right_panel()
     }, { dir = "col", size = "50%" })
 end
 
+-- Build the entire Spring Initializr layout
+--
+-- @param metadata table: fetched Spring metadata
+-- @param selections table: user selections state
+-- @return table: contains the layout and the outer popup
 function M.build_ui(metadata, selections)
     local outer_popup = create_outer_popup()
+
     local layout = Layout(
         outer_popup,
         Layout.Box({

@@ -8,6 +8,8 @@
 --
 -- File: ui/input.lua
 -- Author: Josip Keresman
+--
+-- This module defines reusable input components used in the Spring Initializr UI.
 
 local Input = require("nui.input")
 local Layout = require("nui.layout")
@@ -17,7 +19,11 @@ local msg = require("spring-initializr.utils.message")
 
 local M = {}
 
-local function make_input_popup(title)
+--- Constructs popup border and size settings for an input field.
+--
+-- @param title string
+-- @return table
+local function build_input_popup_opts(title)
     return {
         border = {
             style = "rounded",
@@ -30,7 +36,13 @@ local function make_input_popup(title)
     }
 end
 
-local function make_input_handlers(key, title, selections)
+--- Creates input change and submit handlers that update user selections.
+--
+-- @param key string
+-- @param title string
+-- @param selections table
+-- @return table
+local function build_input_handlers(key, title, selections)
     return {
         on_change = function(val)
             selections[key] = val
@@ -42,9 +54,16 @@ local function make_input_handlers(key, title, selections)
     }
 end
 
-local function create_input_popup(title, key, default, selections)
-    local popup_opts = make_input_popup(title)
-    local handlers = make_input_handlers(key, title, selections)
+--- Creates and returns an Input popup component.
+--
+-- @param title string
+-- @param key string
+-- @param default string
+-- @param selections table
+-- @return Input
+local function create_input_component(title, key, default, selections)
+    local popup_opts = build_input_popup_opts(title)
+    local handlers = build_input_handlers(key, title, selections)
 
     return Input(popup_opts, {
         default_value = default or "",
@@ -53,9 +72,16 @@ local function create_input_popup(title, key, default, selections)
     })
 end
 
+--- Public API to create a layout-wrapped input component for Spring Initializr.
+--
+-- @param title string
+-- @param key string
+-- @param default string
+-- @param selections table
+-- @return Layout.Box
 function M.create_input(title, key, default, selections)
     selections[key] = default or ""
-    local input = create_input_popup(title, key, default, selections)
+    local input = create_input_component(title, key, default, selections)
     focus.register(input)
     return Layout.Box(input, { size = 3 })
 end
