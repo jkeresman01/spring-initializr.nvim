@@ -14,6 +14,7 @@ local focus = require("spring-initializr.ui.focus")
 local highlights = require("spring-initializr.utils.highlights")
 local metadata = require("spring-initializr.metadata.metadata")
 local deps = require("spring-initializr.ui.deps")
+local win = require("spring-initializr.utils.window")
 local msg = require("spring-initializr.utils.message")
 
 local M = {

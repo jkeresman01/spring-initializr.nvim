@@ -10,7 +10,8 @@
 -- Author: Josip Keresman
 
 local Job = require("plenary.job")
-local msg = require("spring-initializr.utils.message")
+
+local METADATA_URL = "https://start.spring.io/metadata/client"
 
 local M = {
     state = {
@@ -21,8 +22,6 @@ local M = {
         callbacks = {},
     },
 }
-
-local METADATA_URL = "https://start.spring.io/metadata/client"
 
 local function call_callbacks(data, err)
     for _, cb in ipairs(M.state.callbacks) do

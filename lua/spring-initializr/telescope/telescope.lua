@@ -22,17 +22,21 @@ local M = {
     selected_dependencies = {},
 }
 
-local function format_dependency_items(metadata)
-    local items = {}
-    for _, group in ipairs(metadata.dependencies.values or {}) do
+local function create_dependency_entry(group_name, dep)
+    return {
+        label = string.format("[%s] %s", group_name, dep.name),
+        id = dep.id,
+    }
+end
+
+local function flatten_dependency_groups(groups)
+    local entries = {}
+    for _, group in ipairs(groups or {}) do
         for _, dep in ipairs(group.values or {}) do
-            table.insert(items, {
-                label = string.format("[%s] %s", group.name, dep.name),
-                id = dep.id,
-            })
+            table.insert(entries, create_dependency_entry(group.name, dep))
         end
     end
-    return items
+    return entries
 end
 
 local function make_entry(entry)
@@ -43,40 +47,51 @@ local function make_entry(entry)
     }
 end
 
-local function on_select_dependency(prompt_bufnr, on_done)
-    local selection = action_state.get_selected_entry()
-    table.insert(M.selected_dependencies, selection.value.id)
-    msg.info("Selected Dependency: " .. selection.value.id)
-    actions.close(prompt_bufnr)
+local function get_picker_layout()
+    return {
+        prompt_position = "top",
+        width = 0.5,
+        height = 0.6,
+    }
+end
 
+local function record_selection(entry)
+    table.insert(M.selected_dependencies, entry.id)
+    msg.info("Selected Dependency: " .. entry.id)
+end
+
+local function handle_selection(prompt_bufnr, on_done)
+    local selected = action_state.get_selected_entry()
+    if selected and selected.value then
+        record_selection(selected.value)
+    end
+    actions.close(prompt_bufnr)
     if on_done then
         on_done()
     end
 end
 
-local function show_dependency_picker(items, opts, on_done)
-    pickers
-        .new(opts, {
-            prompt_title = "Spring Dependencies",
-            finder = finders.new_table({
-                results = items,
-                entry_maker = make_entry,
-            }),
-            sorter = conf.generic_sorter(opts),
-            layout_strategy = "vertical",
-            layout_config = {
-                prompt_position = "top",
-                width = 0.5,
-                height = 0.6,
-            },
-            attach_mappings = function(prompt_bufnr)
-                actions.select_default:replace(function()
-                    on_select_dependency(prompt_bufnr, on_done)
-                end)
-                return true
-            end,
-        })
-        :find()
+local function create_picker_config(items, opts, on_done)
+    return {
+        prompt_title = "Spring Dependencies",
+        finder = finders.new_table({
+            results = items,
+            entry_maker = make_entry,
+        }),
+        sorter = conf.generic_sorter(opts),
+        layout_strategy = "vertical",
+        layout_config = get_picker_layout(),
+        attach_mappings = function(prompt_bufnr)
+            actions.select_default:replace(function()
+                handle_selection(prompt_bufnr, on_done)
+            end)
+            return true
+        end,
+    }
+end
+
+local function open_picker(items, opts, on_done)
+    pickers.new(opts, create_picker_config(items, opts, on_done)):find()
 end
 
 function M.pick_dependencies(opts, on_done)
@@ -88,8 +103,8 @@ function M.pick_dependencies(opts, on_done)
             return
         end
 
-        local items = format_dependency_items(data)
-        show_dependency_picker(items, opts, on_done)
+        local items = flatten_dependency_groups(data.dependencies.values)
+        open_picker(items, opts, on_done)
     end)
 end
 

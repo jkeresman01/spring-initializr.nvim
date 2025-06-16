@@ -8,6 +8,7 @@
 --
 -- File: core/core.lua
 -- Author: Josip Keresman
+
 local ui = require("spring-initializr.ui.init")
 local msg = require("spring-initializr.utils.message")
 local deps = require("spring-initializr.telescope.telescope")
