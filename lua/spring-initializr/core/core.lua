@@ -49,9 +49,6 @@ end
 function M.generate_project()
     local params = collect_params()
     local url = make_download_url(params)
-
-    print("Download URL: " .. url)
-
     local cwd = vim.fn.getcwd()
     local zip_path = cwd .. "/spring-init.zip"
 
