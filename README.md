@@ -1,7 +1,7 @@
 <div align="center">
 
   <h1>spring-initializr.nvim</h1>
-  <h6>The easiest way to generate Spring Boot projects with a modern TUI</h6>
+  <h4>The easiest way to generate Spring Boot projects</h4>
 
 [![Lua](https://img.shields.io/badge/Lua-blue.svg?style=for-the-badge&logo=lua)](http://www.lua.org)
 [![Neovim 0.10](https://img.shields.io/badge/Neovim%200.10-green.svg?style=for-the-badge&logo=neovim)](https://neovim.io)
@@ -9,55 +9,64 @@
 
 </div>
 
-## Table of Contents
+---
 
-- [The problem](#problem)
-- [The solution](#solution)
-- [Repository structure](#repo)
-- [Functionalities](#functionalities)
-- [Installation](#installation)
-    - [Vim-Plug](#vimplug)
-    - [Packer](#packer)
-- [Commands](#commands)
-- [Setup](#setup)
+## ✨ Why spring-initializr.nvim?
+
+Spring Boot project generation traditionally means switching to your browser or running CLI tools — breaking your flow.
+
+**spring-initializr.nvim** lets you create, customize, and download Spring Boot projects _entirely within Neovim.
 
 ---
 
-## The problem :warning: <a name="problem"></a>
-
-Creating Spring Boot projects normally requires navigating [start.spring.io](https://start.spring.io) or using CLI tools outside of Neovim. This interrupts developer flow and context.
-
----
-
-## The solution :trophy: <a name="solution"></a>
+## 📽️ Demo
 
 [![asciicast](https://asciinema.org/a/723220.svg)](https://asciinema.org/a/723220)
 
-**spring-initializr.nvim** brings Spring Boot project generation into Neovim with:
+---
 
-- A floating UI built using `nui.nvim`
-- Fuzzy dependency selection with `telescope.nvim`
-- Tab-based navigation
-- Easy integration with your existing setup
+## 🔧 Features
+
+✅ Full Spring Initializr metadata support  
+✅ TUI-based UI for selecting project options  
+✅ Fuzzy dependency selection with `telescope.nvim`  
+✅ Tab and key-based navigation  
+✅ Instant download and extraction to your current working directory  
 
 ---
 
-## Repository structure :open_file_folder: <a name="repo"></a>
+## 📁 Project Structure
 
 ```bash
 spring-initializr.nvim/
-├── lua/
-│   └── spring-initializr/
-│       ├── init.lua         # Plugin entry point
-│       ├── ui.lua           # UI layout and controls
-│       ├── metadata.lua     # Metadata fetch and parsing
-│       └── telescope.lua    # Dependency picker via Telescope
+├── LICENSE
 ├── README.md
-└── LICENSE
-```
+├── lua
+│   └── spring-initializr
+│       ├── commands
+│       │   └── commands.lua           # Neovim user commands
+│       ├── core
+│       │   └── core.lua               # Project generation logic
+│       ├── init.lua                   # Plugin entry point
+│       ├── metadata
+│       │   └── metadata.lua           # Metadata fetching and state
+│       ├── telescope
+│       │   └── telescope.lua          # Telescope-based dependency picker
+│       ├── ui
+│       │   ├── deps.lua               # Dependencies panel and buttons
+│       │   ├── focus.lua              # Focus management across windows
+│       │   ├── init.lua               # UI mount/unmount setup
+│       │   ├── inputs.lua             # Input fields (groupId, artifactId, etc.)
+│       │   ├── layout.lua             # Full UI layout builder
+│       │   └── radios.lua             # Radio-style selectors
+│       └── utils
+│           ├── file.lua               # File utilities
+│           ├── highlights.lua         # Highlight group setup
+│           ├── http.lua               # Project downloader
+│           ├── message.lua            # Logging helpers
+│           ├── url.lua                # URL query encoding
+│           └── window.lua             # Popup window helpers
 
-
----
 
 ## Functionalities :pick: <a name="functionalities"></a>
 
@@ -120,9 +129,13 @@ vim.keymap.set("n", "<leader>sg", "<CMD>SpringGenerateProject<CR>")
 
 ---
 
-| Keybinding     | Action                                            |
-|----------------|---------------------------------------------------|
-| `<leader>si`   | Launch Spring Initializr UI                       |
-| `<leader>sg`   | Generate Spring Boot project                      |  
+| Keybinding   | Action                                  |
+|--------------|------------------------------------------|
+| `<leader>si` | Open Spring Initializr TUI              |
+| `<leader>sg` | Generate project to current directory   |
+| `<Tab>`      | Navigate forward between fields         |
+| `<S-Tab>`    | Navigate backward                       |
+| `j` / `k`    | Move between radio options              |
+| `<CR>`       | Confirm field selection or submit       |
 
 ---
