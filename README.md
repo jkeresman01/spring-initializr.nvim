@@ -15,7 +15,7 @@
 
 Spring Boot project generation traditionally means switching to your browser or running CLI tools — breaking your flow.
 
-**spring-initializr.nvim** lets you create, customize, and download Spring Boot projects _entirely within Neovim.
+**spring-initializr.nvim** lets you create, customize, and download Spring Boot projects entirely within Neovim.
 
 ---
 
@@ -66,7 +66,7 @@ spring-initializr.nvim/
 │           ├── message.lua            # Logging helpers
 │           ├── url.lua                # URL query encoding
 │           └── window.lua             # Popup window helpers
-
+```
 
 ## Functionalities :pick: <a name="functionalities"></a>
 
