@@ -6,7 +6,7 @@
 -- ██║ ╚████║███████╗╚██████╔╝ ╚████╔╝ ██║██║ ╚═╝ ██║
 -- ╚═╝  ╚═══╝╚══════╝ ╚═════╝   ╚═══╝  ╚═╝╚═╝     ╚═╝
 --
--- File: metadata.lua
+-- File: telescope/telescope.lua
 -- Author: Josip Keresman
 --
 -- This module provides integration with Telescope for displaying and selecting Spring Boot dependencies

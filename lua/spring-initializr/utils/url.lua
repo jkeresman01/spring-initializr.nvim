@@ -6,7 +6,7 @@
 -- ██║ ╚████║███████╗╚██████╔╝ ╚████╔╝ ██║██║ ╚═╝ ██║
 -- ╚═╝  ╚═══╝╚══════╝ ╚═════╝   ╚═══╝  ╚═╝╚═╝     ╚═╝
 --
--- File: utils/window.lua
+-- File: utils/url.lua
 -- Author: Josip Keresman
 --
 -- Utility module for URL encoding and query string generation.

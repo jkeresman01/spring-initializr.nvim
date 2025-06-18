@@ -6,7 +6,7 @@
 -- ██║ ╚████║███████╗╚██████╔╝ ╚████╔╝ ██║██║ ╚═╝ ██║
 -- ╚═╝  ╚═══╝╚══════╝ ╚═════╝   ╚═══╝  ╚═╝╚═╝     ╚═╝
 --
--- File: command.lua
+-- File: commands/commands.lua
 -- Author: Josip Keresman
 --
 -- Description: Registers custom Neovim commands for Spring Initializr UI and project generation.
