@@ -5,7 +5,6 @@
 
 [![Lua](https://img.shields.io/badge/Lua-blue.svg?style=for-the-badge&logo=lua)](http://www.lua.org)
 [![Neovim 0.10](https://img.shields.io/badge/Neovim%200.10-green.svg?style=for-the-badge&logo=neovim)](https://neovim.io)
-![Work In Progress](https://img.shields.io/badge/Work%20In%20Progress-orange?style=for-the-badge)
 
 </div>
 
