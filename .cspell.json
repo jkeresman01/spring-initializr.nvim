@@ -1,6 +1,12 @@
 {
   "version": "0.2",
   "words": [
+    "asciicast",
+    "vimplug",
+    "Munif",
+    "Tanjim",
+    "jkeresman",
+    "keymap",
     "getcwd",
     "winhighlight",
     "noremap",
