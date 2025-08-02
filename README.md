@@ -116,8 +116,6 @@ use {
 :SpringGenerateProject        -- Download and extract Spring Boot project to current directory
 ```
 
----
-
 ## Setup :gear: <a name="setup"></a>
 
 Basic setup and keybindings:
@@ -129,7 +127,6 @@ vim.keymap.set("n", "<leader>si", "<CMD>SpringInitializr<CR>")
 vim.keymap.set("n", "<leader>sg", "<CMD>SpringGenerateProject<CR>")
 ```
 
----
 
 | Keybinding   | Action                                  |
 |--------------|------------------------------------------|
@@ -140,7 +137,6 @@ vim.keymap.set("n", "<leader>sg", "<CMD>SpringGenerateProject<CR>")
 | `j` / `k`    | Move between radio options              |
 | `<CR>`       | Confirm field selection or submit       |
 
----
 
 ## Buy me a coffee ##
 
