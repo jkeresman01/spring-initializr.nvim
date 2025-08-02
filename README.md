@@ -9,7 +9,6 @@
 
 </div>
 
----
 
 ## ✨ Why spring-initializr.nvim?
 
@@ -17,13 +16,11 @@ Spring Boot project generation traditionally means switching to your browser or 
 
 **spring-initializr.nvim** lets you create, customize, and download Spring Boot projects entirely within Neovim.
 
----
 
 ## 📽️ Demo
 
 [![asciicast](https://asciinema.org/a/723220.svg)](https://asciinema.org/a/723220)
 
----
 
 ## 🔧 Features
 
@@ -31,7 +28,7 @@ Spring Boot project generation traditionally means switching to your browser or 
 - [x] TUI-based UI for selecting project options  
 - [x] Fuzzy dependency selection with `telescope.nvim`  
 - [x] Tab and key-based navigation  
----
+
 
 ## 📁 Project Structure
 
@@ -97,7 +94,21 @@ use {
 }
 ```
 
----
+### Lazy.nvim <a name="lazy"></a>
+
+```lua
+{
+  'jkeresman01/spring-initializr.nvim',
+  dependencies = {
+    'nvim-lua/plenary.nvim',
+    'MunifTanjim/nui.nvim',
+    'nvim-telescope/telescope.nvim',
+  },
+  config = function()
+    require('spring-initializr').setup()
+  end
+}
+```
 
 ## Commands :wrench: <a name="commands"></a>
 
