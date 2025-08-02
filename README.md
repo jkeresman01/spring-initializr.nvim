@@ -139,3 +139,8 @@ vim.keymap.set("n", "<leader>sg", "<CMD>SpringGenerateProject<CR>")
 | `<CR>`       | Confirm field selection or submit       |
 
 ---
+
+## Buy me a coffee ##
+
+[![Buy Me a Coffee](https://img.shields.io/badge/-Buy%20Me%20a%20Coffee-yellow?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black)](https://www.buymeacoffee.com/jkeresman)
+
