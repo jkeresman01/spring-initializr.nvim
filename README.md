@@ -2,20 +2,13 @@
 
   <h1>spring-initializr.nvim</h1>
   <h4>The easiest way to generate Spring Boot projects</h4>
+  <h6><i>A Neovim plugin that lets you build and download fully configured Spring Boot projects inside the editor.</i></h6>
 
 [![Lua](https://img.shields.io/badge/Lua-blue.svg?style=for-the-badge&logo=lua)](http://www.lua.org)
 [![Neovim 0.10](https://img.shields.io/badge/Neovim%200.10-green.svg?style=for-the-badge&logo=neovim)](https://neovim.io)
 
 </div>
 
-
-## ✨ spring-initializr.nvim?
-
-A Neovim plugin that lets you build and download fully configured Spring Boot projects inside the editor. 
-
-Choose your dependencies, set project metadata, and generate your app—no browser or external tools required.
-
-## 📽️ Demo
 
 [![asciicast](https://asciinema.org/a/723220.svg)](https://asciinema.org/a/723220)
 
