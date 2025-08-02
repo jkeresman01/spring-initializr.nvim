@@ -27,12 +27,10 @@ Spring Boot project generation traditionally means switching to your browser or 
 
 ## 🔧 Features
 
-✅ Full Spring Initializr metadata support  
-✅ TUI-based UI for selecting project options  
-✅ Fuzzy dependency selection with `telescope.nvim`  
-✅ Tab and key-based navigation  
-✅ Instant download and extraction to your current working directory  
-
+- [x] Full Spring Initializr metadata support  
+- [x] TUI-based UI for selecting project options  
+- [x] Fuzzy dependency selection with `telescope.nvim`  
+- [x] Tab and key-based navigation  
 ---
 
 ## 📁 Project Structure
@@ -68,12 +66,6 @@ spring-initializr.nvim/
 │           └── window.lua             # Popup window helpers
 ```
 
-## Functionalities :pick: <a name="functionalities"></a>
-
-- [x] Select project type, language, version, packaging, Java version....
-- [x] Dependency picker using Telescope
-
----
 
 ## Installation :star: <a name="installation"></a>
 
@@ -81,7 +73,7 @@ spring-initializr.nvim/
 > Dependencies:
 > - `nui.nvim`
 > - `plenary.nvim`
-> - `telescope.nvim` (optional but recommended)
+> - `telescope.nvim`
 
 ### Vim Plug <a name="vimplug"></a>
 
