@@ -10,12 +10,11 @@
 </div>
 
 
-## ✨ Why spring-initializr.nvim?
+## ✨ spring-initializr.nvim?
 
-Spring Boot project generation traditionally means switching to your browser or running CLI tools — breaking your flow.
+A Neovim plugin that lets you build and download fully configured Spring Boot projects inside the editor. 
 
-**spring-initializr.nvim** lets you create, customize, and download Spring Boot projects entirely within Neovim.
-
+Choose your dependencies, set project metadata, and generate your app—no browser or external tools required.
 
 ## 📽️ Demo
 
