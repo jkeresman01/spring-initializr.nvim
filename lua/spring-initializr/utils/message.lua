@@ -1,3 +1,4 @@
+----------------------------------------------------------------------------
 --
 -- ███╗   ██╗███████╗ ██████╗ ██╗   ██╗██╗███╗   ███╗
 -- ████╗  ██║██╔════╝██╔═══██╗██║   ██║██║████╗ ████║
@@ -6,34 +7,58 @@
 -- ██║ ╚████║███████╗╚██████╔╝ ╚████╔╝ ██║██║ ╚═╝ ██║
 -- ╚═╝  ╚═══╝╚══════╝ ╚═════╝   ╚═══╝  ╚═╝╚═╝     ╚═╝
 --
--- File: utils/message.lua
+--
+-- Provides standardized message logging using vim.notify.
+--
+--
+-- License: GPL-3.0
 -- Author: Josip Keresman
 --
--- Utility module for standardized message logging using vim.notify.
+----------------------------------------------------------------------------
 
 local M = {}
 local notify = vim.notify
 
---- Logs an info-level message.
--- @param msg string: message to display
+-----------------------------------------------------------------------------
+--
+-- Logs an info-level message.
+--
+-- @param msg string Message to display
+--
+-----------------------------------------------------------------------------
 M.info = function(msg)
     notify(msg, vim.log.levels.INFO)
 end
 
---- Logs a warning-level message.
--- @param msg string: message to display
+-----------------------------------------------------------------------------
+--
+-- Logs a warning-level message.
+--
+-- @param msg string Message to display
+--
+-----------------------------------------------------------------------------
 M.warn = function(msg)
     notify(msg, vim.log.levels.WARN)
 end
 
---- Logs an error-level message.
--- @param msg string: message to display
+-----------------------------------------------------------------------------
+--
+-- Logs an error-level message.
+--
+-- @param msg string Message to display
+--
+-----------------------------------------------------------------------------
 M.error = function(msg)
     notify(msg, vim.log.levels.ERROR)
 end
 
---- Logs a debug-level message.
--- @param msg string: message to display
+-----------------------------------------------------------------------------
+--
+-- Logs a debug-level message.
+--
+-- @param msg string Message to display
+--
+-----------------------------------------------------------------------------
 M.debug = function(msg)
     notify(msg, vim.log.levels.DEBUG)
 end

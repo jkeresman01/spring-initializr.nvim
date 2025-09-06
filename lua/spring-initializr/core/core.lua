@@ -1,14 +1,20 @@
+----------------------------------------------------------------------------
 --
 -- ███╗   ██╗███████╗ ██████╗ ██╗   ██╗██╗███╗   ███╗
 -- ████╗  ██║██╔════╝██╔═══██╗██║   ██║██║████╗ ████║
 -- ██╔██╗ ██║█████╗  ██║   ██║██║   ██║██║██╔████╔██║
 -- ██║╚██╗██║██╔══╝  ██║   ██║╚██╗ ██╔╝██║██║╚██╔╝██║
 -- ██║ ╚████║███████╗╚██████╔╝ ╚████╔╝ ██║██║ ╚═╝ ██║
--- ╚═╝  ╚═══╝╚══════╝ ╚═════╝   ╚═╝  ╚═╝╚═╝     ╚═╝
+-- ╚═╝  ╚═══╝╚══════╝ ╚═════╝   ╚═══╝  ╚═╝╚═╝     ╚═╝
 --
--- File: core/core.lua
+--
+-- Generates a Spring Boot project using selections from UI and metadata.
+--
+--
+-- License: GPL-3.0
 -- Author: Josip Keresman
--- Description: Generates a Spring Boot project using selections from UI and metadata.
+--
+----------------------------------------------------------------------------
 
 local ui = require("spring-initializr.ui.init")
 local msg = require("spring-initializr.utils.message")
@@ -22,9 +28,13 @@ local SPRING_DOWNLOAD_URL = "https://start.spring.io/starter.zip"
 
 local M = {}
 
---- Collects all user selections from the UI into a parameter table.
+-----------------------------------------------------------------------------
 --
--- @return table - Key-value table of Spring Initializr request parameters.
+-- Collects all user selections from the UI into a parameter table.
+--
+-- @return table Key-value table of Spring Initializr request parameters.
+--
+-----------------------------------------------------------------------------
 local function collect_params()
     local s = ui.state.selections
     return {
@@ -42,24 +52,37 @@ local function collect_params()
     }
 end
 
---- Builds a full Spring Initializr ZIP download URL with query string.
+-----------------------------------------------------------------------------
 --
--- @param params table - Query parameters
--- @return string - Fully constructed download URL
+-- Builds a full Spring Initializr ZIP download URL with query string.
+--
+-- @param params table Query parameters
+-- @return string Fully constructed download URL
+--
+-----------------------------------------------------------------------------
 local function make_download_url(params)
     return SPRING_DOWNLOAD_URL .. "?" .. url_utils.encode_query(params)
 end
 
---- Called on successful project generation to close UI and notify user.
+-----------------------------------------------------------------------------
 --
--- @param cwd string - Path to working directory
+-- Called on successful project generation to close UI and notify user.
+--
+-- @param cwd string Path to working directory
+--
+-----------------------------------------------------------------------------
 local function notify_success(cwd)
     ui.close()
     msg.info("Spring Boot project created in " .. cwd)
 end
 
---- Public API to generate a Spring Boot project.
--- Collects user input, fetches the starter project, unzips it, and notifies the user.
+-----------------------------------------------------------------------------
+--
+-- Public API to generate a Spring Boot project.
+-- Collects user input, fetches the starter project, unzips it, and notifies
+-- the user.
+--
+-----------------------------------------------------------------------------
 function M.generate_project()
     local params = collect_params()
     local url = make_download_url(params)
