@@ -1,3 +1,4 @@
+----------------------------------------------------------------------------
 --
 -- ███╗   ██╗███████╗ ██████╗ ██╗   ██╗██╗███╗   ███╗
 -- ████╗  ██║██╔════╝██╔═══██╗██║   ██║██║████╗ ████║
@@ -6,13 +7,25 @@
 -- ██║ ╚████║███████╗╚██████╔╝ ╚████╔╝ ██║██║ ╚═╝ ██║
 -- ╚═╝  ╚═══╝╚══════╝ ╚═════╝   ╚═══╝  ╚═╝╚═╝     ╚═╝
 --
--- File: init.lua
+--
+-- Entry point for the Spring Initializr Neovim plugin.
+-- Registers all user commands and sets up the plugin.
+--
+--
+-- License: GPL-3.0
 -- Author: Josip Keresman
+---
+----------------------------------------------------------------------------
 
 local commands = require("spring-initializr.commands.commands")
 
 local M = {}
 
+-----------------------------------------------------------------------------
+--
+-- Initializes the plugin by registering user commands.
+---
+-----------------------------------------------------------------------------
 function M.setup()
     commands.register()
 end

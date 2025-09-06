@@ -1,3 +1,4 @@
+----------------------------------------------------------------------------
 --
 -- ███╗   ██╗███████╗ ██████╗ ██╗   ██╗██╗███╗   ███╗
 -- ████╗  ██║██╔════╝██╔═══██╗██║   ██║██║████╗ ████║
@@ -6,10 +7,14 @@
 -- ██║ ╚████║███████╗╚██████╔╝ ╚████╔╝ ██║██║ ╚═╝ ██║
 -- ╚═╝  ╚═══╝╚══════╝ ╚═════╝   ╚═══╝  ╚═╝╚═╝     ╚═╝
 --
--- File: metadata/metadata.lua
+--
+-- Handles fetching and caching of Spring Initializr metadata.
+--
+--
+-- License: GPL-3.0
 -- Author: Josip Keresman
 --
--- Description: Handles fetching and caching of Spring Initializr metadata.
+----------------------------------------------------------------------------
 
 local Job = require("plenary.job")
 
@@ -25,10 +30,14 @@ local M = {
     },
 }
 
---- Calls all registered callbacks with the given data or error.
+-----------------------------------------------------------------------------
+--
+-- Calls all registered callbacks with the given data or error.
 --
 -- @param data table|nil
 -- @param err string|nil
+--
+-----------------------------------------------------------------------------
 local function call_callbacks(data, err)
     for _, cb in ipairs(M.state.callbacks) do
         cb(data, err)
@@ -36,10 +45,14 @@ local function call_callbacks(data, err)
     M.state.callbacks = {}
 end
 
---- Converts the curl result (array of lines) into a single string.
+-----------------------------------------------------------------------------
+--
+-- Converts the curl result (array of lines) into a single string.
 --
 -- @param result table
 -- @return string
+--
+-----------------------------------------------------------------------------
 local function parse_output(result)
     if type(result) == "table" then
         return table.concat(result, "\n")
@@ -47,10 +60,14 @@ local function parse_output(result)
     return ""
 end
 
---- Tries to decode a JSON string to a Lua table.
+-----------------------------------------------------------------------------
+--
+-- Tries to decode a JSON string to a Lua table.
 --
 -- @param output string
 -- @return table|nil, string|nil
+--
+-----------------------------------------------------------------------------
 local function try_decode_json(output)
     local ok, decoded = pcall(vim.json.decode, output)
     if ok and type(decoded) == "table" then
@@ -59,9 +76,13 @@ local function try_decode_json(output)
     return nil, "Failed to parse Spring metadata"
 end
 
---- Updates module state with success metadata and flags.
+-----------------------------------------------------------------------------
+--
+-- Updates module state with success metadata and flags.
 --
 -- @param data table
+--
+-----------------------------------------------------------------------------
 local function update_state_success(data)
     M.state.metadata = data
     M.state.loaded = true
@@ -69,19 +90,27 @@ local function update_state_success(data)
     M.state.loading = false
 end
 
---- Updates module state with an error and flags.
+-----------------------------------------------------------------------------
+--
+-- Updates module state with an error and flags.
 --
 -- @param stderr string
 -- @param fallback_msg string
+--
+-----------------------------------------------------------------------------
 local function update_state_error(stderr, fallback_msg)
     M.state.error = stderr ~= "" and stderr or fallback_msg
     M.state.loading = false
 end
 
---- Handles curl job result and updates state, invokes callbacks.
+-----------------------------------------------------------------------------
+--
+-- Handles curl job result and updates state, invokes callbacks.
 --
 -- @param result table
 -- @param stderr table
+--
+-----------------------------------------------------------------------------
 local function handle_response(result, stderr)
     local output = parse_output(result)
     local data, decode_err = try_decode_json(output)
@@ -97,7 +126,11 @@ local function handle_response(result, stderr)
     end)
 end
 
---- Fetches metadata from the Spring Initializr endpoint using curl.
+-----------------------------------------------------------------------------
+--
+-- Fetches metadata from the Spring Initializr endpoint using curl.
+--
+-----------------------------------------------------------------------------
 local function fetch_from_remote()
     Job:new({
         command = "curl",
@@ -108,9 +141,13 @@ local function fetch_from_remote()
     }):start()
 end
 
---- Fetches Spring metadata, using cache if already loaded.
+-----------------------------------------------------------------------------
 --
--- @param callback function - Function to receive metadata or error
+-- Fetches Spring metadata, using cache if already loaded.
+--
+-- @param callback function Function to receive metadata or error
+--
+-----------------------------------------------------------------------------
 function M.fetch_metadata(callback)
     if M.state.loaded and M.state.metadata then
         callback(M.state.metadata, nil)
