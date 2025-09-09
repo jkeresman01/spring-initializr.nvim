@@ -4,7 +4,7 @@
 -- ████╗  ██║██╔════╝██╔═══██╗██║   ██║██║████╗ ████║
 -- ██╔██╗ ██║█████╗  ██║   ██║██║   ██║██║██╔████╔██║
 -- ██║╚██╗██║██╔══╝  ██║   ██║╚██╗ ██╔╝██║██║╚██╔╝██║
--- ██║ ╚████║███████╗╚██████╔╝ ╚████╔╝ ██║██║ ╚═╝ ██║
+-- ██║╚████║███████╗╚██████╔╝ ╚████╔╝ ██║██║ ╚═╝ ██║
 -- ╚═╝  ╚═══╝╚══════╝ ╚═════╝   ╚═══╝  ╚═╝╚═╝     ╚═╝
 --
 --
@@ -16,8 +16,15 @@
 --
 ----------------------------------------------------------------------------
 
+----------------------------------------------------------------------------
+-- Dependencies
+-- External modules used by this file.
+----------------------------------------------------------------------------
 local Job = require("plenary.job")
 
+----------------------------------------------------------------------------
+-- Constants
+----------------------------------------------------------------------------
 local METADATA_URL = "https://start.spring.io/metadata/client"
 
 local M = {
@@ -30,14 +37,14 @@ local M = {
     },
 }
 
------------------------------------------------------------------------------
+----------------------------------------------------------------------------
 --
 -- Calls all registered callbacks with the given data or error.
 --
--- @param data table|nil
--- @param err string|nil
+-- @param data  table|nil   Decoded metadata table, or nil
+-- @param err   string|nil  Error message, or nil
 --
------------------------------------------------------------------------------
+----------------------------------------------------------------------------
 local function call_callbacks(data, err)
     for _, cb in ipairs(M.state.callbacks) do
         cb(data, err)
@@ -45,14 +52,14 @@ local function call_callbacks(data, err)
     M.state.callbacks = {}
 end
 
------------------------------------------------------------------------------
+----------------------------------------------------------------------------
 --
 -- Converts the curl result (array of lines) into a single string.
 --
--- @param result table
--- @return string
+-- @param  result  table    Lines from stdout
+-- @return string           Joined output
 --
------------------------------------------------------------------------------
+----------------------------------------------------------------------------
 local function parse_output(result)
     if type(result) == "table" then
         return table.concat(result, "\n")
@@ -60,14 +67,16 @@ local function parse_output(result)
     return ""
 end
 
------------------------------------------------------------------------------
+----------------------------------------------------------------------------
 --
 -- Tries to decode a JSON string to a Lua table.
 --
--- @param output string
--- @return table|nil, string|nil
+-- @param  output  string        JSON payload
 --
------------------------------------------------------------------------------
+-- @return table|nil             Decoded table on success, or nil
+-- @return string|nil            Error message on failure, or nil
+--
+----------------------------------------------------------------------------
 local function try_decode_json(output)
     local ok, decoded = pcall(vim.json.decode, output)
     if ok and type(decoded) == "table" then
@@ -76,13 +85,13 @@ local function try_decode_json(output)
     return nil, "Failed to parse Spring metadata"
 end
 
------------------------------------------------------------------------------
+----------------------------------------------------------------------------
 --
 -- Updates module state with success metadata and flags.
 --
--- @param data table
+-- @param data  table   Parsed metadata
 --
------------------------------------------------------------------------------
+----------------------------------------------------------------------------
 local function update_state_success(data)
     M.state.metadata = data
     M.state.loaded = true
@@ -90,27 +99,27 @@ local function update_state_success(data)
     M.state.loading = false
 end
 
------------------------------------------------------------------------------
+----------------------------------------------------------------------------
 --
 -- Updates module state with an error and flags.
 --
--- @param stderr string
--- @param fallback_msg string
+-- @param stderr        string  Raw stderr output
+-- @param fallback_msg  string  Fallback error message
 --
------------------------------------------------------------------------------
+----------------------------------------------------------------------------
 local function update_state_error(stderr, fallback_msg)
     M.state.error = stderr ~= "" and stderr or fallback_msg
     M.state.loading = false
 end
 
------------------------------------------------------------------------------
+----------------------------------------------------------------------------
 --
--- Handles curl job result and updates state, invokes callbacks.
+-- Handles curl job result and updates state, then invokes callbacks.
 --
--- @param result table
--- @param stderr table
+-- @param result  table   Lines from stdout
+-- @param stderr  table   Lines from stderr
 --
------------------------------------------------------------------------------
+----------------------------------------------------------------------------
 local function handle_response(result, stderr)
     local output = parse_output(result)
     local data, decode_err = try_decode_json(output)
@@ -126,11 +135,11 @@ local function handle_response(result, stderr)
     end)
 end
 
------------------------------------------------------------------------------
+----------------------------------------------------------------------------
 --
 -- Fetches metadata from the Spring Initializr endpoint using curl.
 --
------------------------------------------------------------------------------
+----------------------------------------------------------------------------
 local function fetch_from_remote()
     Job:new({
         command = "curl",
@@ -141,13 +150,13 @@ local function fetch_from_remote()
     }):start()
 end
 
------------------------------------------------------------------------------
+----------------------------------------------------------------------------
 --
 -- Fetches Spring metadata, using cache if already loaded.
 --
--- @param callback function Function to receive metadata or error
+-- @param callback  function  Function (data, err) to receive result
 --
------------------------------------------------------------------------------
+----------------------------------------------------------------------------
 function M.fetch_metadata(callback)
     if M.state.loaded and M.state.metadata then
         callback(M.state.metadata, nil)

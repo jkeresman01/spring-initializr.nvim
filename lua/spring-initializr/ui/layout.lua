@@ -16,6 +16,9 @@
 --
 ----------------------------------------------------------------------------
 
+----------------------------------------------------------------------------
+-- Dependencies
+----------------------------------------------------------------------------
 local Layout = require("nui.layout")
 local Popup = require("nui.popup")
 
@@ -23,15 +26,18 @@ local radios = require("spring-initializr.ui.radios")
 local inputs = require("spring-initializr.ui.inputs")
 local deps = require("spring-initializr.ui.deps")
 
+----------------------------------------------------------------------------
+-- Module table
+----------------------------------------------------------------------------
 local M = {}
 
------------------------------------------------------------------------------
+----------------------------------------------------------------------------
 --
 -- Create the outer wrapper popup window.
 --
--- @return Popup Main floating container
+-- @return Popup  Main floating container
 --
------------------------------------------------------------------------------
+----------------------------------------------------------------------------
 local function create_outer_popup()
     return Popup({
         border = {
@@ -44,31 +50,31 @@ local function create_outer_popup()
     })
 end
 
------------------------------------------------------------------------------
+----------------------------------------------------------------------------
 --
 -- Format boot version list to remove ".RELEASE" suffix.
 --
--- @param values table List of version entries
+-- @param  values  table  List of version entries
 --
--- @return table Transformed list
+-- @return table          Transformed list
 --
------------------------------------------------------------------------------
+----------------------------------------------------------------------------
 local function format_boot_versions(values)
     return vim.tbl_map(function(v)
         return { name = v.name, id = v.id and v.id:gsub("%.RELEASE$", "") }
     end, values or {})
 end
 
------------------------------------------------------------------------------
+----------------------------------------------------------------------------
 --
 -- Create all radio components.
 --
--- @param metadata table Spring metadata
--- @param selections table State table of user selections
+-- @param  metadata    table  Spring metadata
+-- @param  selections  table  State table of user selections
 --
--- @return table List of Layout.Box components
+-- @return table              List of Layout.Box components
 --
------------------------------------------------------------------------------
+----------------------------------------------------------------------------
 local function create_radio_controls(metadata, selections)
     return {
         radios.create_radio("Project Type", metadata.type.values, "project_type", selections),
@@ -89,15 +95,15 @@ local function create_radio_controls(metadata, selections)
     }
 end
 
------------------------------------------------------------------------------
+----------------------------------------------------------------------------
 --
 -- Create all input fields.
 --
--- @param selections table State table of user selections
+-- @param  selections  table  State table of user selections
 --
--- @return table List of Layout.Box components
+-- @return table              List of Layout.Box components
 --
------------------------------------------------------------------------------
+----------------------------------------------------------------------------
 local function create_input_controls(selections)
     return {
         inputs.create_input("Group", "groupId", "com.example", selections),
@@ -113,16 +119,16 @@ local function create_input_controls(selections)
     }
 end
 
------------------------------------------------------------------------------
+----------------------------------------------------------------------------
 --
 -- Create the left-hand UI panel with all user-configurable fields.
 --
--- @param metadata table Spring metadata
--- @param selections table State table of user selections
+-- @param  metadata    table       Spring metadata
+-- @param  selections  table       State table of user selections
 --
--- @return Layout.Box Left panel
----
------------------------------------------------------------------------------
+-- @return Layout.Box              Left panel
+--
+----------------------------------------------------------------------------
 local function create_left_panel(metadata, selections)
     local children = {}
     vim.list_extend(children, create_radio_controls(metadata, selections))
@@ -130,13 +136,13 @@ local function create_left_panel(metadata, selections)
     return Layout.Box(children, { dir = "col", size = "50%" })
 end
 
------------------------------------------------------------------------------
+----------------------------------------------------------------------------
 --
 -- Create the right-hand panel with dependency management.
 --
--- @return Layout.Box Right panel
+-- @return Layout.Box  Right panel
 --
------------------------------------------------------------------------------
+----------------------------------------------------------------------------
 local function create_right_panel()
     return Layout.Box({
         Layout.Box(deps.create_button(deps.update_display), { size = "10%" }),
@@ -144,16 +150,16 @@ local function create_right_panel()
     }, { dir = "col", size = "50%" })
 end
 
------------------------------------------------------------------------------
+----------------------------------------------------------------------------
 --
 -- Build the entire Spring Initializr layout.
 --
--- @param metadata table Fetched Spring metadata
--- @param selections table State table of user selections
+-- @param  metadata    table  Fetched Spring metadata
+-- @param  selections  table  State table of user selections
 --
--- @return table Contains the layout and the outer popup
----
------------------------------------------------------------------------------
+-- @return table              Contains the layout and the outer popup
+--
+----------------------------------------------------------------------------
 function M.build_ui(metadata, selections)
     local outer_popup = create_outer_popup()
 

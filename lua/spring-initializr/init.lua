@@ -14,7 +14,7 @@
 --
 -- License: GPL-3.0
 -- Author: Josip Keresman
----
+--
 ----------------------------------------------------------------------------
 
 local commands = require("spring-initializr.commands.commands")
@@ -24,7 +24,7 @@ local M = {}
 -----------------------------------------------------------------------------
 --
 -- Initializes the plugin by registering user commands.
----
+--
 -----------------------------------------------------------------------------
 function M.setup()
     commands.register()

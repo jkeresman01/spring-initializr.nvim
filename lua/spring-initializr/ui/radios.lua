@@ -17,36 +17,39 @@
 --
 ----------------------------------------------------------------------------
 
+----------------------------------------------------------------------------
+-- Dependencies
+----------------------------------------------------------------------------
 local Popup = require("nui.popup")
 local Layout = require("nui.layout")
 
 local focus = require("spring-initializr.ui.focus")
-local msg = require("spring-initializr.utils.message")
+local message_utils = require("spring-initializr.utils.message")
 
 local M = {}
 
------------------------------------------------------------------------------
+----------------------------------------------------------------------------
 --
 -- Normalize a value entry into a radio item format.
 --
--- @param value table With `name` and `id`
+-- @param  value  table  With `name` and `id`
 --
--- @return table Formatted with `label` and `value`
+-- @return table         Formatted with `label` and `value`
 --
------------------------------------------------------------------------------
+----------------------------------------------------------------------------
 local function normalize_item(value)
     return { label = value.name, value = value.id }
 end
 
------------------------------------------------------------------------------
+----------------------------------------------------------------------------
 --
 -- Convert list of value tables into normalized radio items.
 --
--- @param values table List of tables with `name` and `id`
+-- @param  values  table  List of tables with `name` and `id`
 --
--- @return table List of normalized items
+-- @return table         List of normalized items
 --
------------------------------------------------------------------------------
+----------------------------------------------------------------------------
 local function build_items(values)
     local items = {}
     for _, value in ipairs(values or {}) do
@@ -57,30 +60,30 @@ local function build_items(values)
     return items
 end
 
------------------------------------------------------------------------------
+----------------------------------------------------------------------------
 --
 -- Format a single item line for display with a selection marker.
 --
--- @param item table Radio item
--- @param is_selected boolean Whether the item is selected
+-- @param  item         table    Radio item
+-- @param  is_selected  boolean  Whether the item is selected
 --
--- @return string Formatted line
----
------------------------------------------------------------------------------
+-- @return string                Formatted line
+--
+----------------------------------------------------------------------------
 local function render_item_line(item, is_selected)
     local prefix = is_selected and "(x)" or "( )"
     return string.format("%s %s", prefix, item.label)
 end
 
------------------------------------------------------------------------------
+----------------------------------------------------------------------------
 --
 -- Render all radio items to the popup buffer.
 --
--- @param popup Popup Nui popup instance
--- @param items table List of items
--- @param selected_index number Currently selected item index
+-- @param  popup           Popup   Nui popup instance
+-- @param  items           table   List of items
+-- @param  selected_index  number  Currently selected item index
 --
------------------------------------------------------------------------------
+----------------------------------------------------------------------------
 local function render_all_items(popup, items, selected_index)
     local lines = {}
     for i, item in ipairs(items) do
@@ -89,81 +92,80 @@ local function render_all_items(popup, items, selected_index)
     vim.api.nvim_buf_set_lines(popup.bufnr, 0, -1, false, lines)
 end
 
------------------------------------------------------------------------------
+----------------------------------------------------------------------------
 --
 -- Schedule the initial render of the items in the popup.
 --
--- @param popup Popup
--- @param items table
--- @param selected_index number
----
------------------------------------------------------------------------------
+-- @param  popup           Popup
+-- @param  items           table
+-- @param  selected_index  number
+--
+----------------------------------------------------------------------------
 local function schedule_initial_render(popup, items, selected_index)
     vim.schedule(function()
         render_all_items(popup, items, selected_index)
     end)
 end
 
------------------------------------------------------------------------------
+----------------------------------------------------------------------------
 --
 -- Handle selection confirmation with <CR>.
 --
--- @param items table List of items
--- @param selected_index number Currently selected index
--- @param title string Title of the radio group
--- @param key string State key
+-- @param  items           table    List of items
+-- @param  selected_index  number   Currently selected index
+-- @param  title           string   Title of the radio group
+-- @param  key             string   State key
+-- @param  selections      table    Global selection state
 --
--- @param selections table Global selection state
---
------------------------------------------------------------------------------
+----------------------------------------------------------------------------
 local function handle_enter(items, selected_index, title, key, selections)
     selections[key] = items[selected_index].value
-    msg.info(string.format("%s: %s", title, items[selected_index].label))
+    message_utils.info(string.format("%s: %s", title, items[selected_index].label))
 end
 
------------------------------------------------------------------------------
+----------------------------------------------------------------------------
 --
 -- Move down in the list.
 --
--- @param items table List of items
--- @param selected_index number Current index
+-- @param  items           table   List of items
+-- @param  selected_index  number  Current index
 --
--- @return number New index
----
------------------------------------------------------------------------------
+-- @return number                  New index
+--
+----------------------------------------------------------------------------
 local function handle_move_down(items, selected_index)
     return math.min(selected_index + 1, #items)
 end
 
------------------------------------------------------------------------------
+----------------------------------------------------------------------------
 --
 -- Move up in the list.
 --
--- @param selected_index number Current index
+-- @param  selected_index  number  Current index
 --
--- @return number New index
----
------------------------------------------------------------------------------
+-- @return number                  New index
+--
+----------------------------------------------------------------------------
 local function handle_move_up(selected_index)
     return math.max(selected_index - 1, 1)
 end
 
------------------------------------------------------------------------------
+----------------------------------------------------------------------------
 --
 -- Map <CR> key to selection handler.
----
------------------------------------------------------------------------------
+--
+----------------------------------------------------------------------------
 local function map_enter_key(popup, state)
     popup:map("n", "<CR>", function()
         handle_enter(state.items, state.selected[1], state.title, state.key, state.selections)
     end, { nowait = true, noremap = true })
 end
 
------------------------------------------------------------------------------
+----------------------------------------------------------------------------
 --
 -- Map "j" key to move down handler.
----
------------------------------------------------------------------------------
+--
+----------------------------------------------------------------------------
 local function map_down_key(popup, state)
     popup:map("n", "j", function()
         state.selected[1] = handle_move_down(state.items, state.selected[1])
@@ -172,11 +174,11 @@ local function map_down_key(popup, state)
     end, { nowait = true, noremap = true })
 end
 
------------------------------------------------------------------------------
+----------------------------------------------------------------------------
 --
 -- Map "k" key to move up handler.
----
------------------------------------------------------------------------------
+--
+----------------------------------------------------------------------------
 local function map_up_key(popup, state)
     popup:map("n", "k", function()
         state.selected[1] = handle_move_up(state.selected[1])
@@ -185,27 +187,27 @@ local function map_up_key(popup, state)
     end, { nowait = true, noremap = true })
 end
 
------------------------------------------------------------------------------
+----------------------------------------------------------------------------
 --
 -- Attach all key mappings for interaction.
----
------------------------------------------------------------------------------
+--
+----------------------------------------------------------------------------
 local function map_keys(popup, state)
     map_enter_key(popup, state)
     map_down_key(popup, state)
     map_up_key(popup, state)
 end
 
------------------------------------------------------------------------------
+----------------------------------------------------------------------------
 --
 -- Create the popup UI element for the radio.
 --
--- @param title string Title for popup border
--- @param item_count number Used for height
+-- @param  title       string  Title for popup border
+-- @param  item_count  number  Used for height
 --
--- @return Popup
----
------------------------------------------------------------------------------
+-- @return Popup               Created popup
+--
+----------------------------------------------------------------------------
 local function create_radio_popup(title, item_count)
     return Popup({
         border = {
@@ -221,18 +223,18 @@ local function create_radio_popup(title, item_count)
     })
 end
 
------------------------------------------------------------------------------
+----------------------------------------------------------------------------
 --
 -- Create a radio component as a layout box.
 --
--- @param title string Label/title of the radio group
--- @param values table Available radio options
--- @param key string Key to store the selection in state
--- @param selections table Global selection state
+-- @param  title       string  Label/title of the radio group
+-- @param  values      table   Available radio options
+-- @param  key         string  Key to store the selection in state
+-- @param  selections  table   Global selection state
 --
--- @return Layout.Box
----
------------------------------------------------------------------------------
+-- @return Layout.Box          Layout-wrapped popup
+--
+----------------------------------------------------------------------------
 function M.create_radio(title, values, key, selections)
     local items = build_items(values)
     local selected = { 1 }

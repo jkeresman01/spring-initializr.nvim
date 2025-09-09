@@ -8,7 +8,8 @@
 -- ╚═╝  ╚═══╝╚══════╝ ╚═════╝   ╚═══╝  ╚═╝╚═╝     ╚═╝
 --
 --
--- Manages the UI elements related to Spring Initializr dependency selection.
+-- Provides integration with Telescope for displaying and selecting
+-- Spring Boot dependencies.
 --
 --
 -- License: GPL-3.0
@@ -16,147 +17,185 @@
 --
 ----------------------------------------------------------------------------
 
-local Popup = require("nui.popup")
-local Layout = require("nui.layout")
-local focus = require("spring-initializr.ui.focus")
-local telescope_dep = require("spring-initializr.telescope.telescope")
+----------------------------------------------------------------------------
+-- Dependencies
+----------------------------------------------------------------------------
+local pickers = require("telescope.pickers")
+local finders = require("telescope.finders")
+local conf = require("telescope.config").values
+local actions = require("telescope.actions")
+local action_state = require("telescope.actions.state")
+
+local metadata_loader = require("spring-initializr.metadata.metadata")
+local message_utils = require("spring-initializr.utils.message")
 
 local M = {
-    state = {
-        dependencies_panel = nil,
-    },
+    selected_dependencies = {},
 }
 
------------------------------------------------------------------------------
+----------------------------------------------------------------------------
 --
--- Returns the border config for the "Add Dependencies" button.
+-- Creates a single dependency entry for display in Telescope.
 --
------------------------------------------------------------------------------
-local function button_border()
+-- @param  group_name  string  Name of the dependency group
+-- @param  dep         table   Dependency metadata (must include `id` and `name`)
+--
+-- @return table               Formatted entry for Telescope
+--
+----------------------------------------------------------------------------
+local function create_dependency_entry(group_name, dep)
     return {
-        style = "rounded",
-        text = { top = "Add Dependencies (Telescope)", top_align = "center" },
+        label = string.format("[%s] %s", group_name, dep.name),
+        id = dep.id,
     }
 end
 
------------------------------------------------------------------------------
+----------------------------------------------------------------------------
 --
--- Builds the configuration for the dependencies button popup.
+-- Flattens the grouped dependencies into a single list of entries.
 --
------------------------------------------------------------------------------
-local function button_popup_config()
-    return {
-        border = button_border(),
-        size = { height = 3, width = 40 },
-        enter = true,
-        win_options = {
-            winhighlight = "Normal:NormalFloat,FloatBorder:FloatBorder",
-        },
-    }
-end
-
------------------------------------------------------------------------------
+-- @param  groups  table  List of dependency groups
 --
--- Binds the Enter key to open the Telescope dependency picker and update
--- display.
+-- @return table          Flat list of dependency entries
 --
--- @param popup NuiPopup The button popup instance
--- @param on_update function Callback to refresh the dependencies list
---
------------------------------------------------------------------------------
-local function bind_button_action(popup, on_update)
-    popup:map("n", "<CR>", function()
-        vim.defer_fn(function()
-            telescope_dep.pick_dependencies()
-            vim.defer_fn(on_update, 200)
-        end, 100)
-    end, { noremap = true, nowait = true })
-end
-
------------------------------------------------------------------------------
---
--- Creates a popup button that triggers dependency selection.
---
--- @param update_display_fn function Callback to update the dependency display
---
--- @return Layout.Box Wrapped button in a layout box
---
------------------------------------------------------------------------------
-function M.create_button(update_display_fn)
-    local popup = Popup(button_popup_config())
-    bind_button_action(popup, update_display_fn)
-    focus.register(popup)
-    return Layout.Box(popup, { size = 3 })
-end
-
------------------------------------------------------------------------------
---
--- Returns the border config for the dependencies display panel.
---
------------------------------------------------------------------------------
-local function display_border()
-    return {
-        style = "rounded",
-        text = { top = "Selected Dependencies", top_align = "center" },
-    }
-end
-
------------------------------------------------------------------------------
---
--- Builds the configuration for the dependencies display popup.
---
------------------------------------------------------------------------------
-local function display_popup_config()
-    return {
-        border = display_border(),
-        size = { width = 40, height = 10 },
-        buf_options = { modifiable = true, readonly = false },
-        win_options = {
-            winhighlight = "Normal:NormalFloat,FloatBorder:FloatBorder",
-            wrap = true,
-        },
-    }
-end
-
------------------------------------------------------------------------------
---
--- Creates a popup to display selected dependencies.
---
--- @return NuiPopup Popup for showing dependencies
---
------------------------------------------------------------------------------
-function M.create_display()
-    local popup = Popup(display_popup_config())
-    M.state.dependencies_panel = popup
-    return popup
-end
-
------------------------------------------------------------------------------
---
--- Renders the currently selected dependencies as a list of lines.
---
--- @return table List of formatted strings
---
------------------------------------------------------------------------------
-local function render_dependency_list()
-    local lines = { "Selected Dependencies:" }
-    for i, dep in ipairs(telescope_dep.selected_dependencies or {}) do
-        table.insert(lines, string.format("%d. %s", i, dep:sub(1, 38)))
+----------------------------------------------------------------------------
+local function flatten_dependency_groups(groups)
+    local entries = {}
+    for _, group in ipairs(groups or {}) do
+        for _, dep in ipairs(group.values or {}) do
+            table.insert(entries, create_dependency_entry(group.name, dep))
+        end
     end
-    return lines
+    return entries
 end
 
------------------------------------------------------------------------------
+----------------------------------------------------------------------------
 --
--- Updates the dependencies display with currently selected dependencies.
+-- Converts a dependency entry into a Telescope-compatible format.
 --
------------------------------------------------------------------------------
-function M.update_display()
-    local panel = M.state.dependencies_panel
-    if not panel then
-        return
+-- @param  entry  table   Formatted dependency entry
+--
+-- @return table          Entry maker result for Telescope
+--
+----------------------------------------------------------------------------
+local function make_entry(entry)
+    return {
+        value = entry,
+        display = entry.label,
+        ordinal = entry.label,
+    }
+end
+
+----------------------------------------------------------------------------
+--
+-- Provides layout configuration for the Telescope picker.
+--
+-- @return table  Layout config
+--
+----------------------------------------------------------------------------
+local function get_picker_layout()
+    return {
+        prompt_position = "top",
+        width = 0.5,
+        height = 0.6,
+    }
+end
+
+----------------------------------------------------------------------------
+--
+-- Adds the selected dependency to the internal list and shows a message.
+--
+-- @param  entry  table  Selected dependency entry
+--
+----------------------------------------------------------------------------
+local function record_selection(entry)
+    table.insert(M.selected_dependencies, entry.id)
+    message_utils.info("Selected Dependency: " .. entry.id)
+end
+
+----------------------------------------------------------------------------
+--
+-- Handles the <CR> action inside the picker.
+--
+-- @param  prompt_bufnr  number         Buffer number of the picker
+-- @param  on_done       function|nil   Optional callback to run after selection
+--
+----------------------------------------------------------------------------
+local function handle_selection(prompt_bufnr, on_done)
+    local selected = action_state.get_selected_entry()
+    if selected and selected.value then
+        record_selection(selected.value)
     end
-    vim.api.nvim_buf_set_lines(panel.bufnr, 0, -1, false, render_dependency_list())
+    actions.close(prompt_bufnr)
+    if on_done then
+        on_done()
+    end
+end
+
+----------------------------------------------------------------------------
+--
+-- Creates the full Telescope picker configuration table.
+--
+-- @param  items    table          List of dependency entries
+-- @param  opts     table          Telescope picker options
+-- @param  on_done  function|nil   Optional callback
+--
+-- @return table                   Picker configuration
+--
+----------------------------------------------------------------------------
+local function create_picker_config(items, opts, on_done)
+    return {
+        prompt_title = "Spring Dependencies",
+        finder = finders.new_table({
+            results = items,
+            entry_maker = make_entry,
+        }),
+        sorter = conf.generic_sorter(opts),
+        layout_strategy = "vertical",
+        layout_config = get_picker_layout(),
+        attach_mappings = function(prompt_bufnr)
+            actions.select_default:replace(function()
+                handle_selection(prompt_bufnr, on_done)
+            end)
+            return true
+        end,
+    }
+end
+
+----------------------------------------------------------------------------
+--
+-- Opens the Telescope picker with given dependency entries.
+--
+-- @param  items    table          Dependency entries
+-- @param  opts     table          Picker options
+-- @param  on_done  function|nil   Optional callback
+--
+----------------------------------------------------------------------------
+local function open_picker(items, opts, on_done)
+    pickers.new(opts, create_picker_config(items, opts, on_done)):find()
+end
+
+----------------------------------------------------------------------------
+--
+-- Initiates the dependency picker:
+-- fetch metadata, flatten dependencies, and open the picker.
+--
+-- @param  opts     table          Picker options
+-- @param  on_done  function|nil   Optional callback
+--
+----------------------------------------------------------------------------
+function M.pick_dependencies(opts, on_done)
+    opts = opts or {}
+
+    metadata_loader.fetch_metadata(function(data, err)
+        if err then
+            message_utils.error("Failed to load Spring metadata: " .. err)
+            return
+        end
+
+        local items = flatten_dependency_groups(data.dependencies.values)
+        open_picker(items, opts, on_done)
+    end)
 end
 
 return M

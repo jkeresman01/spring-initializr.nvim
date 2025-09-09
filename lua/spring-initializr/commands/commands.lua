@@ -11,9 +11,10 @@
 -- Registers custom Neovim commands for Spring Initializr UI and project
 -- generation.
 --
+--
 -- License: GPL-3.0
 -- Author: Josip Keresman
----
+--
 ----------------------------------------------------------------------------
 
 local ui = require("spring-initializr.ui.init")
@@ -22,6 +23,7 @@ local core = require("spring-initializr.core.core")
 local M = {}
 
 -----------------------------------------------------------------------------
+--
 -- Registers Neovim user commands for Spring Initializr.
 --
 --
