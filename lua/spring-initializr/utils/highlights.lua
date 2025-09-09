@@ -8,12 +8,12 @@
 -- ╚═╝  ╚═══╝╚══════╝ ╚═════╝   ╚═══╝  ╚═╝╚═╝     ╚═╝
 --
 --
---
 -- Defines and applies highlight groups for the Spring Initializr UI.
+--
 --
 -- License: GPL-3.0
 -- Author: Josip Keresman
----
+--
 ----------------------------------------------------------------------------
 
 local M = {}
@@ -21,7 +21,7 @@ local M = {}
 -----------------------------------------------------------------------------
 --
 -- Sets highlight groups used by the plugin.
----
+--
 -----------------------------------------------------------------------------
 local function set_highlight_groups()
     vim.api.nvim_set_hl(0, "NormalFloat", { bg = "none" })
@@ -32,7 +32,7 @@ end
 -----------------------------------------------------------------------------
 --
 -- Registers a ColorScheme autocmd to reapply highlights.
----
+--
 -----------------------------------------------------------------------------
 local function register_colorscheme_autocmd()
     vim.api.nvim_create_autocmd("ColorScheme", {
@@ -44,7 +44,7 @@ end
 -----------------------------------------------------------------------------
 --
 -- Public method to configure all highlights and hooks.
----
+--
 -----------------------------------------------------------------------------
 function M.configure()
     set_highlight_groups()
