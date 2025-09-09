@@ -41,7 +41,7 @@ describe("HashSet (primitives)", function()
         -- Arrange
         local set = HashSet.new()
         set:add("x")
-        s:add("y")
+        set:add("y")
 
         -- Act
         local had_x_before = set:has("x")
