@@ -25,9 +25,9 @@ describe("HashSet (primitives)", function()
         local set = HashSet.new()
 
         -- Act
-        local first_add  = set:add("a")
+        local first_add = set:add("a")
         local second_add = set:add("a")
-        local third_add  = set:add("b")
+        local third_add = set:add("b")
 
         -- Assert
         assert.is_true(first_add)
@@ -40,13 +40,14 @@ describe("HashSet (primitives)", function()
     it("has / remove / clear work as expected", function()
         -- Arrange
         local set = HashSet.new()
-        s:add("x"); s:add("y")
+        set:add("x")
+        s:add("y")
 
         -- Act
-        local had_x_before   = set:has("x")
-        local removed_x      = set:remove("x")
-        local has_x_after    = set:has("x")
-        local removed_x_again= set:remove("x")
+        local had_x_before = set:has("x")
+        local removed_x = set:remove("x")
+        local has_x_after = set:has("x")
+        local removed_x_again = set:remove("x")
         set:clear()
 
         -- Assert
@@ -60,10 +61,10 @@ describe("HashSet (primitives)", function()
 
     it("toggle adds then removes", function()
         -- Arrange
-        local s = HashSet.new()
+        local set = HashSet.new()
 
         -- Act
-        local added   = set:toggle("k")
+        local added = set:toggle("k")
         local removed = set:toggle("k")
 
         -- Assert
@@ -77,7 +78,7 @@ describe("HashSet (primitives)", function()
         local input = { "a", "a", "b", "b", "c" }
 
         -- Act
-        local s = HashSet.from_list(input)
+        local set = HashSet.from_list(input)
 
         -- Assert
         assert.are.equal(3, set:size())
@@ -88,7 +89,7 @@ describe("HashSet (primitives)", function()
 
     it("iter and to_list return all elements (order not guaranteed)", function()
         -- Arrange
-        local s = HashSet.from_list({ "d", "c", "b", "a" })
+        local set = HashSet.from_list({ "d", "c", "b", "a" })
 
         -- Act
         local seen = {}
@@ -111,7 +112,7 @@ describe("HashSet (primitives)", function()
 
         -- Act
         local inter = a:intersection(b)
-        local diff  = a:difference(b)
+        local diff = a:difference(b)
         a:union(b)
 
         -- Assert
@@ -140,7 +141,7 @@ describe("HashSet (tables with key_fn)", function()
         local set = HashSet.new({ key_fn = by_id_lower })
 
         -- Act
-        local first  = set:add({ id = "Web", label = "Spring Web" })
+        local first = set:add({ id = "Web", label = "Spring Web" })
         local second = set:add({ id = "web", label = "Spring Web (alias)" })
 
         -- Assert
@@ -151,11 +152,11 @@ describe("HashSet (tables with key_fn)", function()
 
     it("toggle respects key_fn", function()
         -- Arrange
-        local set   = HashSet.new({ key_fn = by_id_lower })
+        local set = HashSet.new({ key_fn = by_id_lower })
         local dep = { id = "DATA-JPA", label = "Spring Data JPA" }
 
         -- Act
-        local added   = set:toggle(dep)
+        local added = set:toggle(dep)
         local removed = set:toggle({ id = "data-jpa" })
 
         -- Assert
@@ -166,13 +167,13 @@ describe("HashSet (tables with key_fn)", function()
 
     it("has_key / get access by precomputed key", function()
         -- Arrange
-        local s   = HashSet.new({ key_fn = by_id_lower })
+        local set = HashSet.new({ key_fn = by_id_lower })
         local dep = { id = "Actuator" }
         set:add(dep)
 
         -- Act
         local present = set:has_key("actuator")
-        local stored  = set:get("actuator")
+        local stored = set:get("actuator")
 
         -- Assert
         assert.is_true(present)
@@ -184,13 +185,18 @@ describe("HashSet (tables with key_fn)", function()
         local set = HashSet.new({ key_fn = by_id_lower })
         local a = { id = "a" }
         local b = { id = "b" }
-        set:add(a); set:add(b)
+        set:add(a)
+        set:add(b)
 
         -- Act
         local found_a, found_b = false, false
         for v in set:iter() do
-            if v == a then found_a = true end
-            if v == b then found_b = true end
+            if v == a then
+                found_a = true
+            end
+            if v == b then
+                found_b = true
+            end
         end
 
         -- Assert
@@ -198,4 +204,3 @@ describe("HashSet (tables with key_fn)", function()
         assert.is_true(found_b)
     end)
 end)
-
