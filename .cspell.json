@@ -21,6 +21,8 @@
     "initializr",
     "nvim",
     "luacheck",
+    "luarocks",
+    "luajit",
     "Neovim",
     "Josip",
     "Keresman"
