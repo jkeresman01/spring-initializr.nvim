@@ -21,3 +21,6 @@ jobs:
 
       - name: Lint
         run: luacheck lua/ --globals vim
+
+      - name: Check naming/layout
+        run: bash scripts/check-naming.sh
