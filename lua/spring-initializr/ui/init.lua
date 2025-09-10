@@ -21,12 +21,15 @@
 ----------------------------------------------------------------------------
 local layout_builder = require("spring-initializr.ui.layout")
 local focus = require("spring-initializr.ui.focus")
-local highlights = require("spring-initializr.utils.highlights")
+local highlights = require("spring-initializr.style.highlights")
 local metadata = require("spring-initializr.metadata.metadata")
 local deps = require("spring-initializr.ui.deps")
-local win = require("spring-initializr.utils.window")
-local msg = require("spring-initializr.utils.message")
+local window_utils = require("spring-initializr.utils.window_utils")
+local message_utils = require("spring-initializr.utils.message_utils")
 
+----------------------------------------------------------------------------
+-- Module table
+----------------------------------------------------------------------------
 local M = {
     state = {
         layout = nil,
@@ -53,7 +56,7 @@ end
 --
 ----------------------------------------------------------------------------
 local function handle_metadata_error(err)
-    msg.error("Failed to load metadata: " .. (err or "unknown error"))
+    message_utils.error("Failed to load metadata: " .. (err or "unknown error"))
 end
 
 ----------------------------------------------------------------------------
@@ -139,10 +142,13 @@ function M.close()
         M.state.layout = nil
     end
 
-    win.safe_close(M.state.outer_popup and M.state.outer_popup.winid)
+    window_utils.safe_close(M.state.outer_popup and M.state.outer_popup.winid)
     M.state.outer_popup = nil
 
     focus.reset()
 end
 
+----------------------------------------------------------------------------
+-- Exports
+----------------------------------------------------------------------------
 return M

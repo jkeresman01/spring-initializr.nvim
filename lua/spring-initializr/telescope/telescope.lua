@@ -27,8 +27,11 @@ local actions = require("telescope.actions")
 local action_state = require("telescope.actions.state")
 
 local metadata_loader = require("spring-initializr.metadata.metadata")
-local message_utils = require("spring-initializr.utils.message")
+local message_utils = require("spring-initializr.utils.message_utils")
 
+----------------------------------------------------------------------------
+-- Module table
+----------------------------------------------------------------------------
 local M = {
     selected_dependencies = {},
 }
@@ -198,4 +201,7 @@ function M.pick_dependencies(opts, on_done)
     end)
 end
 
+----------------------------------------------------------------------------
+-- Exports
+----------------------------------------------------------------------------
 return M

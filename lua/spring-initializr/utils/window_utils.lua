@@ -8,7 +8,7 @@
 -- ╚═╝  ╚═══╝╚══════╝ ╚═════╝   ╚═══╝  ╚═╝╚═╝     ╚═╝
 --
 --
--- Provides simple HTTP-related utilities for downloading files.
+-- Provides utility functions for working with Neovim windows.
 --
 --
 -- License: GPL-3.0
@@ -17,47 +17,38 @@
 ----------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------
--- Dependencies
+-- Module table
 ----------------------------------------------------------------------------
-local Job = require("plenary.job")
-
 local M = {}
 
 ----------------------------------------------------------------------------
 --
--- Internal callback handler for curl job exit.
+-- Returns the window ID from a component.
+-- Accepts either a direct window ID or a component with a `popup.winid`.
 --
--- @param  return_val  number     Exit code from curl
--- @param  on_success  function   Callback on success
--- @param  on_error    function   Callback on error
+-- @param  comp        table       Component object with `winid` or `popup.winid`
+-- @return number|nil              Window ID, or nil if not found
 --
 ----------------------------------------------------------------------------
-local function handle_download_exit(return_val, on_success, on_error)
-    if return_val ~= 0 then
-        vim.schedule(on_error)
-    else
-        vim.schedule(on_success)
+function M.get_winid(comp)
+    return comp.winid or (comp.popup and comp.popup.winid)
+end
+
+----------------------------------------------------------------------------
+--
+-- Safely closes a Neovim window if it is valid.
+-- Uses `pcall` to protect against errors from already closed/invalid windows.
+--
+-- @param  winid       number      Window ID to close
+--
+----------------------------------------------------------------------------
+function M.safe_close(winid)
+    if winid and vim.api.nvim_win_is_valid(winid) then
+        pcall(vim.api.nvim_win_close, winid, true)
     end
 end
 
 ----------------------------------------------------------------------------
---
--- Downloads a file from a URL to a given output path using `curl`.
---
--- @param  url          string     URL to download
--- @param  output_path  string     Destination file path
--- @param  on_success   function   Callback on success
--- @param  on_error     function   Callback on error
---
+-- Exports
 ----------------------------------------------------------------------------
-function M.download_file(url, output_path, on_success, on_error)
-    Job:new({
-        command = "curl",
-        args = { "-L", url, "-o", output_path },
-        on_exit = function(_, return_val)
-            handle_download_exit(return_val, on_success, on_error)
-        end,
-    }):start()
-end
-
 return M
