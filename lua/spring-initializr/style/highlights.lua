@@ -23,52 +23,49 @@
 
 ----------------------------------------------------------------------------
 --
--- Provides simple HTTP-related utilities for downloading files.
+-- Defines and applies highlight groups for the Spring Initializr UI.
 --
 ----------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------
--- Dependencies
+-- Module table
 ----------------------------------------------------------------------------
-local Job = require("plenary.job")
-
 local M = {}
 
-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------
 --
--- Internal callback handler for curl job exit.
+-- Sets highlight groups used by the plugin.
 --
--- @param  return_val  number     Exit code from curl
--- @param  on_success  function   Callback on success
--- @param  on_error    function   Callback on error
+-----------------------------------------------------------------------------
+local function set_highlight_groups()
+    vim.api.nvim_set_hl(0, "NormalFloat", { bg = "none" })
+    vim.api.nvim_set_hl(0, "FloatBorder", { bg = "none", fg = "#777777" })
+    vim.api.nvim_set_hl(0, "NuiMenuSel", { bg = "#44475a", fg = "#ffffff", bold = true })
+end
+
+-----------------------------------------------------------------------------
 --
-----------------------------------------------------------------------------
-local function handle_download_exit(return_val, on_success, on_error)
-    if return_val ~= 0 then
-        vim.schedule(on_error)
-    else
-        vim.schedule(on_success)
-    end
+-- Registers a ColorScheme autocmd to reapply highlights.
+--
+-----------------------------------------------------------------------------
+local function register_colorscheme_autocmd()
+    vim.api.nvim_create_autocmd("ColorScheme", {
+        pattern = "*",
+        callback = M.configure,
+    })
+end
+
+-----------------------------------------------------------------------------
+--
+-- Public method to configure all highlights and hooks.
+--
+-----------------------------------------------------------------------------
+function M.configure()
+    set_highlight_groups()
+    register_colorscheme_autocmd()
 end
 
 ----------------------------------------------------------------------------
---
--- Downloads a file from a URL to a given output path using `curl`.
---
--- @param  url          string     URL to download
--- @param  output_path  string     Destination file path
--- @param  on_success   function   Callback on success
--- @param  on_error     function   Callback on error
---
+-- Exports
 ----------------------------------------------------------------------------
-function M.download_file(url, output_path, on_success, on_error)
-    Job:new({
-        command = "curl",
-        args = { "-L", url, "-o", output_path },
-        on_exit = function(_, return_val)
-            handle_download_exit(return_val, on_success, on_error)
-        end,
-    }):start()
-end
-
 return M

@@ -23,56 +23,55 @@
 
 ----------------------------------------------------------------------------
 --
--- Provides standardized message logging using vim.notify.
+-- Provides simple HTTP-related utilities for downloading files.
 --
 ----------------------------------------------------------------------------
 
+----------------------------------------------------------------------------
+-- Dependencies
+----------------------------------------------------------------------------
+local Job = require("plenary.job")
+
+----------------------------------------------------------------------------
+-- Module table
+----------------------------------------------------------------------------
 local M = {}
 
-local notify = vim.notify
-
 ----------------------------------------------------------------------------
 --
--- Logs an info-level message.
+-- Internal callback handler for curl job exit.
 --
--- @param  msg  string  Message to display
+-- @param  return_val  number     Exit code from curl
+-- @param  on_success  function   Callback on success
+-- @param  on_error    function   Callback on error
 --
 ----------------------------------------------------------------------------
-function M.info(msg)
-    notify(msg, vim.log.levels.INFO)
+local function handle_download_exit(return_val, on_success, on_error)
+    if return_val ~= 0 then
+        vim.schedule(on_error)
+    else
+        vim.schedule(on_success)
+    end
 end
 
 ----------------------------------------------------------------------------
 --
--- Logs a warning-level message.
+-- Downloads a file from a URL to a given output path using `curl`.
 --
--- @param  msg  string  Message to display
---
-----------------------------------------------------------------------------
-function M.warn(msg)
-    notify(msg, vim.log.levels.WARN)
-end
-
-----------------------------------------------------------------------------
---
--- Logs an error-level message.
---
--- @param  msg  string  Message to display
+-- @param  url          string     URL to download
+-- @param  output_path  string     Destination file path
+-- @param  on_success   function   Callback on success
+-- @param  on_error     function   Callback on error
 --
 ----------------------------------------------------------------------------
-function M.error(msg)
-    notify(msg, vim.log.levels.ERROR)
-end
-
-----------------------------------------------------------------------------
---
--- Logs a debug-level message.
---
--- @param  msg  string  Message to display
---
-----------------------------------------------------------------------------
-function M.debug(msg)
-    notify(msg, vim.log.levels.DEBUG)
+function M.download_file(url, output_path, on_success, on_error)
+    Job:new({
+        command = "curl",
+        args = { "-L", url, "-o", output_path },
+        on_exit = function(_, return_val)
+            handle_download_exit(return_val, on_success, on_error)
+        end,
+    }):start()
 end
 
 return M

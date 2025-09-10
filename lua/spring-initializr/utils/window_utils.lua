@@ -23,43 +23,43 @@
 
 ----------------------------------------------------------------------------
 --
--- Defines and applies highlight groups for the Spring Initializr UI.
+-- Provides utility functions for working with Neovim windows.
 --
 ----------------------------------------------------------------------------
 
+----------------------------------------------------------------------------
+-- Module table
+----------------------------------------------------------------------------
 local M = {}
 
------------------------------------------------------------------------------
+----------------------------------------------------------------------------
 --
--- Sets highlight groups used by the plugin.
+-- Returns the window ID from a component.
+-- Accepts either a direct window ID or a component with a `popup.winid`.
 --
------------------------------------------------------------------------------
-local function set_highlight_groups()
-    vim.api.nvim_set_hl(0, "NormalFloat", { bg = "none" })
-    vim.api.nvim_set_hl(0, "FloatBorder", { bg = "none", fg = "#777777" })
-    vim.api.nvim_set_hl(0, "NuiMenuSel", { bg = "#44475a", fg = "#ffffff", bold = true })
+-- @param  comp        table       Component object with `winid` or `popup.winid`
+-- @return number|nil              Window ID, or nil if not found
+--
+----------------------------------------------------------------------------
+function M.get_winid(comp)
+    return comp.winid or (comp.popup and comp.popup.winid)
 end
 
------------------------------------------------------------------------------
+----------------------------------------------------------------------------
 --
--- Registers a ColorScheme autocmd to reapply highlights.
+-- Safely closes a Neovim window if it is valid.
+-- Uses `pcall` to protect against errors from already closed/invalid windows.
 --
------------------------------------------------------------------------------
-local function register_colorscheme_autocmd()
-    vim.api.nvim_create_autocmd("ColorScheme", {
-        pattern = "*",
-        callback = M.configure,
-    })
+-- @param  winid       number      Window ID to close
+--
+----------------------------------------------------------------------------
+function M.safe_close(winid)
+    if winid and vim.api.nvim_win_is_valid(winid) then
+        pcall(vim.api.nvim_win_close, winid, true)
+    end
 end
 
------------------------------------------------------------------------------
---
--- Public method to configure all highlights and hooks.
---
------------------------------------------------------------------------------
-function M.configure()
-    set_highlight_groups()
-    register_colorscheme_autocmd()
-end
-
+----------------------------------------------------------------------------
+-- Exports
+----------------------------------------------------------------------------
 return M

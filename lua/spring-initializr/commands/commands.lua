@@ -34,6 +34,9 @@
 local ui = require("spring-initializr.ui.init")
 local core = require("spring-initializr.core.core")
 
+----------------------------------------------------------------------------
+-- Module table
+----------------------------------------------------------------------------
 local M = {}
 
 -----------------------------------------------------------------------------
@@ -43,7 +46,7 @@ local M = {}
 --
 -- Commands:
 --   :SpringInitializr       Opens the Spring Initializr UI
---   :SpringGenerateProject  Generates a Spring Boot project into the CWD
+--   :SpringGenerateProject  Generates a Spring Boot project
 --
 -----------------------------------------------------------------------------
 function M.register()
@@ -56,4 +59,7 @@ function M.register()
     end, { desc = "Generate Spring Boot project to CWD" })
 end
 
+----------------------------------------------------------------------------
+-- Exports
+----------------------------------------------------------------------------
 return M

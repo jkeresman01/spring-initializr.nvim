@@ -23,9 +23,14 @@
 
 ----------------------------------------------------------------------------
 --
--- Provides utility functions for working with Neovim windows.
+-- Provides file-related utilities for the Spring Initializr plugin.
 --
 ----------------------------------------------------------------------------
+
+----------------------------------------------------------------------------
+-- Dependencies
+----------------------------------------------------------------------------
+local Job = require("plenary.job")
 
 ----------------------------------------------------------------------------
 -- Module table
@@ -34,29 +39,51 @@ local M = {}
 
 ----------------------------------------------------------------------------
 --
--- Returns the window ID from a component.
--- Accepts either a direct window ID or a component with a `popup.winid`.
+-- Removes a file and calls a continuation on the main thread.
 --
--- @param  comp        table       Component object with `winid` or `popup.winid`
--- @return number|nil              Window ID, or nil if not found
+-- @param  path      string    Path to the file to remove
+-- @param  callback  function  Callback to execute after removal
 --
 ----------------------------------------------------------------------------
-function M.get_winid(comp)
-    return comp.winid or (comp.popup and comp.popup.winid)
+local function remove_file_and_continue(path, callback)
+    os.remove(path)
+    vim.schedule(callback)
 end
 
 ----------------------------------------------------------------------------
 --
--- Safely closes a Neovim window if it is valid.
--- Uses `pcall` to protect against errors from already closed/invalid windows.
+-- Callback function passed to plenary job to handle unzip result.
 --
--- @param  winid       number      Window ID to close
+-- @param  zip_path   string    Path to the zip file
+-- @param  on_done    function  Callback to execute after unzip completes
+--
+-- @return function             Wrapped callback for Job:on_exit
 --
 ----------------------------------------------------------------------------
-function M.safe_close(winid)
-    if winid and vim.api.nvim_win_is_valid(winid) then
-        pcall(vim.api.nvim_win_close, winid, true)
+local function on_unzip_complete(zip_path, on_done)
+    return function()
+        remove_file_and_continue(zip_path, on_done)
     end
 end
 
+----------------------------------------------------------------------------
+--
+-- Unzips a file to a target directory and removes the zip after.
+--
+-- @param  zip_path     string    Path to the zip file
+-- @param  destination  string    Target directory
+-- @param  on_done      function  Callback to execute when done
+--
+----------------------------------------------------------------------------
+function M.unzip(zip_path, destination, on_done)
+    Job:new({
+        command = "unzip",
+        args = { "-o", zip_path, "-d", destination },
+        on_exit = on_unzip_complete(zip_path, on_done),
+    }):start()
+end
+
+----------------------------------------------------------------------------
+-- Exports
+----------------------------------------------------------------------------
 return M

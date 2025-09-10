@@ -34,7 +34,7 @@ local Input = require("nui.input")
 local Layout = require("nui.layout")
 
 local focus = require("spring-initializr.ui.focus")
-local msg = require("spring-initializr.utils.message")
+local message_utils = require("spring-initializr.utils.message_utils")
 
 ----------------------------------------------------------------------------
 -- Module table
@@ -81,7 +81,7 @@ local function build_input_handlers(key, title, selections)
         end,
         on_submit = function(val)
             selections[key] = val
-            msg.info(title .. ": " .. val)
+            message_utils.info(title .. ": " .. val)
         end,
     }
 end
@@ -128,4 +128,7 @@ function M.create_input(title, key, default, selections)
     return Layout.Box(input, { size = 3 })
 end
 
+----------------------------------------------------------------------------
+-- Exports
+----------------------------------------------------------------------------
 return M

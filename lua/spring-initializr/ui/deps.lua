@@ -29,9 +29,13 @@
 
 local Popup = require("nui.popup")
 local Layout = require("nui.layout")
-local focus = require("spring-initializr.ui.focus")
-local telescope_dep = require("spring-initializr.telescope.telescope")
 
+local telescope_dep = require("spring-initializr.telescope.telescope")
+local focus = require("spring-initializr.ui.focus")
+
+----------------------------------------------------------------------------
+-- Module table
+----------------------------------------------------------------------------
 local M = {
     state = {
         dependencies_panel = nil,
@@ -170,4 +174,7 @@ function M.update_display()
     vim.api.nvim_buf_set_lines(panel.bufnr, 0, -1, false, render_dependency_list())
 end
 
+----------------------------------------------------------------------------
+-- Exports
+----------------------------------------------------------------------------
 return M
