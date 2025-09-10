@@ -8,15 +8,29 @@
 -- ╚═╝  ╚═══╝╚══════╝ ╚═════╝   ╚═══╝  ╚═╝╚═╝     ╚═╝
 --
 --
--- Registers custom Neovim commands for Spring Initializr UI and project
--- generation.
+-- spring-initializr.nvim
 --
 --
--- License: GPL-3.0
--- Author: Josip Keresman
+-- Copyright (C) 2025 Josip Keresman
+--
+--
+-- This program is free software: you can redistribute it and/or modify
+-- it under the terms of the GNU General Public License as published by
+-- the Free Software Foundation, either version 3 of the License, or
+-- (at your option) any later version.
 --
 ----------------------------------------------------------------------------
 
+----------------------------------------------------------------------------
+--
+-- Registers custom Neovim commands for Spring Initializr UI and project
+-- generation.
+--
+----------------------------------------------------------------------------
+
+----------------------------------------------------------------------------
+-- Dependecies
+----------------------------------------------------------------------------
 local ui = require("spring-initializr.ui.init")
 local core = require("spring-initializr.core.core")
 
