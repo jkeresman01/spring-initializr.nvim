@@ -155,13 +155,16 @@ Contributions are very welcome. You can help by:
 If you are unsure where to start, open an issue to discuss an idea before coding.
 
 
-## Buy me a coffee ##
+
+
+## License
+
+This project is licensed under the terms of the [GNU General Public License v3.0](./LICENSE).
+
+
+
 <div align="center">
   
   [![Buy Me a Coffee](https://img.shields.io/badge/-Buy%20Me%20a%20Coffee-yellow?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black)](https://www.buymeacoffee.com/jkeresman)
   
 </div>
-
-## License
-
-This project is licensed under the terms of the [GNU General Public License v3.0](./LICENSE).
