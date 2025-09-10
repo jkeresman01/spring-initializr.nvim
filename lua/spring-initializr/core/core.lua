@@ -33,8 +33,8 @@
 ----------------------------------------------------------------------------
 local ui = require("spring-initializr.ui.init")
 local deps = require("spring-initializr.telescope.telescope")
-local message_utils = require("lua.spring-initializr.utils.message_utils")
-local url_utils = require("lua.spring-initializr.utils.url_utils")
+local message_utils = require("spring-initializr.utils.message_utils")
+local url_utils = require("spring-initializr.utils.url_utils")
 local http_utils = require("spring-initializr.utils.http_utils")
 local file_utils = require("spring-initializr.utils.file_utils")
 
