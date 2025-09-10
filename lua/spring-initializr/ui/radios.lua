@@ -24,7 +24,7 @@ local Popup = require("nui.popup")
 local Layout = require("nui.layout")
 
 local focus = require("spring-initializr.ui.focus")
-local message_utils = require("spring-initializr.utils.message")
+local message_utils = require("spring-initializr.utils.message_utils")
 
 ----------------------------------------------------------------------------
 -- Module table
