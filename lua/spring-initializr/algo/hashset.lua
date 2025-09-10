@@ -8,12 +8,23 @@
 -- ╚═╝  ╚═══╝╚══════╝ ╚═════╝   ╚═══╝  ╚═╝╚═╝     ╚═╝
 --
 --
+-- spring-initializr.nvim
+--
+--
+-- Copyright (C) 2025 Josip Keresman
+--
+--
+-- This program is free software: you can redistribute it and/or modify
+-- it under the terms of the GNU General Public License as published by
+-- the Free Software Foundation, either version 3 of the License, or
+-- (at your option) any later version.
+--
+----------------------------------------------------------------------------
+
+----------------------------------------------------------------------------
+--
 -- Hash set implementation with pluggable key function.
 -- Stores unique values by computed key; O(1) add/remove/lookup (amortized).
---
---
--- License: GPL-3.0
--- Author: Josip Keresman
 --
 ----------------------------------------------------------------------------
 
