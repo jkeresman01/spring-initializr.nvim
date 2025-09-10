@@ -8,7 +8,7 @@
 -- ╚═╝  ╚═══╝╚══════╝ ╚═════╝   ╚═══╝  ╚═╝╚═╝     ╚═╝
 --
 --
--- Provides file-related utilities for the Spring Initializr plugin.
+-- Provides simple HTTP-related utilities for downloading files.
 --
 --
 -- License: GPL-3.0
@@ -28,47 +28,38 @@ local M = {}
 
 ----------------------------------------------------------------------------
 --
--- Removes a file and calls a continuation on the main thread.
+-- Internal callback handler for curl job exit.
 --
--- @param  path      string    Path to the file to remove
--- @param  callback  function  Callback to execute after removal
---
-----------------------------------------------------------------------------
-local function remove_file_and_continue(path, callback)
-    os.remove(path)
-    vim.schedule(callback)
-end
-
-----------------------------------------------------------------------------
---
--- Callback function passed to plenary job to handle unzip result.
---
--- @param  zip_path   string    Path to the zip file
--- @param  on_done    function  Callback to execute after unzip completes
---
--- @return function             Wrapped callback for Job:on_exit
+-- @param  return_val  number     Exit code from curl
+-- @param  on_success  function   Callback on success
+-- @param  on_error    function   Callback on error
 --
 ----------------------------------------------------------------------------
-local function on_unzip_complete(zip_path, on_done)
-    return function()
-        remove_file_and_continue(zip_path, on_done)
+local function handle_download_exit(return_val, on_success, on_error)
+    if return_val ~= 0 then
+        vim.schedule(on_error)
+    else
+        vim.schedule(on_success)
     end
 end
 
 ----------------------------------------------------------------------------
 --
--- Unzips a file to a target directory and removes the zip after.
+-- Downloads a file from a URL to a given output path using `curl`.
 --
--- @param  zip_path     string    Path to the zip file
--- @param  destination  string    Target directory
--- @param  on_done      function  Callback to execute when done
+-- @param  url          string     URL to download
+-- @param  output_path  string     Destination file path
+-- @param  on_success   function   Callback on success
+-- @param  on_error     function   Callback on error
 --
 ----------------------------------------------------------------------------
-function M.unzip(zip_path, destination, on_done)
+function M.download_file(url, output_path, on_success, on_error)
     Job:new({
-        command = "unzip",
-        args = { "-o", zip_path, "-d", destination },
-        on_exit = on_unzip_complete(zip_path, on_done),
+        command = "curl",
+        args = { "-L", url, "-o", output_path },
+        on_exit = function(_, return_val)
+            handle_download_exit(return_val, on_success, on_error)
+        end,
     }):start()
 end
 

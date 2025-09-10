@@ -8,7 +8,7 @@
 -- ╚═╝  ╚═══╝╚══════╝ ╚═════╝   ╚═══╝  ╚═╝╚═╝     ╚═╝
 --
 --
--- Provides standardized message logging using vim.notify.
+-- Provides file-related utilities for the Spring Initializr plugin.
 --
 --
 -- License: GPL-3.0
@@ -16,52 +16,63 @@
 --
 ----------------------------------------------------------------------------
 
+----------------------------------------------------------------------------
+-- Dependencies
+----------------------------------------------------------------------------
+local Job = require("plenary.job")
+
+----------------------------------------------------------------------------
+-- Module table
+----------------------------------------------------------------------------
 local M = {}
 
-local notify = vim.notify
-
 ----------------------------------------------------------------------------
 --
--- Logs an info-level message.
+-- Removes a file and calls a continuation on the main thread.
 --
--- @param  msg  string  Message to display
+-- @param  path      string    Path to the file to remove
+-- @param  callback  function  Callback to execute after removal
 --
 ----------------------------------------------------------------------------
-function M.info(msg)
-    notify(msg, vim.log.levels.INFO)
+local function remove_file_and_continue(path, callback)
+    os.remove(path)
+    vim.schedule(callback)
 end
 
 ----------------------------------------------------------------------------
 --
--- Logs a warning-level message.
+-- Callback function passed to plenary job to handle unzip result.
 --
--- @param  msg  string  Message to display
+-- @param  zip_path   string    Path to the zip file
+-- @param  on_done    function  Callback to execute after unzip completes
+--
+-- @return function             Wrapped callback for Job:on_exit
 --
 ----------------------------------------------------------------------------
-function M.warn(msg)
-    notify(msg, vim.log.levels.WARN)
+local function on_unzip_complete(zip_path, on_done)
+    return function()
+        remove_file_and_continue(zip_path, on_done)
+    end
 end
 
 ----------------------------------------------------------------------------
 --
--- Logs an error-level message.
+-- Unzips a file to a target directory and removes the zip after.
 --
--- @param  msg  string  Message to display
+-- @param  zip_path     string    Path to the zip file
+-- @param  destination  string    Target directory
+-- @param  on_done      function  Callback to execute when done
 --
 ----------------------------------------------------------------------------
-function M.error(msg)
-    notify(msg, vim.log.levels.ERROR)
+function M.unzip(zip_path, destination, on_done)
+    Job:new({
+        command = "unzip",
+        args = { "-o", zip_path, "-d", destination },
+        on_exit = on_unzip_complete(zip_path, on_done),
+    }):start()
 end
 
 ----------------------------------------------------------------------------
---
--- Logs a debug-level message.
---
--- @param  msg  string  Message to display
---
+-- Exports
 ----------------------------------------------------------------------------
-function M.debug(msg)
-    notify(msg, vim.log.levels.DEBUG)
-end
-
 return M

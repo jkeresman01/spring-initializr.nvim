@@ -26,6 +26,9 @@ local Layout = require("nui.layout")
 local focus = require("spring-initializr.ui.focus")
 local message_utils = require("spring-initializr.utils.message")
 
+----------------------------------------------------------------------------
+-- Module table
+----------------------------------------------------------------------------
 local M = {}
 
 ----------------------------------------------------------------------------
@@ -257,4 +260,7 @@ function M.create_radio(title, values, key, selections)
     return Layout.Box(popup, { size = #items + 2 })
 end
 
+----------------------------------------------------------------------------
+-- Exports
+----------------------------------------------------------------------------
 return M
