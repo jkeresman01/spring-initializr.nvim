@@ -26,36 +26,22 @@
 ```bash
 spring-initializr.nvim/
 ├── LICENSE
-├── README.md
-├── lua
-│   └── spring-initializr
-│       ├── commands
-│       │   └── commands.lua           # Neovim user commands
-│       ├── core
-│       │   └── core.lua               # Project generation logic
-│       ├── init.lua                   # Plugin entry point
-│       ├── metadata
-│       │   └── metadata.lua           # Metadata fetching and state
-│       ├── telescope
-│       │   └── telescope.lua          # Telescope-based dependency picker
-│       ├── ui
-│       │   ├── deps.lua               # Dependencies panel and buttons
-│       │   ├── focus.lua              # Focus management across windows
-│       │   ├── init.lua               # UI mount/unmount setup
-│       │   ├── inputs.lua             # Input fields (groupId, artifactId, etc.)
-│       │   ├── layout.lua             # Full UI layout builder
-│       │   └── radios.lua             # Radio-style selectors
-│       └── utils
-│           ├── file.lua               # File utilities
-│           ├── highlights.lua         # Highlight group setup
-│           ├── http.lua               # Project downloader
-│           ├── message.lua            # Logging helpers
-│           ├── url.lua                # URL query encoding
-│           └── window.lua             # Popup window helpers
+├── lua/
+│   └── spring-initializr/
+│       ├── algo/
+│       ├── commands/
+│       ├── core/
+│       ├── metadata/
+│       ├── styles/
+│       ├── telescope/
+│       ├── ui/
+│       ├── utils/
+│       └── init.lua
+├── scripts/
+└── tests/
 ```
 
-
-## Installation :star: <a name="installation"></a>
+## :star: <a name="installation"></a> Installation 
 
 > Requires **Neovim 0.9+**  
 > Dependencies:
