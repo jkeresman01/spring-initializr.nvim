@@ -128,10 +128,35 @@ end
 
 ----------------------------------------------------------------------------
 --
+-- Handle success case: update state and notify callbacks.
+--
+-- @param data  table  Decoded metadata
+--
+----------------------------------------------------------------------------
+local function handle_success(data)
+    update_state_success(data)
+    call_callbacks(data, nil)
+end
+
+----------------------------------------------------------------------------
+--
+-- Handle failure case: record error and notify callbacks.
+--
+-- @param stderr_lines  table       Lines from stderr
+-- @param decode_err    string|nil  JSON decode error (if any)
+--
+----------------------------------------------------------------------------
+local function handle_failure(stderr_lines, decode_err)
+    update_state_error(table.concat(stderr_lines or {}, "\n"), decode_err)
+    call_callbacks(nil, M.state.error)
+end
+
+----------------------------------------------------------------------------
+--
 -- Handles curl job result and updates state, then invokes callbacks.
 --
--- @param result  table   Lines from stdout
--- @param stderr  table   Lines from stderr
+-- @param result  table  Lines from stdout
+-- @param stderr  table  Lines from stderr
 --
 ----------------------------------------------------------------------------
 local function handle_response(result, stderr)
@@ -140,11 +165,9 @@ local function handle_response(result, stderr)
 
     vim.schedule(function()
         if data then
-            update_state_success(data)
-            call_callbacks(data, nil)
+            handle_success(data)
         else
-            update_state_error(table.concat(stderr or {}, "\n"), decode_err)
-            call_callbacks(nil, M.state.error)
+            handle_failure(stderr, decode_err)
         end
     end)
 end

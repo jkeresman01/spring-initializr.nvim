@@ -214,6 +214,46 @@ end
 
 ----------------------------------------------------------------------------
 --
+-- Build border config for a radio popup.
+--
+-- @param  title  string  Title for popup border
+--
+-- @return table          Border configuration
+--
+----------------------------------------------------------------------------
+local function radio_border(title)
+    return {
+        style = "rounded",
+        text = { top = title, top_align = "center" },
+    }
+end
+
+----------------------------------------------------------------------------
+--
+-- Build size for a radio popup.
+--
+-- @param  item_count  number  Used to compute height
+--
+-- @return table               Size configuration
+--
+----------------------------------------------------------------------------
+local function radio_size(item_count)
+    return { width = 30, height = item_count + 2 }
+end
+
+----------------------------------------------------------------------------
+--
+-- Build window options for a radio popup.
+--
+-- @return table  Window options
+--
+----------------------------------------------------------------------------
+local function radio_win_options()
+    return { winhighlight = "Normal:NormalFloat,FloatBorder:FloatBorder" }
+end
+
+----------------------------------------------------------------------------
+--
 -- Create the popup UI element for the radio.
 --
 -- @param  title       string  Title for popup border
@@ -224,16 +264,11 @@ end
 ----------------------------------------------------------------------------
 local function create_radio_popup(title, item_count)
     return Popup({
-        border = {
-            style = "rounded",
-            text = { top = title, top_align = "center" },
-        },
-        size = { width = 30, height = item_count + 2 },
+        border = radio_border(title),
+        size = radio_size(item_count),
         enter = true,
         focusable = true,
-        win_options = {
-            winhighlight = "Normal:NormalFloat,FloatBorder:FloatBorder",
-        },
+        win_options = radio_win_options(),
     })
 end
 

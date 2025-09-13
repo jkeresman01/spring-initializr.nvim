@@ -29,7 +29,6 @@
 
 ----------------------------------------------------------------------------
 -- Dependencies
--- External modules used by this file.
 ----------------------------------------------------------------------------
 local ui = require("spring-initializr.ui.init")
 local deps = require("spring-initializr.telescope.telescope")
@@ -51,8 +50,6 @@ local M = {}
 ----------------------------------------------------------------------------
 --
 -- Collect all user selections into Spring Initializr params.
---
--- @return table  Key-value table of Spring Initializr request parameters.
 --
 ----------------------------------------------------------------------------
 local function collect_params()
@@ -76,9 +73,6 @@ end
 --
 -- Build the Spring Initializr ZIP download URL with query string.
 --
--- @param  params  table   Query parameters
--- @return string  Fully constructed download URL
---
 ----------------------------------------------------------------------------
 local function make_download_url(params)
     return SPRING_DOWNLOAD_URL .. "?" .. url_utils.encode_query(params)
@@ -86,20 +80,56 @@ end
 
 ----------------------------------------------------------------------------
 --
--- Close the UI and notify the user on successful generation.
---
--- @param  cwd  string  Working directory where the project was extracted
+-- Notify success (single responsibility).
 --
 ----------------------------------------------------------------------------
-local function notify_success(cwd)
+local function notify_success()
     ui.close()
+    local cwd = vim.fn.getcwd()
     message_utils.info("Spring Boot project created in " .. cwd)
 end
 
 ----------------------------------------------------------------------------
 --
+-- Extract the downloaded ZIP (single responsibility).
+--
+----------------------------------------------------------------------------
+local function extract_zip_to_dest(zip_path, dest)
+    file_utils.unzip(zip_path, dest, notify_success)
+end
+
+----------------------------------------------------------------------------
+--
+-- Handle download error (single responsibility).
+--
+----------------------------------------------------------------------------
+local function on_download_error()
+    message_utils.error("Download failed")
+end
+
+----------------------------------------------------------------------------
+--
+-- Handle download completion by triggering extraction (single responsibility).
+--
+----------------------------------------------------------------------------
+local function on_download_complete(zip_path, dest)
+    extract_zip_to_dest(zip_path, dest)
+end
+
+----------------------------------------------------------------------------
+--
+-- Start the download (single responsibility).
+--
+----------------------------------------------------------------------------
+local function start_download(url, zip_path, dest)
+    http_utils.download_file(url, zip_path, function()
+        on_download_complete(zip_path, dest)
+    end, on_download_error)
+end
+
+----------------------------------------------------------------------------
+--
 -- Generate a Spring Boot project from current UI selections.
--- Collects user input, downloads the starter archive, unzips it, and notifies.
 --
 ----------------------------------------------------------------------------
 function M.generate_project()
@@ -110,13 +140,7 @@ function M.generate_project()
 
     message_utils.info("Just a second, we are setting things up for you...")
 
-    http_utils.download_file(url, zip_path, function()
-        file_utils.unzip(zip_path, cwd, function()
-            notify_success(cwd)
-        end)
-    end, function()
-        message_utils.error("Download failed")
-    end)
+    start_download(url, zip_path, cwd)
 end
 
 ----------------------------------------------------------------------------

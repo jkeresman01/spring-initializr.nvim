@@ -140,7 +140,9 @@ local function handle_selection(prompt_bufnr, on_done)
     if selected and selected.value then
         record_selection(selected.value)
     end
+
     actions.close(prompt_bufnr)
+
     if on_done then
         on_done()
     end

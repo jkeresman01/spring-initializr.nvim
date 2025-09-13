@@ -32,31 +32,55 @@
 -- Dependencies
 ----------------------------------------------------------------------------
 local ui = require("spring-initializr.ui.init")
-local core = require("spring-initializr.core.core")
+local spring_initializr = require("spring-initializr.core.core")
+
+----------------------------------------------------------------------------
+-- Constants (enum-like command names)
+----------------------------------------------------------------------------
+local CMD = {
+    SPRING_INITIALIZR = "SpringInitializr",
+    SPRING_GENERATE_PROJECT = "SpringGenerateProject",
+}
 
 ----------------------------------------------------------------------------
 -- Module table
 ----------------------------------------------------------------------------
 local M = {}
 
------------------------------------------------------------------------------
+----------------------------------------------------------------------------
 --
--- Registers Neovim user commands for Spring Initializr.
+-- Register :SpringInitializr
 --
+----------------------------------------------------------------------------
+function M.register_cmd_spring_initializr()
+    vim.api.nvim_create_user_command(CMD.SPRING_INITIALIZR, function()
+        ui.setup()
+    end, { desc = "Open Spring Initializr UI" })
+end
+
+----------------------------------------------------------------------------
+--
+-- Register :SpringGenerateProject
+--
+----------------------------------------------------------------------------
+function M.register_cmd_spring_generate_project()
+    vim.api.nvim_create_user_command(CMD.SPRING_GENERATE_PROJECT, function()
+        spring_initializr.generate_project()
+    end, { desc = "Generate Spring Boot project to CWD" })
+end
+
+----------------------------------------------------------------------------
+--
+-- Register Neovim user commands for Spring Initializr.
 --
 -- Commands:
 --   :SpringInitializr       Opens the Spring Initializr UI
 --   :SpringGenerateProject  Generates a Spring Boot project
 --
------------------------------------------------------------------------------
+----------------------------------------------------------------------------
 function M.register()
-    vim.api.nvim_create_user_command("SpringInitializr", function()
-        ui.setup()
-    end, { desc = "Open Spring Initializer UI" })
-
-    vim.api.nvim_create_user_command("SpringGenerateProject", function()
-        core.generate_project()
-    end, { desc = "Generate Spring Boot project to CWD" })
+    M.register_cmd_spring_initializr()
+    M.register_cmd_spring_generate_project()
 end
 
 ----------------------------------------------------------------------------

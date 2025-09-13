@@ -31,7 +31,7 @@
 ----------------------------------------------------------------------------
 -- Dependencies
 ----------------------------------------------------------------------------
-local win = require("spring-initializr.utils.window_utils")
+local window_utils = require("spring-initializr.utils.window_utils")
 
 ----------------------------------------------------------------------------
 -- Module table
@@ -59,7 +59,7 @@ end
 ----------------------------------------------------------------------------
 local function focus_next()
     M.current_focus = (M.current_focus % #M.focusables) + 1
-    vim.api.nvim_set_current_win(win.get_winid(M.focusables[M.current_focus]))
+    vim.api.nvim_set_current_win(window_utils.get_winid(M.focusables[M.current_focus]))
 end
 
 ----------------------------------------------------------------------------
@@ -69,7 +69,7 @@ end
 ----------------------------------------------------------------------------
 local function focus_prev()
     M.current_focus = (M.current_focus - 2 + #M.focusables) % #M.focusables + 1
-    vim.api.nvim_set_current_win(win.get_winid(M.focusables[M.current_focus]))
+    vim.api.nvim_set_current_win(window_utils.get_winid(M.focusables[M.current_focus]))
 end
 
 ----------------------------------------------------------------------------

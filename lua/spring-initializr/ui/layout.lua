@@ -44,6 +44,53 @@ local M = {}
 
 ----------------------------------------------------------------------------
 --
+-- Build border config for the outer popup.
+--
+-- @return table  Border configuration
+--
+----------------------------------------------------------------------------
+local function outer_border()
+    return {
+        style = "rounded",
+        text = { top = "[ Spring Initializr ]", top_align = "center" },
+    }
+end
+
+----------------------------------------------------------------------------
+--
+-- Build position for the outer popup.
+--
+-- @return string  Popup position
+--
+----------------------------------------------------------------------------
+local function outer_position()
+    return "50%"
+end
+
+----------------------------------------------------------------------------
+--
+-- Build size for the outer popup.
+--
+-- @return table  Popup size configuration
+--
+----------------------------------------------------------------------------
+local function outer_size()
+    return { width = "70%", height = "75%" }
+end
+
+----------------------------------------------------------------------------
+--
+-- Build window options for the outer popup.
+--
+-- @return table  Window options
+--
+----------------------------------------------------------------------------
+local function outer_win_options()
+    return { winhighlight = "Normal:NormalFloat,FloatBorder:FloatBorder" }
+end
+
+----------------------------------------------------------------------------
+--
 -- Create the outer wrapper popup window.
 --
 -- @return Popup  Main floating container
@@ -51,13 +98,10 @@ local M = {}
 ----------------------------------------------------------------------------
 local function create_outer_popup()
     return Popup({
-        border = {
-            style = "rounded",
-            text = { top = "[ Spring Initializr ]", top_align = "center" },
-        },
-        position = "50%",
-        size = { width = "70%", height = "75%" },
-        win_options = { winhighlight = "Normal:NormalFloat,FloatBorder:FloatBorder" },
+        border = outer_border(),
+        position = outer_position(),
+        size = outer_size(),
+        win_options = outer_win_options(),
     })
 end
 
