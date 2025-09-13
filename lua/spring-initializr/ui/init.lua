@@ -32,7 +32,7 @@
 ----------------------------------------------------------------------------
 local layout_builder = require("spring-initializr.ui.layout")
 local focus = require("spring-initializr.ui.focus")
-local highlights = require("spring-initializr.style.highlights")
+local highlights = require("spring-initializr.styles.highlights")
 local metadata = require("spring-initializr.metadata.metadata")
 local deps = require("spring-initializr.ui.deps")
 local window_utils = require("spring-initializr.utils.window_utils")

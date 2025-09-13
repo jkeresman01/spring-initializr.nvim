@@ -37,13 +37,53 @@ local focus = require("spring-initializr.ui.focus")
 local message_utils = require("spring-initializr.utils.message_utils")
 
 ----------------------------------------------------------------------------
+-- Constants
+----------------------------------------------------------------------------
+local INPUT_WIDTH = 40
+
+----------------------------------------------------------------------------
 -- Module table
 ----------------------------------------------------------------------------
 local M = {}
 
 ----------------------------------------------------------------------------
 --
--- Constructs popup border and size settings for an input field.
+-- Build the border config for an input popup.
+--
+-- @param  title  string  Field title
+--
+-- @return table          Border configuration
+--
+----------------------------------------------------------------------------
+local function input_border(title)
+    return { style = "rounded", text = { top = title, top_align = "left" } }
+end
+
+----------------------------------------------------------------------------
+--
+-- Build the size config for an input popup.
+--
+-- @return table  Size configuration
+--
+----------------------------------------------------------------------------
+local function input_size()
+    return { width = INPUT_WIDTH }
+end
+
+----------------------------------------------------------------------------
+--
+-- Build window options for an input popup.
+--
+-- @return table  Window options
+--
+----------------------------------------------------------------------------
+local function input_win_options()
+    return { winhighlight = "Normal:NormalFloat,FloatBorder:FloatBorder" }
+end
+
+----------------------------------------------------------------------------
+--
+-- Constructs popup options table for an input field.
 --
 -- @param  title  string  Field title
 --
@@ -52,14 +92,9 @@ local M = {}
 ----------------------------------------------------------------------------
 local function build_input_popup_opts(title)
     return {
-        border = {
-            style = "rounded",
-            text = { top = title, top_align = "left" },
-        },
-        size = { width = 40 },
-        win_options = {
-            winhighlight = "Normal:NormalFloat,FloatBorder:FloatBorder",
-        },
+        border = input_border(title),
+        size = input_size(),
+        win_options = input_win_options(),
     }
 end
 

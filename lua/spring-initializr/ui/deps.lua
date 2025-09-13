@@ -27,151 +27,193 @@
 --
 ----------------------------------------------------------------------------
 
+----------------------------------------------------------------------------
+-- Dependencies
+----------------------------------------------------------------------------
 local Popup = require("nui.popup")
 local Layout = require("nui.layout")
 
-local telescope_dep = require("spring-initializr.telescope.telescope")
 local focus = require("spring-initializr.ui.focus")
+local picker = require("spring-initializr.telescope.telescope")
 
 ----------------------------------------------------------------------------
--- Module table
+-- Module
 ----------------------------------------------------------------------------
 local M = {
-    state = {
-        dependencies_panel = nil,
-    },
+    state = { dependencies_panel = nil },
 }
 
------------------------------------------------------------------------------
+----------------------------------------------------------------------------
+-- Constants
+----------------------------------------------------------------------------
+local BUTTON_SIZE = { height = 3, width = 40 }
+local DISPLAY_SIZE = { height = 10, width = 40 }
+local BUTTON_TITLE = "Add Dependencies (Telescope)"
+local DISPLAY_TITLE = "Selected Dependencies"
+local BUTTON_LAYOUT_H = 3
+local PICKER_DELAY_MS = 100
+local UPDATE_DELAY_MS = 200
+local MAX_DEP_LABEL_LEN = 38
+
+----------------------------------------------------------------------------
 --
--- Returns the border config for the "Add Dependencies" button.
+-- Returns the border configuration for the "Add Dependencies" button.
 --
------------------------------------------------------------------------------
+-- @return table  Border configuration table
+--
+----------------------------------------------------------------------------
 local function button_border()
-    return {
-        style = "rounded",
-        text = { top = "Add Dependencies (Telescope)", top_align = "center" },
-    }
+    return { style = "rounded", text = { top = BUTTON_TITLE, top_align = "center" } }
 end
 
------------------------------------------------------------------------------
+----------------------------------------------------------------------------
 --
--- Builds the configuration for the dependencies button popup.
+-- Returns the window options for the "Add Dependencies" button.
 --
------------------------------------------------------------------------------
+-- @return table  Window options
+--
+----------------------------------------------------------------------------
+local function button_win_options()
+    return { winhighlight = "Normal:NormalFloat,FloatBorder:FloatBorder" }
+end
+
+----------------------------------------------------------------------------
+--
+-- Builds the configuration table for the dependencies button popup.
+--
+-- @return table  Popup configuration
+--
+----------------------------------------------------------------------------
 local function button_popup_config()
     return {
         border = button_border(),
-        size = { height = 3, width = 40 },
+        size = BUTTON_SIZE,
         enter = true,
-        win_options = {
-            winhighlight = "Normal:NormalFloat,FloatBorder:FloatBorder",
-        },
+        win_options = button_win_options(),
     }
 end
 
------------------------------------------------------------------------------
+----------------------------------------------------------------------------
 --
--- Binds the Enter key to open the Telescope dependency picker and update
--- display.
+-- Open the Telescope picker and refresh the display after a short delay.
 --
--- @param popup NuiPopup The button popup instance
--- @param on_update function Callback to refresh the dependencies list
+-- @param on_update  function  Callback to refresh the dependencies list
 --
------------------------------------------------------------------------------
+----------------------------------------------------------------------------
+local function open_picker_and_refresh(on_update)
+    vim.defer_fn(function()
+        picker.pick_dependencies()
+        vim.defer_fn(on_update, UPDATE_DELAY_MS)
+    end, PICKER_DELAY_MS)
+end
+
+----------------------------------------------------------------------------
+--
+-- Bind the <CR> key on the button popup to open the picker and refresh.
+--
+-- @param popup      Popup     NUI popup instance for the button
+-- @param on_update  function  Callback to refresh the dependencies list
+--
+----------------------------------------------------------------------------
 local function bind_button_action(popup, on_update)
     popup:map("n", "<CR>", function()
-        vim.defer_fn(function()
-            telescope_dep.pick_dependencies()
-            vim.defer_fn(on_update, 200)
-        end, 100)
+        open_picker_and_refresh(on_update)
     end, { noremap = true, nowait = true })
 end
 
------------------------------------------------------------------------------
+----------------------------------------------------------------------------
 --
--- Creates a popup button that triggers dependency selection.
+-- Create a popup button that triggers dependency selection.
 --
--- @param update_display_fn function Callback to update the dependency display
+-- @param update_display_fn  function  Callback to update the dependency display
 --
--- @return Layout.Box Wrapped button in a layout box
+-- @return Layout.Box  The button wrapped in a Layout.Box
 --
------------------------------------------------------------------------------
+----------------------------------------------------------------------------
 function M.create_button(update_display_fn)
     local popup = Popup(button_popup_config())
     bind_button_action(popup, update_display_fn)
     focus.register(popup)
-    return Layout.Box(popup, { size = 3 })
+    return Layout.Box(popup, { size = BUTTON_LAYOUT_H })
 end
 
------------------------------------------------------------------------------
+----------------------------------------------------------------------------
 --
--- Returns the border config for the dependencies display panel.
+-- Returns the border configuration for the dependencies display panel.
 --
------------------------------------------------------------------------------
+-- @return table  Border configuration table
+--
+----------------------------------------------------------------------------
 local function display_border()
-    return {
-        style = "rounded",
-        text = { top = "Selected Dependencies", top_align = "center" },
-    }
+    return { style = "rounded", text = { top = DISPLAY_TITLE, top_align = "center" } }
 end
 
------------------------------------------------------------------------------
+----------------------------------------------------------------------------
 --
--- Builds the configuration for the dependencies display popup.
+-- Returns the window options for the dependencies display panel.
 --
------------------------------------------------------------------------------
+-- @return table  Window options
+--
+----------------------------------------------------------------------------
+local function display_win_options()
+    return { winhighlight = "Normal:NormalFloat,FloatBorder:FloatBorder", wrap = true }
+end
+
+----------------------------------------------------------------------------
+--
+-- Builds the configuration table for the dependencies display popup.
+--
+-- @return table  Popup configuration
+--
+----------------------------------------------------------------------------
 local function display_popup_config()
     return {
         border = display_border(),
-        size = { width = 40, height = 10 },
+        size = DISPLAY_SIZE,
         buf_options = { modifiable = true, readonly = false },
-        win_options = {
-            winhighlight = "Normal:NormalFloat,FloatBorder:FloatBorder",
-            wrap = true,
-        },
+        win_options = display_win_options(),
     }
 end
 
------------------------------------------------------------------------------
+----------------------------------------------------------------------------
 --
--- Creates a popup to display selected dependencies.
+-- Create a popup to display selected dependencies.
 --
--- @return NuiPopup Popup for showing dependencies
+-- @return Popup  Nui popup used for showing dependencies
 --
------------------------------------------------------------------------------
+----------------------------------------------------------------------------
 function M.create_display()
     local popup = Popup(display_popup_config())
     M.state.dependencies_panel = popup
     return popup
 end
 
------------------------------------------------------------------------------
+----------------------------------------------------------------------------
 --
--- Renders the currently selected dependencies as a list of lines.
+-- Produce the lines to render for the selected dependencies list.
 --
--- @return table List of formatted strings
+-- @return table  List of strings for buffer rendering
 --
------------------------------------------------------------------------------
-local function render_dependency_list()
+----------------------------------------------------------------------------
+local function render_dependency_lines()
     local lines = { "Selected Dependencies:" }
-    for i, dep in ipairs(telescope_dep.selected_dependencies or {}) do
-        table.insert(lines, string.format("%d. %s", i, dep:sub(1, 38)))
+    for i, dep in ipairs(picker.selected_dependencies or {}) do
+        lines[#lines + 1] = string.format("%d. %s", i, dep:sub(1, MAX_DEP_LABEL_LEN))
     end
     return lines
 end
 
------------------------------------------------------------------------------
+----------------------------------------------------------------------------
 --
--- Updates the dependencies display with currently selected dependencies.
+-- Update the dependencies display buffer with current selections.
 --
------------------------------------------------------------------------------
+----------------------------------------------------------------------------
 function M.update_display()
     local panel = M.state.dependencies_panel
     if not panel then
         return
     end
-    vim.api.nvim_buf_set_lines(panel.bufnr, 0, -1, false, render_dependency_list())
+    vim.api.nvim_buf_set_lines(panel.bufnr, 0, -1, false, render_dependency_lines())
 end
 
 ----------------------------------------------------------------------------
