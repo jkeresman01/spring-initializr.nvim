@@ -2,11 +2,9 @@ name: format
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
   pull_request:
-    branches:
-      - main
+    branches: [ main ]
 
 jobs:
   format:
@@ -14,18 +12,40 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Install cargo
-      uses: actions-rs/toolchain@v1
-      with:
-        toolchain: stable
-        profile: minimal
-        override: true
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          override: true
 
-    - name: Install stylua
-      run: cargo install stylua
+      - name: Capture rustc version
+        id: rustc
+        run: echo "version=$(rustc --version | tr ' ' '-')" >> "$GITHUB_OUTPUT"
 
-    - name: Formatting check
-      run: stylua --check lua/ --config-path=.stylua.toml
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target
+          key: ${{ runner.os }}-cargo-${{ steps.rustc.outputs.version }}-stylua-0.20.0
+          restore-keys: |
+            ${{ runner.os }}-cargo-${{ steps.rustc.outputs.version }}-
+            ${{ runner.os }}-cargo-
+
+      - name: Install Stylua (if missing)
+        run: |
+          if ! command -v stylua >/dev/null 2>&1; then
+            cargo install stylua --locked --version 0.20.0
+          fi
+          stylua --version
+
+      - name: Formatting check
+        run: stylua --check lua/ --config-path=.stylua.toml
