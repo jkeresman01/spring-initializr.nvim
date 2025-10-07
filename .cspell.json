@@ -28,6 +28,8 @@
     "luacheck",
     "luarocks",
     "luajit",
+    "rustc",
+    "stylua",
     "Neovim",
     "Josip",
     "Keresman"
