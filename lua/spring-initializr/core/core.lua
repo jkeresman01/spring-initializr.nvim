@@ -86,7 +86,7 @@ end
 local function notify_success()
     ui.close()
     local cwd = vim.fn.getcwd()
-    message_utils.info("Spring Boot project created in " .. cwd)
+    message_utils.show_info_message("Spring Boot project created in " .. cwd)
 end
 
 ----------------------------------------------------------------------------
@@ -104,7 +104,7 @@ end
 --
 ----------------------------------------------------------------------------
 local function on_download_error()
-    message_utils.error("Download failed")
+    message_utils.show_error_message("Download failed")
 end
 
 ----------------------------------------------------------------------------
@@ -137,9 +137,7 @@ function M.generate_project()
     local url = make_download_url(params)
     local cwd = vim.fn.getcwd()
     local zip_path = cwd .. "/spring-init.zip"
-
-    message_utils.info("Just a second, we are setting things up for you...")
-
+    message_utils.show_info_message("Just a second, we are setting things up for you...")
     start_download(url, zip_path, cwd)
 end
 

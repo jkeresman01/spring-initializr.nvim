@@ -67,7 +67,7 @@ end
 --
 ----------------------------------------------------------------------------
 local function handle_metadata_error(err)
-    message_utils.error("Failed to load metadata: " .. (err or "unknown error"))
+    message_utils.show_error_message("Failed to load metadata: " .. (err or "unknown error"))
 end
 
 ----------------------------------------------------------------------------

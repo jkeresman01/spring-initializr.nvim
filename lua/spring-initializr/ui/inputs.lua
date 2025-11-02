@@ -116,7 +116,7 @@ local function build_input_handlers(key, title, selections)
         end,
         on_submit = function(val)
             selections[key] = val
-            message_utils.info(title .. ": " .. val)
+            message_utils.show_info_message(title .. ": " .. val)
         end,
     }
 end
