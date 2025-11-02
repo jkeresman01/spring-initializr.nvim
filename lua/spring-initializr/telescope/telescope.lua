@@ -124,7 +124,7 @@ end
 ----------------------------------------------------------------------------
 local function record_selection(entry)
     table.insert(M.selected_dependencies, entry.id)
-    message_utils.info("Selected Dependency: " .. entry.id)
+    message_utils.show_info_message("Selected Dependency: " .. entry.id)
 end
 
 ----------------------------------------------------------------------------
@@ -205,7 +205,7 @@ function M.pick_dependencies(opts, on_done)
 
     metadata_loader.fetch_metadata(function(data, err)
         if err then
-            message_utils.error("Failed to load Spring metadata: " .. err)
+            message_utils.show_error_message("Failed to load Spring metadata: " .. err)
             return
         end
 

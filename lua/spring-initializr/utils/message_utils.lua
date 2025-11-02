@@ -44,7 +44,7 @@ local notify = vim.notify
 -- @param  msg  string  Message to display
 --
 ----------------------------------------------------------------------------
-function M.info(msg)
+function M.show_info_message(msg)
     notify(msg, vim.log.levels.INFO)
 end
 
@@ -55,7 +55,7 @@ end
 -- @param  msg  string  Message to display
 --
 ----------------------------------------------------------------------------
-function M.warn(msg)
+function M.show_warn_message(msg)
     notify(msg, vim.log.levels.WARN)
 end
 
@@ -66,7 +66,7 @@ end
 -- @param  msg  string  Message to display
 --
 ----------------------------------------------------------------------------
-function M.error(msg)
+function M.show_error_message(msg)
     notify(msg, vim.log.levels.ERROR)
 end
 
@@ -77,7 +77,7 @@ end
 -- @param  msg  string  Message to display
 --
 ----------------------------------------------------------------------------
-function M.debug(msg)
+function M.show_debug_message(msg)
     notify(msg, vim.log.levels.DEBUG)
 end
 

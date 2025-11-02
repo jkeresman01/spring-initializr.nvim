@@ -134,7 +134,7 @@ end
 ----------------------------------------------------------------------------
 local function handle_enter(items, selected_index, title, key, selections)
     selections[key] = items[selected_index].value
-    message_utils.info(string.format("%s: %s", title, items[selected_index].label))
+    message_utils.show_info_message(string.format("%s: %s", title, items[selected_index].label))
 end
 
 ----------------------------------------------------------------------------
