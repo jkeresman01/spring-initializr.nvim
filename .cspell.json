@@ -30,6 +30,8 @@
     "luajit",
     "rustc",
     "stylua",
+    "Ffile",
+    "Csecurity",
     "Neovim",
     "Josip",
     "Keresman"
