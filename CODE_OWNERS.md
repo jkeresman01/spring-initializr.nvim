@@ -22,4 +22,4 @@ All pull requests require approval from the code owner before merging. This ensu
 
 For questions about code ownership or review process, please contact:
 - Email: josipkeresman@gmail.com
-- GitHub: [@dlozina](https://github.com/jkeresman01)
+- GitHub: [@jkeresman01](https://github.com/jkeresman01)
