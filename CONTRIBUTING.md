@@ -3,6 +3,7 @@
 Contributions are very welcome. You can help by:
 
 - Picking up an existing issue.
+  - Issues marked with the label `good first issue` are ideal if you're new to contributing.
 - Opening a new **bug report** or **feature request** with clear details.
 - Submitting a focused pull request that improves code, docs, or UX.
 
