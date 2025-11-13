@@ -43,7 +43,7 @@ local message_utils = require("spring-initializr.utils.message_utils")
 ----------------------------------------------------------------------------
 -- Constants
 ----------------------------------------------------------------------------
-local SPRING_DEPENDENCIES= "Spring Dependencies"
+local SPRING_DEPENDENCIES = "Spring Dependencies"
 local LAYOUT_STRATEGY = "vertical"
 
 ----------------------------------------------------------------------------
