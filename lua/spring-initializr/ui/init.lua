@@ -47,6 +47,7 @@ local M = {
         outer_popup = nil,
         selections = { dependencies = {} },
         metadata = nil,
+        autocmd_id = nil,
     },
 }
 
@@ -96,6 +97,74 @@ end
 
 ----------------------------------------------------------------------------
 --
+-- Checks if a closed window belongs to our UI.
+--
+-- @param  closed_win  number  Window ID that was closed
+--
+-- @return boolean             True if window belongs to this UI
+--
+----------------------------------------------------------------------------
+local function is_ui_window(closed_win)
+    if M.state.outer_popup and M.state.outer_popup.winid == closed_win then
+        return true
+    end
+
+    for _, comp in ipairs(focus.focusables) do
+        local winid = window_utils.get_winid(comp)
+        if winid == closed_win then
+            return true
+        end
+    end
+
+    return false
+end
+
+----------------------------------------------------------------------------
+--
+-- Handles window close event.
+--
+-- @param  args  table  Autocmd event arguments
+--
+----------------------------------------------------------------------------
+local function handle_window_closed(args)
+    local closed_win = tonumber(args.match)
+    if not closed_win then
+        return
+    end
+
+    if is_ui_window(closed_win) then
+        vim.schedule(function()
+            M.close()
+        end)
+    end
+end
+
+----------------------------------------------------------------------------
+--
+-- Clears existing autocmd if present.
+--
+----------------------------------------------------------------------------
+local function clear_autocmd()
+    if M.state.autocmd_id then
+        pcall(vim.api.nvim_del_autocmd, M.state.autocmd_id)
+        M.state.autocmd_id = nil
+    end
+end
+
+----------------------------------------------------------------------------
+--
+-- Sets up autocmd to close entire UI when any window is closed with :q
+--
+----------------------------------------------------------------------------
+local function setup_close_autocmd()
+    clear_autocmd()
+    M.state.autocmd_id = vim.api.nvim_create_autocmd("WinClosed", {
+        callback = handle_window_closed,
+    })
+end
+
+----------------------------------------------------------------------------
+--
 -- Mounts the layout, sets focus behavior and updates dependency display.
 --
 ----------------------------------------------------------------------------
@@ -103,6 +172,7 @@ local function activate_ui()
     M.state.layout:mount()
     focus.enable()
     deps.update_display()
+    setup_close_autocmd()
 end
 
 ----------------------------------------------------------------------------
@@ -141,21 +211,38 @@ end
 
 ----------------------------------------------------------------------------
 --
--- Cleans up all active layout and popup UI components.
--- Resets internal state and focus tracking.
+-- Unmounts the layout component.
 --
 ----------------------------------------------------------------------------
-function M.close()
+local function unmount_layout()
     if M.state.layout then
         pcall(function()
             M.state.layout:unmount()
         end)
         M.state.layout = nil
     end
+end
 
+----------------------------------------------------------------------------
+--
+-- Closes the outer popup window.
+--
+----------------------------------------------------------------------------
+local function close_outer_popup()
     window_utils.safe_close(M.state.outer_popup and M.state.outer_popup.winid)
     M.state.outer_popup = nil
+end
 
+----------------------------------------------------------------------------
+--
+-- Cleans up all active layout and popup UI components.
+-- Resets internal state and focus tracking.
+--
+----------------------------------------------------------------------------
+function M.close()
+    clear_autocmd()
+    unmount_layout()
+    close_outer_popup()
     focus.reset()
 end
 
