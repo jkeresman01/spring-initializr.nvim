@@ -51,8 +51,6 @@ local DISPLAY_SIZE = { height = 10, width = 40 }
 local BUTTON_TITLE = "Add Dependencies (Telescope)"
 local DISPLAY_TITLE = "Selected Dependencies"
 local BUTTON_LAYOUT_H = 3
-local PICKER_DELAY_MS = 100
-local UPDATE_DELAY_MS = 200
 local MAX_DEP_LABEL_LEN = 38
 
 ----------------------------------------------------------------------------
@@ -95,16 +93,13 @@ end
 
 ----------------------------------------------------------------------------
 --
--- Open the Telescope picker and refresh the display after a short delay.
+-- Open the Telescope picker with a callback to refresh the display.
 --
 -- @param on_update  function  Callback to refresh the dependencies list
 --
 ----------------------------------------------------------------------------
 local function open_picker_and_refresh(on_update)
-    vim.defer_fn(function()
-        picker.pick_dependencies()
-        vim.defer_fn(on_update, UPDATE_DELAY_MS)
-    end, PICKER_DELAY_MS)
+    picker.pick_dependencies({}, on_update)
 end
 
 ----------------------------------------------------------------------------
@@ -210,7 +205,7 @@ end
 ----------------------------------------------------------------------------
 function M.update_display()
     local panel = M.state.dependencies_panel
-    if not panel then
+    if not panel or not vim.api.nvim_buf_is_valid(panel.bufnr) then
         return
     end
     vim.api.nvim_buf_set_lines(panel.bufnr, 0, -1, false, render_dependency_lines())
