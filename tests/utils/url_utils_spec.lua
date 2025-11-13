@@ -14,6 +14,8 @@
 
 local url_utils = require("spring-initializr.utils.url_utils")
 
+local url_utils = require("spring-initializr.utils.url_utils")
+
 describe("url_utils", function()
     describe("urlencode", function()
         it("encodes spaces as %20", function()
@@ -22,8 +24,9 @@ describe("url_utils", function()
         end)
 
         it("encodes special characters correctly", function()
+            -- The actual implementation doesn't encode . (dot)
             local result = url_utils.urlencode("test@example.com")
-            assert.are.equal("test%40example%2Ecom", result)
+            assert.are.equal("test%40example.com", result)
         end)
 
         it("preserves alphanumeric characters", function()
@@ -32,9 +35,10 @@ describe("url_utils", function()
         end)
 
         it("preserves allowed special characters", function()
-            -- According to RFC 3986, these should not be encoded: - _ . ~
+            -- The actual implementation preserves: - _ . ~
+            -- These are "unreserved" characters per RFC 3986
             local result = url_utils.urlencode("test-file_name.txt")
-            assert.are.equal("test%2Dfile_name%2Etxt", result)
+            assert.are.equal("test-file_name.txt", result)
         end)
 
         it("encodes unicode characters", function()
@@ -70,7 +74,7 @@ describe("url_utils", function()
             local result = url_utils.encode_query(params)
 
             -- Order may vary, check both keys are present
-            assert.is_true(result:find("type=maven%2Dproject") ~= nil)
+            assert.is_true(result:find("type=maven%-project") ~= nil)
             assert.is_true(result:find("language=java") ~= nil)
             assert.is_true(result:find("&") ~= nil)
         end)
@@ -105,8 +109,9 @@ describe("url_utils", function()
             }
             local result = url_utils.encode_query(params)
 
-            -- Commas should be encoded as %2C, hyphens as %2D
-            assert.are.equal("dependencies=web%2Cdata%2Djpa%2Csecurity", result)
+            -- Commas are encoded as %2C
+            -- Hyphens are NOT encoded (unreserved character)
+            assert.are.equal("dependencies=web%2Cdata-jpa%2Csecurity", result)
         end)
 
         it("encodes numeric values", function()
