@@ -41,6 +41,12 @@ local metadata_loader = require("spring-initializr.metadata.metadata")
 local message_utils = require("spring-initializr.utils.message_utils")
 
 ----------------------------------------------------------------------------
+-- Constants
+----------------------------------------------------------------------------
+local SPRING_DEPENDECIES = "Spring Dependencies"
+local LAYOUT_STRATEGY = "vertical"
+
+----------------------------------------------------------------------------
 -- Module table
 ----------------------------------------------------------------------------
 local M = {
@@ -130,6 +136,7 @@ end
 ----------------------------------------------------------------------------
 --
 -- Handles the <CR> action inside the picker.
+-- Wraps on_done in vim.schedule to ensure it runs AFTER state update.
 --
 -- @param  prompt_bufnr  number         Buffer number of the picker
 -- @param  on_done       function|nil   Optional callback to run after selection
@@ -144,7 +151,7 @@ local function handle_selection(prompt_bufnr, on_done)
     actions.close(prompt_bufnr)
 
     if on_done then
-        on_done()
+        vim.schedule(on_done)
     end
 end
 
@@ -161,13 +168,13 @@ end
 ----------------------------------------------------------------------------
 local function create_picker_config(items, opts, on_done)
     return {
-        prompt_title = "Spring Dependencies",
+        prompt_title = SPRING_DEPENDECIES,
         finder = finders.new_table({
             results = items,
             entry_maker = make_entry,
         }),
         sorter = conf.generic_sorter(opts),
-        layout_strategy = "vertical",
+        layout_strategy = LAYOUT_STRATEGY,
         layout_config = get_picker_layout(),
         attach_mappings = function(prompt_bufnr)
             actions.select_default:replace(function()
