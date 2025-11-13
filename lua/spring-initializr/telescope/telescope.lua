@@ -43,7 +43,7 @@ local message_utils = require("spring-initializr.utils.message_utils")
 ----------------------------------------------------------------------------
 -- Constants
 ----------------------------------------------------------------------------
-local SPRING_DEPENDECIES = "Spring Dependencies"
+local SPRING_DEPENDENCIES= "Spring Dependencies"
 local LAYOUT_STRATEGY = "vertical"
 
 ----------------------------------------------------------------------------
@@ -168,7 +168,7 @@ end
 ----------------------------------------------------------------------------
 local function create_picker_config(items, opts, on_done)
     return {
-        prompt_title = SPRING_DEPENDECIES,
+        prompt_title = SPRING_DEPENDENCIES,
         finder = finders.new_table({
             results = items,
             entry_maker = make_entry,
