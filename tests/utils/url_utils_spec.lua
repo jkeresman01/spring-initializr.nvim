@@ -14,8 +14,6 @@
 
 local url_utils = require("spring-initializr.utils.url_utils")
 
-local url_utils = require("spring-initializr.utils.url_utils")
-
 describe("url_utils", function()
     describe("urlencode", function()
         it("encodes spaces as %20", function()
