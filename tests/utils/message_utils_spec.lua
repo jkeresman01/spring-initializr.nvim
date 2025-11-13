@@ -14,153 +14,137 @@
 
 local message_utils = require("spring-initializr.utils.message_utils")
 
+local message_utils = require("spring-initializr.utils.message_utils")
+
 describe("message_utils", function()
     local original_notify
-    local captured_calls
+    local notify_calls
 
     before_each(function()
-        -- Capture vim.notify calls
+        -- Save original vim.notify
         original_notify = vim.notify
-        captured_calls = {}
-        vim.notify = function(msg, level)
-            table.insert(captured_calls, { msg = msg, level = level })
+        notify_calls = {}
+
+        -- Mock vim.notify to capture calls
+        vim.notify = function(msg, level, opts)
+            table.insert(notify_calls, {
+                message = msg,
+                level = level,
+                opts = opts,
+            })
         end
     end)
 
     after_each(function()
-        -- Restore original notify
+        -- Restore original vim.notify
         vim.notify = original_notify
+        notify_calls = {}
     end)
 
     describe("show_info_message", function()
         it("calls vim.notify with INFO level", function()
-            -- Arrange
-            local message = "Test info message"
+            local test_message = "Test info message"
 
-            -- Act
-            message_utils.show_info_message(message)
+            message_utils.show_info_message(test_message)
 
-            -- Assert
-            assert.are.equal(1, #captured_calls)
-            assert.are.equal(message, captured_calls[1].msg)
-            assert.are.equal(vim.log.levels.INFO, captured_calls[1].level)
+            assert.are.equal(1, #notify_calls)
+            assert.are.equal(test_message, notify_calls[1].message)
+            assert.are.equal(vim.log.levels.INFO, notify_calls[1].level)
         end)
 
         it("handles empty string", function()
-            -- Act
             message_utils.show_info_message("")
 
-            -- Assert
-            assert.are.equal(1, #captured_calls)
-            assert.are.equal("", captured_calls[1].msg)
+            assert.are.equal(1, #notify_calls)
+            assert.are.equal("", notify_calls[1].message)
         end)
 
         it("handles multiline message", function()
-            -- Arrange
-            local message = "Line 1\nLine 2\nLine 3"
+            local multiline = "Line 1\nLine 2\nLine 3"
 
-            -- Act
-            message_utils.show_info_message(message)
+            message_utils.show_info_message(multiline)
 
-            -- Assert
-            assert.are.equal(1, #captured_calls)
-            assert.are.equal(message, captured_calls[1].msg)
+            assert.are.equal(1, #notify_calls)
+            assert.are.equal(multiline, notify_calls[1].message)
         end)
     end)
 
     describe("show_warn_message", function()
         it("calls vim.notify with WARN level", function()
-            -- Arrange
-            local message = "Test warning message"
+            local test_message = "Test warning message"
 
-            -- Act
-            message_utils.show_warn_message(message)
+            message_utils.show_warn_message(test_message)
 
-            -- Assert
-            assert.are.equal(1, #captured_calls)
-            assert.are.equal(message, captured_calls[1].msg)
-            assert.are.equal(vim.log.levels.WARN, captured_calls[1].level)
+            assert.are.equal(1, #notify_calls)
+            assert.are.equal(test_message, notify_calls[1].message)
+            assert.are.equal(vim.log.levels.WARN, notify_calls[1].level)
         end)
 
         it("handles warning with special characters", function()
-            -- Arrange
-            local message = "Warning: File 'test.txt' not found!"
+            local warning = "Warning: File 'test.txt' not found!"
 
-            -- Act
-            message_utils.show_warn_message(message)
+            message_utils.show_warn_message(warning)
 
-            -- Assert
-            assert.are.equal(message, captured_calls[1].msg)
+            assert.are.equal(1, #notify_calls)
+            assert.are.equal(warning, notify_calls[1].message)
+            assert.are.equal(vim.log.levels.WARN, notify_calls[1].level)
         end)
     end)
 
     describe("show_error_message", function()
         it("calls vim.notify with ERROR level", function()
-            -- Arrange
-            local message = "Test error message"
+            local test_message = "Test error message"
 
-            -- Act
-            message_utils.show_error_message(message)
+            message_utils.show_error_message(test_message)
 
-            -- Assert
-            assert.are.equal(1, #captured_calls)
-            assert.are.equal(message, captured_calls[1].msg)
-            assert.are.equal(vim.log.levels.ERROR, captured_calls[1].level)
+            assert.are.equal(1, #notify_calls)
+            assert.are.equal(test_message, notify_calls[1].message)
+            assert.are.equal(vim.log.levels.ERROR, notify_calls[1].level)
         end)
 
         it("handles error with stack trace", function()
-            -- Arrange
-            local message = "Error:\n  at line 10\n  in function foo()"
+            local error_msg = "Error:\n  at line 10\n  in function foo()"
 
-            -- Act
-            message_utils.show_error_message(message)
+            message_utils.show_error_message(error_msg)
 
-            -- Assert
-            assert.are.equal(message, captured_calls[1].msg)
+            assert.are.equal(1, #notify_calls)
+            assert.are.equal(error_msg, notify_calls[1].message)
+            assert.are.equal(vim.log.levels.ERROR, notify_calls[1].level)
         end)
     end)
 
     describe("show_debug_message", function()
         it("calls vim.notify with DEBUG level", function()
-            -- Arrange
-            local message = "Test debug message"
+            local test_message = "Test debug message"
 
-            -- Act
-            message_utils.show_debug_message(message)
+            message_utils.show_debug_message(test_message)
 
-            -- Assert
-            assert.are.equal(1, #captured_calls)
-            assert.are.equal(message, captured_calls[1].msg)
-            assert.are.equal(vim.log.levels.DEBUG, captured_calls[1].level)
+            assert.are.equal(1, #notify_calls)
+            assert.are.equal(test_message, notify_calls[1].message)
+            assert.are.equal(vim.log.levels.DEBUG, notify_calls[1].level)
         end)
 
         it("handles debug with variable dump", function()
-            -- Arrange
-            local message = "Debug: var = { key = 'value' }"
+            local debug_msg = "Debug: var = { key = 'value' }"
 
-            -- Act
-            message_utils.show_debug_message(message)
+            message_utils.show_debug_message(debug_msg)
 
-            -- Assert
-            assert.are.equal(message, captured_calls[1].msg)
+            assert.are.equal(1, #notify_calls)
+            assert.are.equal(debug_msg, notify_calls[1].message)
+            assert.are.equal(vim.log.levels.DEBUG, notify_calls[1].level)
         end)
     end)
 
     describe("multiple messages", function()
         it("handles sequential calls", function()
-            -- Act
             message_utils.show_info_message("First")
             message_utils.show_warn_message("Second")
             message_utils.show_error_message("Third")
 
-            -- Assert
-            assert.are.equal(3, #captured_calls)
-            assert.are.equal("First", captured_calls[1].msg)
-            assert.are.equal(vim.log.levels.INFO, captured_calls[1].level)
-            assert.are.equal("Second", captured_calls[2].msg)
-            assert.are.equal(vim.log.levels.WARN, captured_calls[2].level)
-            assert.are.equal("Third", captured_calls[3].msg)
-            assert.are.equal(vim.log.levels.ERROR, captured_calls[3].level)
+            assert.are.equal(3, #notify_calls)
+            assert.are.equal(vim.log.levels.INFO, notify_calls[1].level)
+            assert.are.equal(vim.log.levels.WARN, notify_calls[2].level)
+            assert.are.equal(vim.log.levels.ERROR, notify_calls[3].level)
         end)
     end)
 end)
