@@ -90,12 +90,19 @@ spring-initializr.nvim/
 │       ├── telescope/         # Telescope integration
 │       │   └── telescope.lua
 │       ├── ui/                # UI components
-│       │   ├── deps.lua       # Dependency components
-│       │   ├── focus.lua      # Focus management
-│       │   ├── init.lua       # UI entry point
-│       │   ├── inputs.lua     # Input fields
-│       │   ├── layout.lua     # Layout builder
-│       │   └── radios.lua     # Radio buttons
+│       │   ├── components/
+│       │   │   ├── dependencies_display.lua   # Manages UI elements
+│       │   │   ├── inputs.lua                 # Input fields
+│       │   │   └── radios.lua                 # Radio buttons
+│       │   ├── config/
+│       │   │   ├── form_context.lua           # Generate reusable config objects
+│       │   │   ├── input_config.lua           # Generate parameter object for input field
+│       │   │   └── radios.lua                 # Generate parameter object for radio button
+│       │   ├── layout/
+│       │   │   └── layout.lua                 # Layout builder
+│       │   ├── managers/
+│       │   │   └── focus_manager.lua          # Focus management
+│       │   └── init.lua                       # UI entry point
 │       ├── utils/             # Utilities
 │       │   ├── file_utils.lua
 │       │   ├── http_utils.lua
@@ -106,6 +113,11 @@ spring-initializr.nvim/
 ├── tests/                     # Test suite
 │   ├── algo/
 │   │   └── hashset_spec.lua
+│   ├── ui/
+│   │   └── focus_manager_spec.lua
+│   ├── utils/
+│   │   ├── url_utils_spec.lua           
+│   │   └── windows_utils_spec.lua 
 │   └── minimal_init.lua
 ├── scripts/                   # Development scripts
 │   └── check-naming.sh
