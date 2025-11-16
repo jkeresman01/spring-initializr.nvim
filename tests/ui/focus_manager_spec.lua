@@ -8,20 +8,20 @@
 -- ╚═╝  ╚═══╝╚══════╝ ╚═════╝   ╚═══╝  ╚═╝╚═╝     ╚═╝
 --
 --
--- Unit tests for spring-initializr/ui/focus.lua
+-- Unit tests for spring-initializr/ui/focus_manager.lua
 --
 ----------------------------------------------------------------------------
 
-local focus = require("spring-initializr.ui.focus")
+local focus_manager = require("spring-initializr.ui.managers.focus_manager")
 
-describe("focus management", function()
+describe("focus_manager management", function()
     local original_set_current_win
     local set_win_calls
     local mock_components
 
     before_each(function()
-        -- Reset focus state
-        focus.reset()
+        -- Reset focus_manager state
+        focus_manager.reset()
 
         -- Mock vim.api.nvim_set_current_win
         original_set_current_win = vim.api.nvim_set_current_win
@@ -49,7 +49,7 @@ describe("focus management", function()
 
     after_each(function()
         vim.api.nvim_set_current_win = original_set_current_win
-        focus.reset()
+        focus_manager.reset()
     end)
 
     describe("register", function()
@@ -58,48 +58,48 @@ describe("focus management", function()
             local component = mock_components[1]
 
             -- Act
-            focus.register(component)
+            focus_manager.register_component(component)
 
             -- Assert
-            assert.are.equal(1, #focus.focusables)
-            assert.are.equal(component, focus.focusables[1])
+            assert.are.equal(1, #focus_manager.focusables)
+            assert.are.equal(component, focus_manager.focusables[1])
         end)
 
         it("allows multiple components to be registered", function()
             -- Act
-            focus.register(mock_components[1])
-            focus.register(mock_components[2])
-            focus.register(mock_components[3])
+            focus_manager.register_component(mock_components[1])
+            focus_manager.register_component(mock_components[2])
+            focus_manager.register_component(mock_components[3])
 
             -- Assert
-            assert.are.equal(3, #focus.focusables)
+            assert.are.equal(3, #focus_manager.focusables)
         end)
     end)
 
     describe("reset", function()
         it("clears all focusables", function()
             -- Arrange
-            focus.register(mock_components[1])
-            focus.register(mock_components[2])
+            focus_manager.register_component(mock_components[1])
+            focus_manager.register_component(mock_components[2])
 
             -- Act
-            focus.reset()
+            focus_manager.reset()
 
             -- Assert
-            assert.are.equal(0, #focus.focusables)
+            assert.are.equal(0, #focus_manager.focusables)
         end)
 
-        it("resets current focus to 1", function()
+        it("resets current focus_manager to 1", function()
             -- Arrange
-            focus.register(mock_components[1])
-            focus.register(mock_components[2])
-            focus.current_focus = 2
+            focus_manager.register_component(mock_components[1])
+            focus_manager.register_component(mock_components[2])
+            focus_manager.current_focus = 2
 
             -- Act
-            focus.reset()
+            focus_manager.reset()
 
             -- Assert
-            assert.are.equal(1, focus.current_focus)
+            assert.are.equal(1, focus_manager.current_focus)
         end)
     end)
 
@@ -113,11 +113,11 @@ describe("focus management", function()
                 end
             end
 
-            focus.register(mock_components[1])
-            focus.register(mock_components[2])
+            focus_manager.register_component(mock_components[1])
+            focus_manager.register_component(mock_components[2])
 
             -- Act
-            focus.enable()
+            focus_manager.enable_navigation()
 
             -- Assert
             assert.are.equal(4, #map_calls) -- 2 keys per component
@@ -138,9 +138,9 @@ describe("focus management", function()
 
     describe("navigation", function()
         before_each(function()
-            -- Register components and enable focus
+            -- Register components and enable focus_manager
             for _, comp in ipairs(mock_components) do
-                focus.register(comp)
+                focus_manager.register_component(comp)
             end
         end)
 
@@ -152,71 +152,71 @@ describe("focus management", function()
                     tab_handler = fn
                 end
             end
-            focus.enable()
+            focus_manager.enable_navigation()
 
             -- Act - simulate pressing Tab
             tab_handler()
 
             -- Assert
-            assert.are.equal(2, focus.current_focus)
+            assert.are.equal(2, focus_manager.current_focus)
             assert.are.equal(1, #set_win_calls)
             assert.are.equal(1002, set_win_calls[1])
         end)
 
         it("wraps to first component after last", function()
             -- Arrange
-            focus.current_focus = 3
+            focus_manager.current_focus = 3
             local tab_handler
             mock_components[3].map = function(self, mode, key, fn)
                 if key == "<Tab>" then
                     tab_handler = fn
                 end
             end
-            focus.enable()
+            focus_manager.enable_navigation()
 
             -- Act
             tab_handler()
 
             -- Assert
-            assert.are.equal(1, focus.current_focus)
+            assert.are.equal(1, focus_manager.current_focus)
             assert.are.equal(1001, set_win_calls[#set_win_calls])
         end)
 
         it("cycles backward through components", function()
             -- Arrange
-            focus.current_focus = 2
+            focus_manager.current_focus = 2
             local shift_tab_handler
             mock_components[2].map = function(self, mode, key, fn)
                 if key == "<S-Tab>" then
                     shift_tab_handler = fn
                 end
             end
-            focus.enable()
+            focus_manager.enable_navigation()
 
             -- Act
             shift_tab_handler()
 
             -- Assert
-            assert.are.equal(1, focus.current_focus)
+            assert.are.equal(1, focus_manager.current_focus)
             assert.are.equal(1001, set_win_calls[#set_win_calls])
         end)
 
         it("wraps to last component from first", function()
             -- Arrange
-            focus.current_focus = 1
+            focus_manager.current_focus = 1
             local shift_tab_handler
             mock_components[1].map = function(self, mode, key, fn)
                 if key == "<S-Tab>" then
                     shift_tab_handler = fn
                 end
             end
-            focus.enable()
+            focus_manager.enable_navigation()
 
             -- Act
             shift_tab_handler()
 
             -- Assert
-            assert.are.equal(3, focus.current_focus)
+            assert.are.equal(3, focus_manager.current_focus)
             assert.are.equal(1003, set_win_calls[#set_win_calls])
         end)
     end)
@@ -224,26 +224,26 @@ describe("focus management", function()
     describe("edge cases", function()
         it("handles single component", function()
             -- Arrange
-            focus.register(mock_components[1])
+            focus_manager.register_component(mock_components[1])
             local tab_handler
             mock_components[1].map = function(self, mode, key, fn)
                 if key == "<Tab>" then
                     tab_handler = fn
                 end
             end
-            focus.enable()
+            focus_manager.enable_navigation()
 
             -- Act
             tab_handler()
 
             -- Assert - should stay on same component
-            assert.are.equal(1, focus.current_focus)
+            assert.are.equal(1, focus_manager.current_focus)
         end)
 
         it("handles no components gracefully", function()
             -- Act & Assert - should not throw
             assert.has_no.errors(function()
-                focus.enable()
+                focus_manager.enable_navigation()
             end)
         end)
     end)

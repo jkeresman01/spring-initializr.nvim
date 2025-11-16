@@ -33,7 +33,8 @@
 local Popup = require("nui.popup")
 local Layout = require("nui.layout")
 
-local focus = require("spring-initializr.ui.focus")
+local focus_manager = require("spring-initializr.ui.managers.focus_manager")
+local message_utils = require("spring-initializr.utils.message_utils")
 local picker = require("spring-initializr.telescope.telescope")
 
 ----------------------------------------------------------------------------
@@ -50,6 +51,7 @@ local BUTTON_SIZE = { height = 3, width = 40 }
 local DISPLAY_SIZE = { height = 10, width = 40 }
 local BUTTON_TITLE = "Add Dependencies (Telescope)"
 local DISPLAY_TITLE = "Selected Dependencies"
+local SELECTED_DEPENDENCIES = DISPLAY_TITLE .. ": "
 local BUTTON_LAYOUT_H = 3
 local MAX_DEP_LABEL_LEN = 38
 
@@ -118,6 +120,17 @@ end
 
 ----------------------------------------------------------------------------
 --
+-- Registers focus for provided component
+--
+-- @param component  component any component
+--
+----------------------------------------------------------------------------
+local function register_focus_for_components(component)
+    focus_manager.register_component(component)
+end
+
+----------------------------------------------------------------------------
+--
 -- Create a popup button that triggers dependency selection.
 --
 -- @param update_display_fn  function  Callback to update the dependency display
@@ -128,7 +141,7 @@ end
 function M.create_button(update_display_fn)
     local popup = Popup(button_popup_config())
     bind_button_action(popup, update_display_fn)
-    focus.register(popup)
+    register_focus_for_components(popup)
     return Layout.Box(popup, { size = BUTTON_LAYOUT_H })
 end
 
@@ -156,6 +169,17 @@ end
 
 ----------------------------------------------------------------------------
 --
+-- Returns the buffer options for the dependencies display panel.
+--
+-- @return table  Buffer options
+--
+----------------------------------------------------------------------------
+local function display_buffer_options()
+    return { modifiable = true, readonly = false }
+end
+
+----------------------------------------------------------------------------
+--
 -- Builds the configuration table for the dependencies display popup.
 --
 -- @return table  Popup configuration
@@ -165,7 +189,7 @@ local function display_popup_config()
     return {
         border = display_border(),
         size = DISPLAY_SIZE,
-        buf_options = { modifiable = true, readonly = false },
+        buf_options = display_buffer_options(),
         win_options = display_win_options(),
     }
 end
@@ -191,7 +215,7 @@ end
 --
 ----------------------------------------------------------------------------
 local function render_dependency_lines()
-    local lines = { "Selected Dependencies:" }
+    local lines = { SELECTED_DEPENDENCIES }
     for i, dep in ipairs(picker.selected_dependencies or {}) do
         lines[#lines + 1] = string.format("%d. %s", i, dep:sub(1, MAX_DEP_LABEL_LEN))
     end
@@ -205,9 +229,12 @@ end
 ----------------------------------------------------------------------------
 function M.update_display()
     local panel = M.state.dependencies_panel
+
     if not panel or not vim.api.nvim_buf_is_valid(panel.bufnr) then
+        message_utils.show_error_message("Failed to updated dependencies display buffer")
         return
     end
+
     vim.api.nvim_buf_set_lines(panel.bufnr, 0, -1, false, render_dependency_lines())
 end
 

@@ -34,7 +34,7 @@
 local Popup = require("nui.popup")
 local Layout = require("nui.layout")
 
-local focus = require("spring-initializr.ui.focus")
+local focus_manager = require("spring-initializr.ui.managers.focus_manager")
 local message_utils = require("spring-initializr.utils.message_utils")
 
 ----------------------------------------------------------------------------
@@ -274,6 +274,17 @@ end
 
 ----------------------------------------------------------------------------
 --
+-- Registers focus for provided component
+--
+-- @param component  component any component
+--
+----------------------------------------------------------------------------
+local function register_focus_for_components(component)
+    focus_manager.register_component(component)
+end
+
+----------------------------------------------------------------------------
+--
 -- Create a radio component as a layout box.
 --
 -- @param  title       string  Label/title of the radio group
@@ -301,7 +312,7 @@ function M.create_radio(title, values, key, selections)
 
     map_keys(popup, state)
     schedule_initial_render(popup, items, selected[1])
-    focus.register(popup)
+    register_focus_for_components(popup)
 
     return Layout.Box(popup, { size = #items + 2 })
 end

@@ -48,7 +48,7 @@ local M = {
 -- @param comp  table  Component to register
 --
 ----------------------------------------------------------------------------
-function M.register(comp)
+function M.register_component(comp)
     table.insert(M.focusables, comp)
 end
 
@@ -89,7 +89,7 @@ end
 -- Enable focus navigation across all registered components.
 --
 ----------------------------------------------------------------------------
-function M.enable()
+function M.enable_navigation()
     for _, comp in ipairs(M.focusables) do
         map_navigation_keys(comp)
     end
