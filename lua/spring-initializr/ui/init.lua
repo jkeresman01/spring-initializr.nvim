@@ -30,11 +30,11 @@
 ----------------------------------------------------------------------------
 -- Dependencies
 ----------------------------------------------------------------------------
-local layout_builder = require("spring-initializr.ui.layout")
-local focus = require("spring-initializr.ui.focus")
+local layout_builder = require("spring-initializr.ui.layout.layout")
+local focus_manager = require("spring-initializr.ui.managers.focus_manager")
 local highlights = require("spring-initializr.styles.highlights")
 local metadata = require("spring-initializr.metadata.metadata")
-local deps = require("spring-initializr.ui.deps")
+local dependecies_display = require("spring-initializr.ui.components.dependecies_display")
 local window_utils = require("spring-initializr.utils.window_utils")
 local message_utils = require("spring-initializr.utils.message_utils")
 
@@ -96,13 +96,13 @@ end
 
 ----------------------------------------------------------------------------
 --
--- Mounts the layout, sets focus behavior and updates dependency display.
+-- Mounts the layout, sets focus_manager behavior and updates dependency display.
 --
 ----------------------------------------------------------------------------
 local function activate_ui()
     M.state.layout:mount()
-    focus.enable()
-    deps.update_display()
+    focus_manager.enable_navigation()
+    dependecies_display.update_display()
 end
 
 ----------------------------------------------------------------------------
@@ -142,7 +142,7 @@ end
 ----------------------------------------------------------------------------
 --
 -- Cleans up all active layout and popup UI components.
--- Resets internal state and focus tracking.
+-- Resets internal state and focus_manager tracking.
 --
 ----------------------------------------------------------------------------
 function M.close()
@@ -156,7 +156,7 @@ function M.close()
     window_utils.safe_close(M.state.outer_popup and M.state.outer_popup.winid)
     M.state.outer_popup = nil
 
-    focus.reset()
+    focus_manager.reset()
 end
 
 ----------------------------------------------------------------------------
