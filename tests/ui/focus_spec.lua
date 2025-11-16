@@ -67,9 +67,9 @@ describe("focus_manager management", function()
 
         it("allows multiple components to be registered", function()
             -- Act
-            focus_manager.register(mock_components[1])
-            focus_manager.register(mock_components[2])
-            focus_manager.register(mock_components[3])
+            focus_manager.register_component(mock_components[1])
+            focus_manager.register_component(mock_components[2])
+            focus_manager.register_component(mock_components[3])
 
             -- Assert
             assert.are.equal(3, #focus_manager.focusables)
@@ -79,8 +79,8 @@ describe("focus_manager management", function()
     describe("reset", function()
         it("clears all focusables", function()
             -- Arrange
-            focus_manager.register(mock_components[1])
-            focus_manager.register(mock_components[2])
+            focus_manager.register_component(mock_components[1])
+            focus_manager.register_component(mock_components[2])
 
             -- Act
             focus_manager.reset()
@@ -91,8 +91,8 @@ describe("focus_manager management", function()
 
         it("resets current focus_manager to 1", function()
             -- Arrange
-            focus_manager.register(mock_components[1])
-            focus_manager.register(mock_components[2])
+            focus_manager.register_component(mock_components[1])
+            focus_manager.register_component(mock_components[2])
             focus_manager.current_focus_manager = 2
 
             -- Act
@@ -117,7 +117,7 @@ describe("focus_manager management", function()
             focus_manager.register_component(mock_components[2])
 
             -- Act
-            focus_manager.enable()
+            focus_manager.enable_navigation()
 
             -- Assert
             assert.are.equal(4, #map_calls) -- 2 keys per component
@@ -152,7 +152,7 @@ describe("focus_manager management", function()
                     tab_handler = fn
                 end
             end
-            focus_manager.enable()
+            focus_manager.enable_navigation()
 
             -- Act - simulate pressing Tab
             tab_handler()
@@ -231,7 +231,7 @@ describe("focus_manager management", function()
                     tab_handler = fn
                 end
             end
-            focus_manager.enable()
+            focus_manager.enable_navigation()
 
             -- Act
             tab_handler()
