@@ -42,8 +42,7 @@ describe("url_utils", function()
         it("preserves alphanumeric characters", function()
             -- Arrange
             local input = "abc123XYZ"
-            
-            -- Act 
+            -- Act
             local result = url_utils.urlencode(input)
 
             -- Assert
@@ -64,7 +63,7 @@ describe("url_utils", function()
         end)
 
         it("encodes unicode characters", function()
-            -- Arrange 
+            -- Arrange
             local input = "hello世界"
 
             -- Act
