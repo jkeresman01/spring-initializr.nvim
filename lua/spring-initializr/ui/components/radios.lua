@@ -37,8 +37,6 @@ local Layout = require("nui.layout")
 local focus_manager = require("spring-initializr.ui.managers.focus_manager")
 local message_utils = require("spring-initializr.utils.message_utils")
 
-local RadioConfig = require("spring-initializr.ui.config.radio_config")
-
 ----------------------------------------------------------------------------
 -- Module table
 ----------------------------------------------------------------------------
@@ -48,8 +46,8 @@ local M = {}
 -- Local state table
 ----------------------------------------------------------------------------
 
-local RadioState = {}
-function RadioState.new(config, items, selected)
+M.RadioState = {}
+function M.RadioState.new(config, items, selected)
     return {
         title = config.title,
         key = config.key,

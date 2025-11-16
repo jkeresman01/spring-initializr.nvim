@@ -36,8 +36,6 @@ local Layout = require("nui.layout")
 local focus_manager = require("spring-initializr.ui.managers.focus_manager")
 local message_utils = require("spring-initializr.utils.message_utils")
 
-local InputConfig = require("spring-initializr.ui.config.input_config")
-
 ----------------------------------------------------------------------------
 -- Constants
 ----------------------------------------------------------------------------
@@ -111,8 +109,8 @@ end
 --
 ----------------------------------------------------------------------------
 local function update_selection(config, val)
-    selections[key] = val
-    message_utils.show_info_message(title .. ": " .. val)
+    config.selections[config.key] = val
+    message_utils.show_info_message(config.title .. ": " .. val)
 end
 
 ----------------------------------------------------------------------------
@@ -154,7 +152,7 @@ local function create_input_component(config)
     local handlers = build_input_handlers(config)
 
     return Input(popup_opts, {
-        default_value = default or "",
+        default_value = config.default,
         on_change = handlers.on_change,
         on_submit = handlers.on_submit,
     })
