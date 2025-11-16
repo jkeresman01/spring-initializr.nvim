@@ -34,7 +34,7 @@ local layout_builder = require("spring-initializr.ui.layout.layout")
 local focus_manager = require("spring-initializr.ui.managers.focus_manager")
 local highlights = require("spring-initializr.styles.highlights")
 local metadata = require("spring-initializr.metadata.metadata")
-local dependecies_display = require("spring-initializr.ui.components.dependecies_display")
+local dependencies_display = require("spring-initializr.ui.components.dependecies_display")
 local window_utils = require("spring-initializr.utils.window_utils")
 local message_utils = require("spring-initializr.utils.message_utils")
 
@@ -102,7 +102,7 @@ end
 local function activate_ui()
     M.state.layout:mount()
     focus_manager.enable_navigation()
-    dependecies_display.update_display()
+    dependencies_display.update_display()
 end
 
 ----------------------------------------------------------------------------

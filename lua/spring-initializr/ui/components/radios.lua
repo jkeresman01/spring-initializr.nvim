@@ -267,14 +267,14 @@ local function create_radio_popup(title, item_count)
         border = radio_border(title),
         size = radio_size(item_count),
         enter = true,
-        focus_managerable = true,
+        focusable = true,
         win_options = radio_win_options(),
     })
 end
 
 ----------------------------------------------------------------------------
 --
--- Registers foucs for provided component
+-- Registers focus for provided component
 --
 -- @param component  component any component
 --

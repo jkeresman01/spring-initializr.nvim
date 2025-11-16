@@ -120,7 +120,7 @@ end
 
 ----------------------------------------------------------------------------
 --
--- Registers foucs for provided component
+-- Registers focus for provided component
 --
 -- @param component  component any component
 --
@@ -231,7 +231,7 @@ function M.update_display()
     local panel = M.state.dependencies_panel
 
     if not panel or not vim.api.nvim_buf_is_valid(panel.bufnr) then
-        message_utils.show_error_message("Failed to updated dependecies display buffer")
+        message_utils.show_error_message("Failed to updated dependencies display buffer")
         return
     end
 

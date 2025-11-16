@@ -160,7 +160,7 @@ end
 
 ----------------------------------------------------------------------------
 --
--- Registers foucs for provided component
+-- Registers focus for provided component
 --
 -- @param component  component any component
 --

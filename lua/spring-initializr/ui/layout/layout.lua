@@ -35,7 +35,7 @@ local Popup = require("nui.popup")
 
 local radios = require("spring-initializr.ui.components.radios")
 local inputs = require("spring-initializr.ui.components.inputs")
-local dependecies_display = require("spring-initializr.ui.components.dependecies_display")
+local dependencies_display = require("spring-initializr.ui.components.dependecies_display")
 
 ----------------------------------------------------------------------------
 -- Module table
@@ -201,10 +201,10 @@ end
 local function create_right_panel()
     return Layout.Box({
         Layout.Box(
-            dependecies_display.create_button(dependecies_display.update_display),
+            dependencies_display.create_button(dependencies_display.update_display),
             { size = "10%" }
         ),
-        Layout.Box(dependecies_display.create_display(), { size = "90%" }),
+        Layout.Box(dependencies_display.create_display(), { size = "90%" }),
     }, { dir = "col", size = "50%" })
 end
 

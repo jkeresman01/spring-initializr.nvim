@@ -53,7 +53,7 @@ describe("focus_manager management", function()
     end)
 
     describe("register", function()
-        it("adds component to focus_managerables list", function()
+        it("adds component to focusables list", function()
             -- Arrange
             local component = mock_components[1]
 
@@ -61,8 +61,8 @@ describe("focus_manager management", function()
             focus_manager.register_component(component)
 
             -- Assert
-            assert.are.equal(1, #focus_manager.focus_managerables)
-            assert.are.equal(component, focus_manager.focus_managerables[1])
+            assert.are.equal(1, #focus_manager.focusables)
+            assert.are.equal(component, focus_manager.focusables[1])
         end)
 
         it("allows multiple components to be registered", function()
@@ -72,12 +72,12 @@ describe("focus_manager management", function()
             focus_manager.register(mock_components[3])
 
             -- Assert
-            assert.are.equal(3, #focus_manager.focus_managerables)
+            assert.are.equal(3, #focus_manager.focusables)
         end)
     end)
 
     describe("reset", function()
-        it("clears all focus_managerables", function()
+        it("clears all focusables", function()
             -- Arrange
             focus_manager.register(mock_components[1])
             focus_manager.register(mock_components[2])
@@ -86,7 +86,7 @@ describe("focus_manager management", function()
             focus_manager.reset()
 
             -- Assert
-            assert.are.equal(0, #focus_manager.focus_managerables)
+            assert.are.equal(0, #focus_manager.focusables)
         end)
 
         it("resets current focus_manager to 1", function()
