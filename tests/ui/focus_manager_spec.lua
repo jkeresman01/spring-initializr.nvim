@@ -93,13 +93,13 @@ describe("focus_manager management", function()
             -- Arrange
             focus_manager.register_component(mock_components[1])
             focus_manager.register_component(mock_components[2])
-            focus_manager.current_focus_manager = 2
+            focus_manager.current_focus = 2
 
             -- Act
             focus_manager.reset()
 
             -- Assert
-            assert.are.equal(1, focus_manager.current_focus_manager)
+            assert.are.equal(1, focus_manager.current_focus)
         end)
     end)
 
@@ -158,14 +158,14 @@ describe("focus_manager management", function()
             tab_handler()
 
             -- Assert
-            assert.are.equal(2, focus_manager.current_focus_manager)
+            assert.are.equal(2, focus_manager.current_focus)
             assert.are.equal(1, #set_win_calls)
             assert.are.equal(1002, set_win_calls[1])
         end)
 
         it("wraps to first component after last", function()
             -- Arrange
-            focus_manager.current_focus_manager = 3
+            focus_manager.current_focus = 3
             local tab_handler
             mock_components[3].map = function(self, mode, key, fn)
                 if key == "<Tab>" then
@@ -178,13 +178,13 @@ describe("focus_manager management", function()
             tab_handler()
 
             -- Assert
-            assert.are.equal(1, focus_manager.current_focus_manager)
+            assert.are.equal(1, focus_manager.current_focus)
             assert.are.equal(1001, set_win_calls[#set_win_calls])
         end)
 
         it("cycles backward through components", function()
             -- Arrange
-            focus_manager.current_focus_manager = 2
+            focus_manager.current_focus = 2
             local shift_tab_handler
             mock_components[2].map = function(self, mode, key, fn)
                 if key == "<S-Tab>" then
@@ -197,13 +197,13 @@ describe("focus_manager management", function()
             shift_tab_handler()
 
             -- Assert
-            assert.are.equal(1, focus_manager.current_focus_manager)
+            assert.are.equal(1, focus_manager.current_focus)
             assert.are.equal(1001, set_win_calls[#set_win_calls])
         end)
 
         it("wraps to last component from first", function()
             -- Arrange
-            focus_manager.current_focus_manager = 1
+            focus_manager.current_focus = 1
             local shift_tab_handler
             mock_components[1].map = function(self, mode, key, fn)
                 if key == "<S-Tab>" then
@@ -216,7 +216,7 @@ describe("focus_manager management", function()
             shift_tab_handler()
 
             -- Assert
-            assert.are.equal(3, focus_manager.current_focus_manager)
+            assert.are.equal(3, focus_manager.current_focus)
             assert.are.equal(1003, set_win_calls[#set_win_calls])
         end)
     end)
@@ -237,7 +237,7 @@ describe("focus_manager management", function()
             tab_handler()
 
             -- Assert - should stay on same component
-            assert.are.equal(1, focus_manager.current_focus_manager)
+            assert.are.equal(1, focus_manager.current_focus)
         end)
 
         it("handles no components gracefully", function()
