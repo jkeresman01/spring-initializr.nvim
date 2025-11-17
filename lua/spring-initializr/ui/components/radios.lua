@@ -140,11 +140,7 @@ end
 --
 -- Handle selection confirmation with <CR>.
 --
--- @param  items           table    List of items
--- @param  selected_index  number   Currently selected index
--- @param  title           string   Title of the radio group
--- @param  key             string   State key
--- @param  selections      table    Global selection state
+-- @param  state   table    List of items
 --
 ----------------------------------------------------------------------------
 local function handle_enter(state)
@@ -303,12 +299,9 @@ end
 --
 -- Create a radio component as a layout box.
 --
--- @param  title       string  Label/title of the radio group
--- @param  values      table   Available radio options
--- @param  key         string  Key to store the selection in state
--- @param  selections  table   Global selection state
+-- @param  config       table/RadioConfig  Containing metatable object with title, values, key, and shared selections
 --
--- @return Layout.Box          Layout-wrapped popup
+-- @return Layout.Box                      Layout-wrapped popup
 --
 ----------------------------------------------------------------------------
 function M.create_radio(config)

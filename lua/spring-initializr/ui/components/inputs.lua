@@ -102,10 +102,8 @@ end
 --
 -- Updates a selected field value and displays a message.
 --
--- @param selections table   Table holding current user selections
--- @param key        string  Field key to update
--- @param title      string  Human-readable label for the field
--- @param val        any     New value to store and display
+-- @param  config    table/InputConfig  Containing metatable object with title, key, default value, and shared selections
+-- @param val        any                New value to store and display
 --
 ----------------------------------------------------------------------------
 local function update_selection(config, val)
@@ -117,11 +115,7 @@ end
 --
 -- Creates input change and submit handlers that update user selections.
 --
--- @param  key         string  Field key
--- @param  title       string  Field title
--- @param  selections  table   State table to store values
---
--- @return table               Handlers for input events
+-- @param  config       table/InputConfig  Containing metatable object with title, key, default value, and shared selections
 --
 ----------------------------------------------------------------------------
 local function build_input_handlers(config)
@@ -139,22 +133,19 @@ end
 --
 -- Creates and returns an Input popup component.
 --
--- @param  title       string  Field title
--- @param  key         string  Field key
--- @param  default     string  Default value
--- @param  selections  table   State table to store values
+-- @param  config       table/InputConfig  Containing metatable object with title, key, default value, and shared selections
 --
--- @return Input               Input popup component
+-- @return Input                           Input popup component
 --
 ----------------------------------------------------------------------------
 local function create_input_component(config)
     local popup_opts = build_input_popup_opts(config.title)
-    local handlers = build_input_handlers(config)
+    local input_handlers = build_input_handlers(config)
 
     return Input(popup_opts, {
         default_value = config.default,
-        on_change = handlers.on_change,
-        on_submit = handlers.on_submit,
+        on_change = input_handlers.on_change,
+        on_submit = input_handlers.on_submit,
     })
 end
 
@@ -173,12 +164,9 @@ end
 --
 -- Create a layout-wrapped input component for Spring Initializr.
 --
--- @param  title       string       Field title
--- @param  key         string       Field key
--- @param  default     string       Default value
--- @param  selections  table        State table to store values
+-- @param  config       table/InputConfig  Containing metatable object with title, key, default value, and shared selections
 --
--- @return Layout.Box               Layout-wrapped input component
+-- @return Layout.Box                      Layout-wrapped input component
 --
 ----------------------------------------------------------------------------
 function M.create_input(config)
