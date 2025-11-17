@@ -102,7 +102,8 @@ end
 --
 -- Updates a selected field value and displays a message.
 --
--- @param  config    table/InputConfig  Containing metatable object with title, key, default value, and shared selections
+-- @param  config   table/InputConfig  Containing configuration object with
+-- title, key, default value, and shared selections
 -- @param val        any                New value to store and display
 --
 ----------------------------------------------------------------------------
@@ -115,7 +116,8 @@ end
 --
 -- Creates input change and submit handlers that update user selections.
 --
--- @param  config       table/InputConfig  Containing metatable object with title, key, default value, and shared selections
+-- @param  config   table/InputConfig  Containing configuration object with
+-- title, key, default value, and shared selections
 --
 ----------------------------------------------------------------------------
 local function build_input_handlers(config)
@@ -133,7 +135,8 @@ end
 --
 -- Creates and returns an Input popup component.
 --
--- @param  config       table/InputConfig  Containing metatable object with title, key, default value, and shared selections
+-- @param  config   table/InputConfig  Containing configuration object with
+-- title, key, default value, and shared selections
 --
 -- @return Input                           Input popup component
 --
@@ -164,7 +167,8 @@ end
 --
 -- Create a layout-wrapped input component for Spring Initializr.
 --
--- @param  config       table/InputConfig  Containing metatable object with title, key, default value, and shared selections
+-- @param  config   table/InputConfig  Containing configuration object with
+-- title, key, default value, and shared selectionsr
 --
 -- @return Layout.Box                      Layout-wrapped input component
 --

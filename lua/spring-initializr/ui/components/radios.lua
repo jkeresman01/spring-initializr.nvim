@@ -140,7 +140,8 @@ end
 --
 -- Handle selection confirmation with <CR>.
 --
--- @param  state   table    List of items
+-- @param  state   RadioState   ConfigurationObject with title, key,
+-- selections, items, and selected values
 --
 ----------------------------------------------------------------------------
 local function handle_enter(state)
@@ -299,7 +300,8 @@ end
 --
 -- Create a radio component as a layout box.
 --
--- @param  config       table/RadioConfig  Containing metatable object with title, values, key, and shared selections
+-- @param  config   table/RadioConfig  Containing configuration object
+-- with title, values, key, and shared selections
 --
 -- @return Layout.Box                      Layout-wrapped popup
 --
