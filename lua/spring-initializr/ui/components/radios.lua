@@ -303,7 +303,7 @@ end
 -- @param  config   table/RadioConfig  Containing configuration object
 -- with title, values, key, and shared selections
 --
--- @return Layout.Box                      Layout-wrapped popup
+-- @return Layout.Box                  Layout-wrapped popup
 --
 ----------------------------------------------------------------------------
 function M.create_radio(config)

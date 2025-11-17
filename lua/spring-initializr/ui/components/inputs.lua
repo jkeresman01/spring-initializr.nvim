@@ -104,7 +104,7 @@ end
 --
 -- @param  config   table/InputConfig  Containing configuration object with
 -- title, key, default value, and shared selections
--- @param val        any                New value to store and display
+-- @param val       any                New value to store and display
 --
 ----------------------------------------------------------------------------
 local function update_selection(config, val)
@@ -138,7 +138,7 @@ end
 -- @param  config   table/InputConfig  Containing configuration object with
 -- title, key, default value, and shared selections
 --
--- @return Input                           Input popup component
+-- @return Input                       Input popup component
 --
 ----------------------------------------------------------------------------
 local function create_input_component(config)
@@ -170,7 +170,7 @@ end
 -- @param  config   table/InputConfig  Containing configuration object with
 -- title, key, default value, and shared selections
 --
--- @return Layout.Box                      Layout-wrapped input component
+-- @return Layout.Box                  Layout-wrapped input component
 --
 ----------------------------------------------------------------------------
 function M.create_input(config)
