@@ -168,7 +168,7 @@ end
 -- Create a layout-wrapped input component for Spring Initializr.
 --
 -- @param  config   table/InputConfig  Containing configuration object with
--- title, key, default value, and shared selectionsr
+-- title, key, default value, and shared selections
 --
 -- @return Layout.Box                      Layout-wrapped input component
 --
