@@ -43,6 +43,21 @@ local message_utils = require("spring-initializr.utils.message_utils")
 local M = {}
 
 ----------------------------------------------------------------------------
+-- Local state table
+----------------------------------------------------------------------------
+
+M.RadioState = {}
+function M.RadioState.new(config, items, selected)
+    return {
+        title = config.title,
+        key = config.key,
+        selections = config.selections,
+        items = items,
+        selected = selected,
+    }
+end
+
+----------------------------------------------------------------------------
 --
 -- Normalize a value entry into a radio item format.
 --
@@ -125,16 +140,14 @@ end
 --
 -- Handle selection confirmation with <CR>.
 --
--- @param  items           table    List of items
--- @param  selected_index  number   Currently selected index
--- @param  title           string   Title of the radio group
--- @param  key             string   State key
--- @param  selections      table    Global selection state
+-- @param  state   RadioState   ConfigurationObject with title, key,
+-- selections, items, and selected values
 --
 ----------------------------------------------------------------------------
-local function handle_enter(items, selected_index, title, key, selections)
-    selections[key] = items[selected_index].value
-    message_utils.show_info_message(string.format("%s: %s", title, items[selected_index].label))
+local function handle_enter(state)
+    local selected_item = state.items[state.selected[1]]
+    state.selections[state.key] = selected_item.value
+    message_utils.show_info_message(string.format("%s: %s", state.title, selected_item.label))
 end
 
 ----------------------------------------------------------------------------
@@ -171,7 +184,7 @@ end
 ----------------------------------------------------------------------------
 local function map_enter_key(popup, state)
     popup:map("n", "<CR>", function()
-        handle_enter(state.items, state.selected[1], state.title, state.key, state.selections)
+        handle_enter(state)
     end, { nowait = true, noremap = true })
 end
 
@@ -287,28 +300,20 @@ end
 --
 -- Create a radio component as a layout box.
 --
--- @param  title       string  Label/title of the radio group
--- @param  values      table   Available radio options
--- @param  key         string  Key to store the selection in state
--- @param  selections  table   Global selection state
+-- @param  config   table/RadioConfig  Containing configuration object
+-- with title, values, key, and shared selections
 --
--- @return Layout.Box          Layout-wrapped popup
+-- @return Layout.Box                  Layout-wrapped popup
 --
 ----------------------------------------------------------------------------
-function M.create_radio(title, values, key, selections)
-    local items = build_items(values)
+function M.create_radio(config)
+    local items = build_items(config.values)
     local selected = { 1 }
 
-    selections[key] = items[selected[1]].value
+    config.selections[config.key] = items[selected[1]].value
 
-    local popup = create_radio_popup(title, #items)
-    local state = {
-        title = title,
-        items = items,
-        key = key,
-        selections = selections,
-        selected = selected,
-    }
+    local popup = create_radio_popup(config.title, #items)
+    local state = M.RadioState.new(config, items, selected)
 
     map_keys(popup, state)
     schedule_initial_render(popup, items, selected[1])
