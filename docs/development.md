@@ -97,7 +97,7 @@ spring-initializr.nvim/
 │       │   ├── config/
 │       │   │   ├── form_context.lua           # Generate reusable config objects
 │       │   │   ├── input_config.lua           # Generate parameter object for input field
-│       │   │   └── radios.lua                 # Generate parameter object for radio button
+│       │   │   └── radio_config.lua           # Generate parameter object for radio button
 │       │   ├── layout/
 │       │   │   └── layout.lua                 # Layout builder
 │       │   ├── managers/
