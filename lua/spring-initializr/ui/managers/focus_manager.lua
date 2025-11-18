@@ -97,6 +97,49 @@ end
 
 ----------------------------------------------------------------------------
 --
+-- Gets the window ID of the first focusable component.
+--
+-- @return number|nil  Window ID of first component, or nil
+--
+----------------------------------------------------------------------------
+local function get_first_component_winid()
+    if #M.focusables == 0 then
+        return nil
+    end
+    local first_component = M.focusables[1]
+    return window_utils.get_winid(first_component)
+end
+
+----------------------------------------------------------------------------
+--
+-- Sets focus to a window and ensures normal mode.
+--
+-- @param winid  number  Window ID to focus
+--
+----------------------------------------------------------------------------
+local function focus_window_in_normal_mode(winid)
+    if not winid or not vim.api.nvim_win_is_valid(winid) then
+        return
+    end
+    vim.api.nvim_set_current_win(winid)
+    vim.cmd("stopinsert")
+end
+
+----------------------------------------------------------------------------
+--
+-- Sets focus to the first registered component in normal mode.
+-- Should be called after all components are registered and mounted.
+--
+----------------------------------------------------------------------------
+function M.focus_first()
+    vim.schedule(function()
+        local winid = get_first_component_winid()
+        focus_window_in_normal_mode(winid)
+    end)
+end
+
+----------------------------------------------------------------------------
+--
 -- Clear all focusables and reset focus index.
 --
 ----------------------------------------------------------------------------

@@ -112,6 +112,7 @@ local function activate_ui()
         M.state.outer_popup,
         M.close
     )
+    focus_manager.focus_first()
 end
 
 ----------------------------------------------------------------------------
