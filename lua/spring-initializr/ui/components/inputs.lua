@@ -104,12 +104,23 @@ end
 --
 -- @param  config   table/InputConfig  Containing configuration object with
 -- title, key, default value, and shared selections
--- @param val       any                New value to store and display
+-- @param value       any                New value to store and display
 --
 ----------------------------------------------------------------------------
-local function update_selection(config, val)
-    config.selections[config.key] = val
-    message_utils.show_info_message(config.title .. ": " .. val)
+local function update_selection(config, value)
+    config.selections[config.key] = value
+end
+
+
+----------------------------------------------------------------------------
+--
+-- Displays a selected value.
+--
+-- @param value       any                selection
+--
+----------------------------------------------------------------------------
+local function show_selection(config, value)
+    message_utils.show_info_message(config.title .. ": " .. value)
 end
 
 ----------------------------------------------------------------------------
@@ -122,11 +133,12 @@ end
 ----------------------------------------------------------------------------
 local function build_input_handlers(config)
     return {
-        on_change = function(val)
-            update_selection(config, val)
+        on_change = function(value)
+            update_selection(config, value)
         end,
-        on_submit = function(val)
-            update_selection(config, val)
+        on_submit = function(value)
+            update_selection(config, value)
+            show_selection(config, value)
         end,
     }
 end

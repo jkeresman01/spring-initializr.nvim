@@ -45,7 +45,9 @@ local notify = vim.notify
 --
 ----------------------------------------------------------------------------
 function M.show_info_message(msg)
-    notify(msg, vim.log.levels.INFO)
+    vim.schedule(function()
+        notify(msg, vim.log.levels.INFO)
+    end)
 end
 
 ----------------------------------------------------------------------------
@@ -56,7 +58,9 @@ end
 --
 ----------------------------------------------------------------------------
 function M.show_warn_message(msg)
-    notify(msg, vim.log.levels.WARN)
+    vim.schedule(function()
+        notify(msg, vim.log.levels.WARN)
+    end)
 end
 
 ----------------------------------------------------------------------------
@@ -67,7 +71,9 @@ end
 --
 ----------------------------------------------------------------------------
 function M.show_error_message(msg)
-    notify(msg, vim.log.levels.ERROR)
+    vim.schedule(function()
+        notify(msg, vim.log.levels.ERROR)
+    end)
 end
 
 ----------------------------------------------------------------------------
@@ -78,7 +84,9 @@ end
 --
 ----------------------------------------------------------------------------
 function M.show_debug_message(msg)
-    notify(msg, vim.log.levels.DEBUG)
+    vim.schedule(function()
+        notify(msg, vim.log.levels.DEBUG)
+    end)
 end
 
 ----------------------------------------------------------------------------
