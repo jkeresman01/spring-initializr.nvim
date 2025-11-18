@@ -46,7 +46,10 @@ local M = {
     state = {
         layout = nil,
         outer_popup = nil,
-        selections = { dependencies = {} },
+        selections = {
+            dependencies = {},
+            configurationFileFormat = "properties",
+        },
         metadata = nil,
     },
 }

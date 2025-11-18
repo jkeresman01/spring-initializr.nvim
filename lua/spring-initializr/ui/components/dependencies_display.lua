@@ -31,7 +31,6 @@
 -- Dependencies
 ----------------------------------------------------------------------------
 local Popup = require("nui.popup")
-local Layout = require("nui.layout")
 
 local focus_manager = require("spring-initializr.ui.managers.focus_manager")
 local message_utils = require("spring-initializr.utils.message_utils")
@@ -48,11 +47,10 @@ local M = {
 -- Constants
 ----------------------------------------------------------------------------
 local BUTTON_SIZE = { height = 3, width = 40 }
-local DISPLAY_SIZE = { height = 10, width = 40 }
+local DISPLAY_SIZE = { height = "100%", width = 40 }
 local BUTTON_TITLE = "Add Dependencies (Telescope)"
 local DISPLAY_TITLE = "Selected Dependencies"
 local SELECTED_DEPENDENCIES = DISPLAY_TITLE .. ": "
-local BUTTON_LAYOUT_H = 3
 local MAX_DEP_LABEL_LEN = 38
 
 ----------------------------------------------------------------------------
@@ -142,7 +140,7 @@ function M.create_button(update_display_fn)
     local popup = Popup(button_popup_config())
     bind_button_action(popup, update_display_fn)
     register_focus_for_components(popup)
-    return Layout.Box(popup, { size = BUTTON_LAYOUT_H })
+    return popup
 end
 
 ----------------------------------------------------------------------------
