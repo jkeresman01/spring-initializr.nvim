@@ -43,7 +43,7 @@ local message_utils = require("spring-initializr.utils.message_utils")
 ----------------------------------------------------------------------------
 -- Constants
 ----------------------------------------------------------------------------
-local SPRING_DEPENDENCIES = "Spring Dependencies"
+local PICKER_TITLE = "Spring Dependencies"
 local LAYOUT_STRATEGY = "vertical"
 
 ----------------------------------------------------------------------------
@@ -53,52 +53,68 @@ local M = {
     selected_dependencies = {},
 }
 
-----------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 --
--- Creates a single dependency entry for display in Telescope.
+-- Formats the display label for a dependency.
 --
--- @param  group_name  string  Name of the dependency group
--- @param  dep         table   Dependency metadata (must include `id` and `name`)
+-- @param group string   Dependency group name
+-- @param dep   table    Dependency metadata
 --
--- @return table               Formatted entry for Telescope
+-- @return string        Formatted label
 --
-----------------------------------------------------------------------------
-local function create_dependency_entry(group_name, dep)
+-------------------------------------------------------------------------------
+local function format_label(group, dep)
+    return string.format("[%s] %s", group, dep.name)
+end
+
+-------------------------------------------------------------------------------
+--
+-- Creates a normalized dependency entry.
+--
+-- @param group string   Group name
+-- @param dep   table    Dependency metadata
+--
+-- @return table         Flat entry table
+--
+-------------------------------------------------------------------------------
+local function build_entry(group, dep)
     return {
-        label = string.format("[%s] %s", group_name, dep.name),
         id = dep.id,
+        label = format_label(group, dep),
     }
 end
 
-----------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 --
--- Flattens the grouped dependencies into a single list of entries.
+-- Converts metadata groups into a flat list of dependency entries.
 --
--- @param  groups  table  List of dependency groups
+-- @param groups table   List of grouped dependencies
 --
--- @return table          Flat list of dependency entries
+-- @return table         Flat list of entries
 --
-----------------------------------------------------------------------------
-local function flatten_dependency_groups(groups)
-    local entries = {}
+-------------------------------------------------------------------------------
+local function flatten_entries(groups)
+    local out = {}
+
     for _, group in ipairs(groups or {}) do
         for _, dep in ipairs(group.values or {}) do
-            table.insert(entries, create_dependency_entry(group.name, dep))
+            table.insert(out, build_entry(group.name, dep))
         end
     end
-    return entries
+
+    return out
 end
 
-----------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 --
--- Converts a dependency entry into a Telescope-compatible format.
+-- Converts a flat entry into a Telescope-compatible entry.
 --
--- @param  entry  table   Formatted dependency entry
+-- @param entry table
 --
--- @return table          Entry maker result for Telescope
+-- @return table
 --
-----------------------------------------------------------------------------
-local function make_entry(entry)
+-------------------------------------------------------------------------------
+local function make_telescope_entry(entry)
     return {
         value = entry,
         display = entry.label,
@@ -106,14 +122,46 @@ local function make_entry(entry)
     }
 end
 
-----------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 --
--- Provides layout configuration for the Telescope picker.
+-- Record user's selected dependency.
 --
--- @return table  Layout config
+-- @param entry table
 --
-----------------------------------------------------------------------------
-local function get_picker_layout()
+-------------------------------------------------------------------------------
+local function record_selection(entry)
+    table.insert(M.selected_dependencies, entry.id)
+    message_utils.show_info_message("Selected Dependency: " .. entry.id)
+end
+
+-------------------------------------------------------------------------------
+--
+-- Handler for <CR> inside picker.
+--
+-- @param bufnr   number
+-- @param on_done function|nil
+--
+-------------------------------------------------------------------------------
+local function on_select(bufnr, on_done)
+    local selected = action_state.get_selected_entry()
+
+    if selected and selected.value then
+        record_selection(selected.value)
+    end
+
+    actions.close(bufnr)
+
+    if on_done then
+        vim.schedule(on_done)
+    end
+end
+
+-------------------------------------------------------------------------------
+--
+-- Picker layout config builder.
+--
+-------------------------------------------------------------------------------
+local function picker_layout()
     return {
         prompt_position = "top",
         width = 0.5,
@@ -121,92 +169,77 @@ local function get_picker_layout()
     }
 end
 
-----------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 --
--- Adds the selected dependency to the internal list and shows a message.
+-- Build Telescope's finder config.
 --
--- @param  entry  table  Selected dependency entry
+-- @param items table
 --
-----------------------------------------------------------------------------
-local function record_selection(entry)
-    table.insert(M.selected_dependencies, entry.id)
-    message_utils.show_info_message("Selected Dependency: " .. entry.id)
+-------------------------------------------------------------------------------
+local function build_finder(items)
+    return finders.new_table({
+        results = items,
+        entry_maker = make_telescope_entry,
+    })
 end
 
-----------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 --
--- Handles the <CR> action inside the picker.
--- Wraps on_done in vim.schedule to ensure it runs AFTER state update.
+-- Build attach_mappings callback.
 --
--- @param  prompt_bufnr  number         Buffer number of the picker
--- @param  on_done       function|nil   Optional callback to run after selection
+-- @param on_done function|nil
 --
-----------------------------------------------------------------------------
-local function handle_selection(prompt_bufnr, on_done)
-    local selected = action_state.get_selected_entry()
-    if selected and selected.value then
-        record_selection(selected.value)
-    end
-
-    actions.close(prompt_bufnr)
-
-    if on_done then
-        vim.schedule(on_done)
+-------------------------------------------------------------------------------
+local function build_mappings(on_done)
+    return function(prompt_bufnr)
+        actions.select_default:replace(function()
+            on_select(prompt_bufnr, on_done)
+        end)
+        return true
     end
 end
 
-----------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 --
--- Creates the full Telescope picker configuration table.
+-- Assemble full picker config.
 --
--- @param  items    table          List of dependency entries
--- @param  opts     table          Telescope picker options
--- @param  on_done  function|nil   Optional callback
+-- @param items   table
+-- @param opts    table
+-- @param on_done function|nil
 --
--- @return table                   Picker configuration
---
-----------------------------------------------------------------------------
-local function create_picker_config(items, opts, on_done)
+-------------------------------------------------------------------------------
+local function build_picker_config(items, opts, on_done)
     return {
-        prompt_title = SPRING_DEPENDENCIES,
-        finder = finders.new_table({
-            results = items,
-            entry_maker = make_entry,
-        }),
+        prompt_title = PICKER_TITLE,
+        finder = build_finder(items),
         sorter = conf.generic_sorter(opts),
         layout_strategy = LAYOUT_STRATEGY,
-        layout_config = get_picker_layout(),
-        attach_mappings = function(prompt_bufnr)
-            actions.select_default:replace(function()
-                handle_selection(prompt_bufnr, on_done)
-            end)
-            return true
-        end,
+        layout_config = picker_layout(),
+        attach_mappings = build_mappings(on_done),
     }
 end
 
-----------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 --
--- Opens the Telescope picker with given dependency entries.
+-- Open a Telescope picker.
 --
--- @param  items    table          Dependency entries
--- @param  opts     table          Picker options
--- @param  on_done  function|nil   Optional callback
+-- @param items table
+-- @param opts  table
+-- @param done  function|nil
 --
-----------------------------------------------------------------------------
-local function open_picker(items, opts, on_done)
-    pickers.new(opts, create_picker_config(items, opts, on_done)):find()
+-------------------------------------------------------------------------------
+local function open_picker(items, opts, done)
+    pickers.new(opts, build_picker_config(items, opts, done)):find()
 end
 
-----------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 --
--- Initiates the dependency picker:
--- fetch metadata, flatten dependencies, and open the picker.
+-- Fetch metadata, flatten dependencies, and open picker.
 --
--- @param  opts     table          Picker options
--- @param  on_done  function|nil   Optional callback
+-- @param opts    table
+-- @param on_done function|nil
 --
-----------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 function M.pick_dependencies(opts, on_done)
     opts = opts or {}
 
@@ -216,7 +249,8 @@ function M.pick_dependencies(opts, on_done)
             return
         end
 
-        local items = flatten_dependency_groups(data.dependencies.values)
+        local groups = data.dependencies.values
+        local items = flatten_entries(groups)
         open_picker(items, opts, on_done)
     end)
 end

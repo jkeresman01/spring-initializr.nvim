@@ -23,7 +23,8 @@
 
 ----------------------------------------------------------------------------
 --
--- Provides standardized message logging using vim.notify.
+-- Parameter Object used as a constructor to bundle configuration data
+-- and shared state for a single input field.
 --
 ----------------------------------------------------------------------------
 
@@ -31,62 +32,27 @@
 -- Module table
 ----------------------------------------------------------------------------
 local M = {}
-
-----------------------------------------------------------------------------
--- Locales
-----------------------------------------------------------------------------
-local notify = vim.notify
+M.__index = M
 
 ----------------------------------------------------------------------------
 --
--- Logs an info-level message.
+-- Creates a new instance of InputConfig.
 --
--- @param  msg  string  Message to display
+-- @param  title        string  Label/Title for the input field
+-- @param  key          string  Key used to store value in selections table
+-- @param  default      string  Default starting value for input
+-- @param  selections   table   Shared state table for user selections
 --
-----------------------------------------------------------------------------
-function M.show_info_message(msg)
-    vim.schedule(function()
-        notify(msg, vim.log.levels.INFO)
-    end)
-end
-
-----------------------------------------------------------------------------
---
--- Logs a warning-level message.
---
--- @param  msg  string  Message to display
+-- @return InputConfig          A new InputConfig instance
 --
 ----------------------------------------------------------------------------
-function M.show_warn_message(msg)
-    vim.schedule(function()
-        notify(msg, vim.log.levels.WARN)
-    end)
-end
-
-----------------------------------------------------------------------------
---
--- Logs an error-level message.
---
--- @param  msg  string  Message to display
---
-----------------------------------------------------------------------------
-function M.show_error_message(msg)
-    vim.schedule(function()
-        notify(msg, vim.log.levels.ERROR)
-    end)
-end
-
-----------------------------------------------------------------------------
---
--- Logs a debug-level message.
---
--- @param  msg  string  Message to display
---
-----------------------------------------------------------------------------
-function M.show_debug_message(msg)
-    vim.schedule(function()
-        notify(msg, vim.log.levels.DEBUG)
-    end)
+function M.new(title, key, default, selections)
+    return setmetatable({
+        title = title,
+        key = key,
+        default = default or "",
+        selections = selections,
+    }, M)
 end
 
 ----------------------------------------------------------------------------

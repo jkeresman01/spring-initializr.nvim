@@ -39,6 +39,7 @@ local window_utils = require("spring-initializr.utils.window_utils")
 local M = {
     focusables = {},
     current_focus = 1,
+    close_callback = nil,
 }
 
 ----------------------------------------------------------------------------
@@ -48,8 +49,19 @@ local M = {
 -- @param comp  table  Component to register
 --
 ----------------------------------------------------------------------------
-function M.register(comp)
+function M.register_component(comp)
     table.insert(M.focusables, comp)
+end
+
+----------------------------------------------------------------------------
+--
+-- Set the callback function to be called when quit is triggered.
+--
+-- @param callback  function  Function to call on quit
+--
+----------------------------------------------------------------------------
+function M.set_close_callback(callback)
+    M.close_callback = callback
 end
 
 ----------------------------------------------------------------------------
@@ -74,14 +86,26 @@ end
 
 ----------------------------------------------------------------------------
 --
--- Map navigation keys to a component.
+-- Handle quit action - closes the entire UI.
+--
+----------------------------------------------------------------------------
+local function handle_quit()
+    if M.close_callback then
+        M.close_callback()
+    end
+end
+
+----------------------------------------------------------------------------
+--
+-- Map navigation and quit keys to a component.
 --
 -- @param comp  table  Component to map keys for
 --
 ----------------------------------------------------------------------------
-local function map_navigation_keys(comp)
+local function map_component_keys(comp)
     comp:map("n", "<Tab>", focus_next, { noremap = true, nowait = true })
     comp:map("n", "<S-Tab>", focus_prev, { noremap = true, nowait = true })
+    comp:map("n", "q", handle_quit, { noremap = true, nowait = true })
 end
 
 ----------------------------------------------------------------------------
@@ -89,9 +113,9 @@ end
 -- Enable focus navigation across all registered components.
 --
 ----------------------------------------------------------------------------
-function M.enable()
+function M.enable_navigation()
     for _, comp in ipairs(M.focusables) do
-        map_navigation_keys(comp)
+        map_component_keys(comp)
     end
 end
 
@@ -103,6 +127,7 @@ end
 function M.reset()
     M.focusables = {}
     M.current_focus = 1
+    M.close_callback = nil
 end
 
 ----------------------------------------------------------------------------

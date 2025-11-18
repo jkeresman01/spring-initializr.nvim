@@ -33,9 +33,11 @@
 local Layout = require("nui.layout")
 local Popup = require("nui.popup")
 
-local radios = require("spring-initializr.ui.radios")
-local inputs = require("spring-initializr.ui.inputs")
-local deps = require("spring-initializr.ui.deps")
+local radios = require("spring-initializr.ui.components.radios")
+local inputs = require("spring-initializr.ui.components.inputs")
+local dependencies_display = require("spring-initializr.ui.components.dependencies_display")
+
+local FormContext = require("spring-initializr.ui.config.form_context")
 
 ----------------------------------------------------------------------------
 -- Module table
@@ -130,22 +132,27 @@ end
 -- @return table              List of Layout.Box components
 --
 ----------------------------------------------------------------------------
-local function create_radio_controls(metadata, selections)
+local function create_radio_controls(form_context)
+    local metadata = form_context.metadata
     return {
-        radios.create_radio("Project Type", metadata.type.values, "project_type", selections),
-        radios.create_radio("Language", metadata.language.values, "language", selections),
         radios.create_radio(
-            "Spring Boot Version",
-            format_boot_versions(metadata.bootVersion.values),
-            "boot_version",
-            selections
+            form_context:radio_config("Project Type", metadata.type.values, "project_type")
         ),
-        radios.create_radio("Packaging", metadata.packaging.values, "packaging", selections),
         radios.create_radio(
-            "Java Version",
-            metadata.javaVersion.values,
-            "java_version",
-            selections
+            form_context:radio_config("Language", metadata.language.values, "language")
+        ),
+        radios.create_radio(
+            form_context:radio_config(
+                "Spring Boot Version",
+                format_boot_versions(metadata.bootVersion.values),
+                "boot_version"
+            )
+        ),
+        radios.create_radio(
+            form_context:radio_config("Packaging", metadata.packaging.values, "packaging")
+        ),
+        radios.create_radio(
+            form_context:radio_config("Java Version", metadata.javaVersion.values, "java_version")
         ),
     }
 end
@@ -159,18 +166,17 @@ end
 -- @return table              List of Layout.Box components
 --
 ----------------------------------------------------------------------------
-local function create_input_controls(selections)
+local function create_input_controls(form_context)
     return {
-        inputs.create_input("Group", "groupId", "com.example", selections),
-        inputs.create_input("Artifact", "artifactId", "demo", selections),
-        inputs.create_input("Name", "name", "demo", selections),
+        inputs.create_input(form_context:input_config("Group", "groupId", "com.example")),
+        inputs.create_input(form_context:input_config("Artifact", "artifactId", "demo")),
+        inputs.create_input(form_context:input_config("Name", "name", "demo")),
         inputs.create_input(
-            "Description",
-            "description",
-            "Demo project for Spring Boot",
-            selections
+            form_context:input_config("Description", "description", "Demo project for Spring Boot")
         ),
-        inputs.create_input("Package Name", "packageName", "com.example.demo", selections),
+        inputs.create_input(
+            form_context:input_config("Package Name", "packageName", "com.example.demo")
+        ),
     }
 end
 
@@ -184,10 +190,10 @@ end
 -- @return Layout.Box              Left panel
 --
 ----------------------------------------------------------------------------
-local function create_left_panel(metadata, selections)
+local function create_left_panel(form_context)
     local children = {}
-    vim.list_extend(children, create_radio_controls(metadata, selections))
-    vim.list_extend(children, create_input_controls(selections))
+    vim.list_extend(children, create_radio_controls(form_context))
+    vim.list_extend(children, create_input_controls(form_context))
     return Layout.Box(children, { dir = "col", size = "50%" })
 end
 
@@ -200,8 +206,11 @@ end
 ----------------------------------------------------------------------------
 local function create_right_panel()
     return Layout.Box({
-        Layout.Box(deps.create_button(deps.update_display), { size = "10%" }),
-        Layout.Box(deps.create_display(), { size = "90%" }),
+        Layout.Box(
+            dependencies_display.create_button(dependencies_display.update_display),
+            { size = "10%" }
+        ),
+        Layout.Box(dependencies_display.create_display(), { size = "90%" }),
     }, { dir = "col", size = "50%" })
 end
 
@@ -218,10 +227,12 @@ end
 function M.build_ui(metadata, selections)
     local outer_popup = create_outer_popup()
 
+    local form_context = FormContext.new(metadata, selections)
+
     local layout = Layout(
         outer_popup,
         Layout.Box({
-            create_left_panel(metadata, selections),
+            create_left_panel(form_context),
             create_right_panel(),
         }, { dir = "row" })
     )

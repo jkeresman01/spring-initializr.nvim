@@ -30,11 +30,11 @@
 ----------------------------------------------------------------------------
 -- Dependencies
 ----------------------------------------------------------------------------
-local layout_builder = require("spring-initializr.ui.layout")
-local focus = require("spring-initializr.ui.focus")
+local layout_builder = require("spring-initializr.ui.layout.layout")
+local focus_manager = require("spring-initializr.ui.managers.focus_manager")
 local highlights = require("spring-initializr.styles.highlights")
 local metadata = require("spring-initializr.metadata.metadata")
-local deps = require("spring-initializr.ui.deps")
+local dependencies_display = require("spring-initializr.ui.components.dependencies_display")
 local window_utils = require("spring-initializr.utils.window_utils")
 local message_utils = require("spring-initializr.utils.message_utils")
 
@@ -47,7 +47,6 @@ local M = {
         outer_popup = nil,
         selections = { dependencies = {} },
         metadata = nil,
-        autocmd_id = nil,
     },
 }
 
@@ -97,82 +96,16 @@ end
 
 ----------------------------------------------------------------------------
 --
--- Checks if a closed window belongs to our UI.
---
--- @param  closed_win  number  Window ID that was closed
---
--- @return boolean             True if window belongs to this UI
---
-----------------------------------------------------------------------------
-local function is_ui_window(closed_win)
-    if M.state.outer_popup and M.state.outer_popup.winid == closed_win then
-        return true
-    end
-
-    for _, comp in ipairs(focus.focusables) do
-        local winid = window_utils.get_winid(comp)
-        if winid == closed_win then
-            return true
-        end
-    end
-
-    return false
-end
-
-----------------------------------------------------------------------------
---
--- Handles window close event.
---
--- @param  args  table  Autocmd event arguments
---
-----------------------------------------------------------------------------
-local function handle_window_closed(args)
-    local closed_win = tonumber(args.match)
-    if not closed_win then
-        return
-    end
-
-    if is_ui_window(closed_win) then
-        vim.schedule(function()
-            M.close()
-        end)
-    end
-end
-
-----------------------------------------------------------------------------
---
--- Clears existing autocmd if present.
---
-----------------------------------------------------------------------------
-local function clear_autocmd()
-    if M.state.autocmd_id then
-        pcall(vim.api.nvim_del_autocmd, M.state.autocmd_id)
-        M.state.autocmd_id = nil
-    end
-end
-
-----------------------------------------------------------------------------
---
--- Sets up autocmd to close entire UI when any window is closed with :q
---
-----------------------------------------------------------------------------
-local function setup_close_autocmd()
-    clear_autocmd()
-    M.state.autocmd_id = vim.api.nvim_create_autocmd("WinClosed", {
-        callback = handle_window_closed,
-    })
-end
-
-----------------------------------------------------------------------------
---
--- Mounts the layout, sets focus behavior and updates dependency display.
+-- Mounts the layout, sets focus_manager behavior and updates dependency display.
 --
 ----------------------------------------------------------------------------
 local function activate_ui()
     M.state.layout:mount()
-    focus.enable()
-    deps.update_display()
-    setup_close_autocmd()
+    focus_manager.set_close_callback(function()
+        M.close()
+    end)
+    focus_manager.enable_navigation()
+    dependencies_display.update_display()
 end
 
 ----------------------------------------------------------------------------
@@ -211,39 +144,22 @@ end
 
 ----------------------------------------------------------------------------
 --
--- Unmounts the layout component.
+-- Cleans up all active layout and popup UI components.
+-- Resets internal state and focus_manager tracking.
 --
 ----------------------------------------------------------------------------
-local function unmount_layout()
+function M.close()
     if M.state.layout then
         pcall(function()
             M.state.layout:unmount()
         end)
         M.state.layout = nil
     end
-end
 
-----------------------------------------------------------------------------
---
--- Closes the outer popup window.
---
-----------------------------------------------------------------------------
-local function close_outer_popup()
     window_utils.safe_close(M.state.outer_popup and M.state.outer_popup.winid)
     M.state.outer_popup = nil
-end
 
-----------------------------------------------------------------------------
---
--- Cleans up all active layout and popup UI components.
--- Resets internal state and focus tracking.
---
-----------------------------------------------------------------------------
-function M.close()
-    clear_autocmd()
-    unmount_layout()
-    close_outer_popup()
-    focus.reset()
+    focus_manager.reset()
 end
 
 ----------------------------------------------------------------------------

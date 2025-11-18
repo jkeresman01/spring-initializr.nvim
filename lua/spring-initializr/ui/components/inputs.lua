@@ -33,7 +33,7 @@
 local Input = require("nui.input")
 local Layout = require("nui.layout")
 
-local focus = require("spring-initializr.ui.focus")
+local focus_manager = require("spring-initializr.ui.managers.focus_manager")
 local message_utils = require("spring-initializr.utils.message_utils")
 
 ----------------------------------------------------------------------------
@@ -100,23 +100,44 @@ end
 
 ----------------------------------------------------------------------------
 --
--- Creates input change and submit handlers that update user selections.
+-- Updates a selected field value and displays a message.
 --
--- @param  key         string  Field key
--- @param  title       string  Field title
--- @param  selections  table   State table to store values
---
--- @return table               Handlers for input events
+-- @param  config   table/InputConfig  Containing configuration object with
+-- title, key, default value, and shared selections
+-- @param value       any                New value to store and display
 --
 ----------------------------------------------------------------------------
-local function build_input_handlers(key, title, selections)
+local function update_selection(config, value)
+    config.selections[config.key] = value
+end
+
+----------------------------------------------------------------------------
+--
+-- Displays a selected value.
+--
+-- @param value       any                selection
+--
+----------------------------------------------------------------------------
+local function show_selection(config, value)
+    message_utils.show_info_message(config.title .. ": " .. value)
+end
+
+----------------------------------------------------------------------------
+--
+-- Creates input change and submit handlers that update user selections.
+--
+-- @param  config   table/InputConfig  Containing configuration object with
+-- title, key, default value, and shared selections
+--
+----------------------------------------------------------------------------
+local function build_input_handlers(config)
     return {
-        on_change = function(val)
-            selections[key] = val
+        on_change = function(value)
+            update_selection(config, value)
         end,
-        on_submit = function(val)
-            selections[key] = val
-            message_utils.show_info_message(title .. ": " .. val)
+        on_submit = function(value)
+            update_selection(config, value)
+            show_selection(config, value)
         end,
     }
 end
@@ -125,42 +146,49 @@ end
 --
 -- Creates and returns an Input popup component.
 --
--- @param  title       string  Field title
--- @param  key         string  Field key
--- @param  default     string  Default value
--- @param  selections  table   State table to store values
+-- @param  config   table/InputConfig  Containing configuration object with
+-- title, key, default value, and shared selections
 --
--- @return Input               Input popup component
+-- @return Input                       Input popup component
 --
 ----------------------------------------------------------------------------
-local function create_input_component(title, key, default, selections)
-    local popup_opts = build_input_popup_opts(title)
-    local handlers = build_input_handlers(key, title, selections)
+local function create_input_component(config)
+    local popup_opts = build_input_popup_opts(config.title)
+    local input_handlers = build_input_handlers(config)
 
     return Input(popup_opts, {
-        default_value = default or "",
-        on_change = handlers.on_change,
-        on_submit = handlers.on_submit,
+        default_value = config.default,
+        on_change = input_handlers.on_change,
+        on_submit = input_handlers.on_submit,
     })
+end
+
+----------------------------------------------------------------------------
+--
+-- Registers focus for provided component
+--
+-- @param component  component any component
+--
+----------------------------------------------------------------------------
+local function register_focus_for_components(component)
+    focus_manager.register_component(component)
 end
 
 ----------------------------------------------------------------------------
 --
 -- Create a layout-wrapped input component for Spring Initializr.
 --
--- @param  title       string       Field title
--- @param  key         string       Field key
--- @param  default     string       Default value
--- @param  selections  table        State table to store values
+-- @param  config   table/InputConfig  Containing configuration object with
+-- title, key, default value, and shared selections
 --
--- @return Layout.Box               Layout-wrapped input component
+-- @return Layout.Box                  Layout-wrapped input component
 --
 ----------------------------------------------------------------------------
-function M.create_input(title, key, default, selections)
-    selections[key] = default or ""
-    local input = create_input_component(title, key, default, selections)
-    focus.register(input)
-    return Layout.Box(input, { size = 3 })
+function M.create_input(config)
+    config.selections[config.key] = config.default
+    local input_component = create_input_component(config)
+    register_focus_for_components(input_component)
+    return Layout.Box(input_component, { size = 3 })
 end
 
 ----------------------------------------------------------------------------

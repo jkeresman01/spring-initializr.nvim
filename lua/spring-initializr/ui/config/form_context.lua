@@ -23,7 +23,8 @@
 
 ----------------------------------------------------------------------------
 --
--- Provides standardized message logging using vim.notify.
+-- Factory for bundling high-level data (metadata and user selections)
+-- and provide convenience methods to generate reusable configuration objects
 --
 ----------------------------------------------------------------------------
 
@@ -31,62 +32,55 @@
 -- Module table
 ----------------------------------------------------------------------------
 local M = {}
-
-----------------------------------------------------------------------------
--- Locales
-----------------------------------------------------------------------------
-local notify = vim.notify
+M.__index = M
 
 ----------------------------------------------------------------------------
 --
--- Logs an info-level message.
+-- Creates a new instance of FormContext.
 --
--- @param  msg  string  Message to display
+-- @param  metadata    table  Stores Spring Initializr API metadata
+-- @param  selection   table  Shared global state for user selections
+--
+-- @return FormContext        Next FormContext instance
 --
 ----------------------------------------------------------------------------
-function M.show_info_message(msg)
-    vim.schedule(function()
-        notify(msg, vim.log.levels.INFO)
-    end)
+function M.new(metadata, selections)
+    return setmetatable({
+        metadata = metadata,
+        selections = selections,
+    }, M)
 end
 
 ----------------------------------------------------------------------------
 --
--- Logs a warning-level message.
+-- Create a new RadioConfig Parameter Object.
 --
--- @param  msg  string  Message to display
+-- @param  title       string  Label/title of the radio group
+-- @param  values      table   Available radio options
+-- @param  key         string  Key to store the selection in state
+--
+-- @return RadioConfig         Fully configured RadioConfig object
 --
 ----------------------------------------------------------------------------
-function M.show_warn_message(msg)
-    vim.schedule(function()
-        notify(msg, vim.log.levels.WARN)
-    end)
+function M:radio_config(title, values, key)
+    local RadioConfig = require("spring-initializr.ui.config.radio_config")
+    return RadioConfig.new(title, values, key, self.selections)
 end
 
 ----------------------------------------------------------------------------
 --
--- Logs an error-level message.
+-- Create a new InputConfig Parameter Object.
 --
--- @param  msg  string  Message to display
+-- @param  title    string  Label for the input field
+-- @param  key      string  Key to store the selection in state
+-- @param  default  string  Default value for input field
 --
-----------------------------------------------------------------------------
-function M.show_error_message(msg)
-    vim.schedule(function()
-        notify(msg, vim.log.levels.ERROR)
-    end)
-end
-
-----------------------------------------------------------------------------
---
--- Logs a debug-level message.
---
--- @param  msg  string  Message to display
+-- @return InputConfig      Fully configured InputConfig object
 --
 ----------------------------------------------------------------------------
-function M.show_debug_message(msg)
-    vim.schedule(function()
-        notify(msg, vim.log.levels.DEBUG)
-    end)
+function M:input_config(title, key, default)
+    local InputConfig = require("spring-initializr.ui.config.input_config")
+    return InputConfig.new(title, key, default, self.selections)
 end
 
 ----------------------------------------------------------------------------
