@@ -39,6 +39,7 @@ local action_state = require("telescope.actions.state")
 
 local metadata_loader = require("spring-initializr.metadata.metadata")
 local message_utils = require("spring-initializr.utils.message_utils")
+local HashSet = require("spring-initializr.algo.hashset")
 
 ----------------------------------------------------------------------------
 -- Constants
@@ -51,7 +52,19 @@ local LAYOUT_STRATEGY = "vertical"
 ----------------------------------------------------------------------------
 local M = {
     selected_dependencies = {},
+    selected_set = nil,
 }
+
+-------------------------------------------------------------------------------
+--
+-- Initialize the selected dependencies HashSet on first use.
+--
+-------------------------------------------------------------------------------
+local function init_hashset()
+    if not M.selected_set then
+        M.selected_set = HashSet.new()
+    end
+end
 
 -------------------------------------------------------------------------------
 --
@@ -124,12 +137,18 @@ end
 
 -------------------------------------------------------------------------------
 --
--- Record user's selected dependency.
+-- Record user's selected dependency if not already selected.
 --
 -- @param entry table
 --
 -------------------------------------------------------------------------------
 local function record_selection(entry)
+    init_hashset()
+    if M.selected_set:has(entry.id) then
+        message_utils.show_warn_message("Already selected: " .. entry.id)
+        return
+    end
+    M.selected_set:add(entry.id)
     table.insert(M.selected_dependencies, entry.id)
     message_utils.show_info_message("Selected Dependency: " .. entry.id)
 end
