@@ -37,6 +37,7 @@ local metadata = require("spring-initializr.metadata.metadata")
 local dependencies_display = require("spring-initializr.ui.components.dependencies_display")
 local window_utils = require("spring-initializr.utils.window_utils")
 local message_utils = require("spring-initializr.utils.message_utils")
+local buffer_utils = require("spring-initializr.utils.buffer_utils")
 
 ----------------------------------------------------------------------------
 -- Module table
@@ -103,6 +104,11 @@ local function activate_ui()
     M.state.layout:mount()
     focus_manager.enable_navigation()
     dependencies_display.update_display()
+    buffer_utils.setup_close_on_buffer_delete(
+        focus_manager.focusables,
+        M.state.outer_popup,
+        M.close
+    )
 end
 
 ----------------------------------------------------------------------------
