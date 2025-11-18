@@ -54,14 +54,12 @@ end
 ----------------------------------------------------------------------------
 local function collect_buffers_from_components(components)
     local buffers = {}
-    
     for _, comp in ipairs(components) do
         local bufnr = get_bufnr_from_component(comp)
         if bufnr then
             table.insert(buffers, bufnr)
         end
     end
-    
     return buffers
 end
 
