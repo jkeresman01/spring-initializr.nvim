@@ -27,6 +27,7 @@
     "bufnr",
     "highligh",
     "urlencode",
+    "stopinsert",
     "Initializr",
     "initializr",
     "nvim",
