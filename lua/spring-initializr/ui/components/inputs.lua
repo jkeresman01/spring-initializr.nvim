@@ -111,7 +111,6 @@ local function update_selection(config, value)
     config.selections[config.key] = value
 end
 
-
 ----------------------------------------------------------------------------
 --
 -- Displays a selected value.
