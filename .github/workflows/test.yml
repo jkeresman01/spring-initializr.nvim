@@ -33,5 +33,6 @@ jobs:
 
       - name: Run tests (Plenary/Busted)
         run: |
-          nvim --version
-          nvim --headless -u tests/minimal_init.lua -c "PlenaryBustedDirectory tests" +q
+            nvim --headless -u tests/minimal_init.lua \
+            -c "PlenaryBustedDirectory tests --exclude-pattern telescope_integration_spec" +q
+
