@@ -101,6 +101,7 @@ spring-initializr.nvim/
 │       │   ├── layout/
 │       │   │   └── layout.lua                 # Layout builder
 │       │   ├── managers/
+│       │   │   ├── buffer_manager.lua         # Registers UI closing
 │       │   │   └── focus_manager.lua          # Focus management
 │       │   └── init.lua                       # UI entry point
 │       ├── utils/             # Utilities

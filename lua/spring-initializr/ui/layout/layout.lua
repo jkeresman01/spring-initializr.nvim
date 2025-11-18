@@ -45,6 +45,14 @@ local FormContext = require("spring-initializr.ui.config.form_context")
 local M = {}
 
 ----------------------------------------------------------------------------
+-- Constants
+----------------------------------------------------------------------------
+local CONFIG_FORMAT_OPTIONS = {
+    { name = "Properties", id = "properties" },
+    { name = "YAML", id = "yaml" },
+}
+
+----------------------------------------------------------------------------
 --
 -- Build border config for the outer popup.
 --
@@ -126,10 +134,9 @@ end
 --
 -- Create all radio components.
 --
--- @param  metadata    table  Spring metadata
--- @param  selections  table  State table of user selections
+-- @param  form_context  FormContext  Context with metadata and selections
 --
--- @return table              List of Layout.Box components
+-- @return table                      List of Layout.Box components
 --
 ----------------------------------------------------------------------------
 local function create_radio_controls(form_context)
@@ -154,6 +161,13 @@ local function create_radio_controls(form_context)
         radios.create_radio(
             form_context:radio_config("Java Version", metadata.javaVersion.values, "java_version")
         ),
+        radios.create_radio(
+            form_context:radio_config(
+                "Config Format",
+                CONFIG_FORMAT_OPTIONS,
+                "configurationFileFormat"
+            )
+        ),
     }
 end
 
@@ -161,9 +175,9 @@ end
 --
 -- Create all input fields.
 --
--- @param  selections  table  State table of user selections
+-- @param  form_context  FormContext  Context with selections
 --
--- @return table              List of Layout.Box components
+-- @return table                      List of Layout.Box components
 --
 ----------------------------------------------------------------------------
 local function create_input_controls(form_context)
@@ -184,10 +198,9 @@ end
 --
 -- Create the left-hand UI panel with all user-configurable fields.
 --
--- @param  metadata    table       Spring metadata
--- @param  selections  table       State table of user selections
+-- @param  form_context  FormContext  Context with metadata and selections
 --
--- @return Layout.Box              Left panel
+-- @return Layout.Box                 Left panel
 --
 ----------------------------------------------------------------------------
 local function create_left_panel(form_context)
@@ -208,9 +221,9 @@ local function create_right_panel()
     return Layout.Box({
         Layout.Box(
             dependencies_display.create_button(dependencies_display.update_display),
-            { size = "10%" }
+            { size = 3 }
         ),
-        Layout.Box(dependencies_display.create_display(), { size = "90%" }),
+        Layout.Box(dependencies_display.create_display(), { grow = 1 }),
     }, { dir = "col", size = "50%" })
 end
 

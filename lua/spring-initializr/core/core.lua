@@ -66,6 +66,7 @@ local function collect_params()
         packaging = s.packaging,
         javaVersion = s.java_version,
         dependencies = table.concat(deps.selected_dependencies or {}, ","),
+        configurationFileFormat = s.configurationFileFormat or "properties",
     }
 end
 
