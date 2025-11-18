@@ -102,7 +102,7 @@ end
 ----------------------------------------------------------------------------
 local function activate_ui()
     M.state.layout:mount()
-    focus_manager.enable_navigation()
+    focus_manager.enable_navigation(M)
     dependencies_display.update_display()
     buffer_utils.setup_close_on_buffer_delete(
         focus_manager.focusables,

@@ -32,6 +32,7 @@
 -- Dependencies
 ----------------------------------------------------------------------------
 local window_utils = require("spring-initializr.utils.window_utils")
+local buffer_manager = require("spring-initializr.ui.managers.buffer_manager")
 
 ----------------------------------------------------------------------------
 -- Module table
@@ -86,12 +87,16 @@ end
 
 ----------------------------------------------------------------------------
 --
--- Enable focus navigation across all registered components.
+-- Enable focus navigation across all registered components and closes UI
+-- if mapped key 'q' is pressed.
+--
+-- @param main_ui    table  Module table passed from init.lua
 --
 ----------------------------------------------------------------------------
-function M.enable_navigation()
+function M.enable_navigation(main_ui)
     for _, comp in ipairs(M.focusables) do
         map_navigation_keys(comp)
+        buffer_manager.register_close_key(comp, main_ui)
     end
 end
 
