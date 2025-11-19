@@ -180,10 +180,11 @@ end
 local function fetch_from_remote()
     Job:new({
         command = "curl",
-        args = { 
+        args = {
             "-s",
-            "-H", "Accept: application/vnd.initializr.v2.3+json",
-            METADATA_URL
+            "-H",
+            "Accept: application/vnd.initializr.v2.3+json",
+            METADATA_URL,
         },
         on_exit = function(j)
             handle_response(j:result(), j:stderr_result())
