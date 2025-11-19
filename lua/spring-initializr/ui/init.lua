@@ -51,6 +51,7 @@ local M = {
             configurationFileFormat = "properties",
         },
         metadata = nil,
+        is_open = false,
     },
 }
 
@@ -105,6 +106,7 @@ end
 ----------------------------------------------------------------------------
 local function activate_ui()
     M.state.layout:mount()
+    M.state.is_open = true
     focus_manager.enable_navigation(M)
     dependencies_display.update_display()
     buffer_utils.setup_close_on_buffer_delete(
@@ -132,9 +134,15 @@ end
 --
 -- Public setup function that initializes the full UI system.
 -- Loads metadata, builds layout, and shows the form.
+-- Prevents recursive opening if UI is already displayed.
 --
 ----------------------------------------------------------------------------
 function M.setup()
+    if M.state.is_open then
+        message_utils.show_warn_message("Spring Initializr is already open")
+        return
+    end
+
     setup_highlights()
 
     metadata.fetch_metadata(function(data, err)
@@ -165,6 +173,7 @@ function M.close()
 
     window_utils.safe_close(M.state.outer_popup and M.state.outer_popup.winid)
     M.state.outer_popup = nil
+    M.state.is_open = false
 
     focus_manager.reset()
 end
