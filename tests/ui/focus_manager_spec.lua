@@ -120,7 +120,7 @@ describe("focus_manager management", function()
             focus_manager.enable_navigation()
 
             -- Assert
-            assert.are.equal(4, #map_calls) -- 2 keys per component
+            assert.are.equal(6, #map_calls) -- 2 keys per component
             assert.is_true(vim.tbl_contains(
                 vim.tbl_map(function(c)
                     return c.key
