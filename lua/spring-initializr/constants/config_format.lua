@@ -23,37 +23,13 @@
 
 ----------------------------------------------------------------------------
 --
--- Entry point for the Spring Initializr Neovim plugin.
--- Registers all user commands and sets up the plugin.
+-- Configuration format constants for Spring Boot projects.
 --
 ----------------------------------------------------------------------------
 
-local commands = require("spring-initializr.commands.commands")
-local config = require("spring-initializr.config.config")
-
-local M = {}
-
------------------------------------------------------------------------------
---
--- Initializes the plugin by registering user commands.
---
--- @param  user_config  table|nil  Optional configuration options
---                                 Supported fields:
---                                   - config_format: "properties" or "yaml"
---
--- @example
--- require("spring-initializr").setup()
---
--- @example
--- local ConfigFormat = require("spring-initializr.constants.config_format")
--- require("spring-initializr").setup({
---   config_format = ConfigFormat.YAML
--- })
---
------------------------------------------------------------------------------
-function M.setup(user_config)
-    config.setup(user_config)
-    commands.register()
-end
+local M = {
+    PROPERTIES = "properties",
+    YAML = "yaml",
+}
 
 return M

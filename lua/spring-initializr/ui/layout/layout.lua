@@ -35,6 +35,7 @@ local Popup = require("nui.popup")
 
 local radios = require("spring-initializr.ui.components.radios")
 local inputs = require("spring-initializr.ui.components.inputs")
+local config = require("spring-initializr.config.config")
 local dependencies_display = require("spring-initializr.ui.components.dependencies_display")
 
 local FormContext = require("spring-initializr.ui.config.form_context")
@@ -239,6 +240,8 @@ end
 ----------------------------------------------------------------------------
 function M.build_ui(metadata, selections)
     local outer_popup = create_outer_popup()
+
+    selections.configurationFileFormat = config.get_config_format()
 
     local form_context = FormContext.new(metadata, selections)
 

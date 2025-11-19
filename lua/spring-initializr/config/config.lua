@@ -23,37 +23,44 @@
 
 ----------------------------------------------------------------------------
 --
--- Entry point for the Spring Initializr Neovim plugin.
--- Registers all user commands and sets up the plugin.
+-- Manages plugin configuration.
 --
 ----------------------------------------------------------------------------
 
-local commands = require("spring-initializr.commands.commands")
-local config = require("spring-initializr.config.config")
+----------------------------------------------------------------------------
+-- Module table
+----------------------------------------------------------------------------
+local M = {
+    config_format = "properties",
+}
 
-local M = {}
-
------------------------------------------------------------------------------
+----------------------------------------------------------------------------
 --
--- Initializes the plugin by registering user commands.
+-- Sets up plugin configuration.
 --
--- @param  user_config  table|nil  Optional configuration options
+-- @param  user_config  table|nil  User-provided configuration options
 --                                 Supported fields:
 --                                   - config_format: "properties" or "yaml"
 --
--- @example
--- require("spring-initializr").setup()
---
--- @example
--- local ConfigFormat = require("spring-initializr.constants.config_format")
--- require("spring-initializr").setup({
---   config_format = ConfigFormat.YAML
--- })
---
------------------------------------------------------------------------------
+----------------------------------------------------------------------------
 function M.setup(user_config)
-    config.setup(user_config)
-    commands.register()
+    if user_config and user_config.config_format then
+        M.config_format = user_config.config_format
+    end
 end
 
+----------------------------------------------------------------------------
+--
+-- Gets the configured format.
+--
+-- @return string  Configuration format ("properties" or "yaml")
+--
+----------------------------------------------------------------------------
+function M.get_config_format()
+    return M.config_format
+end
+
+----------------------------------------------------------------------------
+-- Exports
+----------------------------------------------------------------------------
 return M
