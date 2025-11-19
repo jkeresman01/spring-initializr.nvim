@@ -46,14 +46,6 @@ local FormContext = require("spring-initializr.ui.context.form_context")
 local M = {}
 
 ----------------------------------------------------------------------------
--- Constants
-----------------------------------------------------------------------------
-local CONFIG_FORMAT_OPTIONS = {
-    { name = "Properties", id = "properties" },
-    { name = "YAML", id = "yaml" },
-}
-
-----------------------------------------------------------------------------
 --
 -- Build border config for the outer popup.
 --
@@ -165,7 +157,7 @@ local function create_radio_controls(form_context)
         radios.create_radio(
             form_context:radio_config(
                 "Config Format",
-                CONFIG_FORMAT_OPTIONS,
+                metadata.configurationFileFormat.values,
                 "configurationFileFormat"
             )
         ),
