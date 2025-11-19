@@ -77,25 +77,30 @@
 spring-initializr.nvim/
 ├── lua/
 │   └── spring-initializr/
-│       ├── algo/              # Data structures
+│       ├── algo/                   # Data structures
 │       │   └── hashset.lua
-│       ├── commands/          # User commands
+│       ├── commands/               # User commands
 │       │   └── commands.lua
-│       ├── core/              # Business logic
+│       ├── config/                 # Plugin config
+│       │   └── config.lua
+│       ├── constants/              # Config format constants
+│       │   └── config_format.lua   
+│       ├── context/                # Generate reusable config objects
+│       │   └── form_context.lua   
+│       ├── core/                   # Business logic
 │       │   └── core.lua
-│       ├── metadata/          # Metadata fetching
+│       ├── metadata/               # Metadata fetching
 │       │   └── metadata.lua
-│       ├── styles/            # Styling/highlights
+│       ├── styles/                 # Styling/highlights
 │       │   └── highlights.lua
-│       ├── telescope/         # Telescope integration
+│       ├── telescope/              # Telescope integration
 │       │   └── telescope.lua
-│       ├── ui/                # UI components
+│       ├── ui/                     # UI components
 │       │   ├── components/
 │       │   │   ├── dependencies_display.lua   # Manages UI elements
 │       │   │   ├── inputs.lua                 # Input fields
 │       │   │   └── radios.lua                 # Radio buttons
 │       │   ├── config/
-│       │   │   ├── form_context.lua           # Generate reusable config objects
 │       │   │   ├── input_config.lua           # Generate parameter object for input field
 │       │   │   └── radio_config.lua           # Generate parameter object for radio button
 │       │   ├── layout/
