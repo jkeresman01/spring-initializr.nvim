@@ -30,6 +30,9 @@ spring-initializr.nvim/
 │   └── spring-initializr/
 │       ├── algo/
 │       ├── commands/
+│       ├── config/
+│       ├── constants/
+│       ├── context/
 │       ├── core/
 │       ├── metadata/
 │       ├── styles/
