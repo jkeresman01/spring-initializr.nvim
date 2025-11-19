@@ -38,7 +38,7 @@ local inputs = require("spring-initializr.ui.components.inputs")
 local config = require("spring-initializr.config.config")
 local dependencies_display = require("spring-initializr.ui.components.dependencies_display")
 
-local FormContext = require("spring-initializr.ui.config.form_context")
+local FormContext = require("spring-initializr.context.form_context")
 
 ----------------------------------------------------------------------------
 -- Module table
