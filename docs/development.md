@@ -85,8 +85,6 @@ spring-initializr.nvim/
 │       │   └── config.lua
 │       ├── constants/              # Config format constants
 │       │   └── config_format.lua   
-│       ├── context/                # Generate reusable config objects
-│       │   └── form_context.lua   
 │       ├── core/                   # Business logic
 │       │   └── core.lua
 │       ├── metadata/               # Metadata fetching
@@ -103,6 +101,8 @@ spring-initializr.nvim/
 │       │   ├── config/
 │       │   │   ├── input_config.lua           # Generate parameter object for input field
 │       │   │   └── radio_config.lua           # Generate parameter object for radio button
+│       │   ├── context/                       
+│       │   │   └── form_context.lua           # Generate reusable config objects
 │       │   ├── layout/
 │       │   │   └── layout.lua                 # Layout builder
 │       │   ├── managers/

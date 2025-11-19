@@ -32,7 +32,6 @@ spring-initializr.nvim/
 │       ├── commands/
 │       ├── config/
 │       ├── constants/
-│       ├── context/
 │       ├── core/
 │       ├── metadata/
 │       ├── styles/
