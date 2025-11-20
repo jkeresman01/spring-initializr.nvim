@@ -36,7 +36,7 @@ local Popup = require("nui.popup")
 local focus_manager = require("spring-initializr.ui.managers.focus_manager")
 local message_utils = require("spring-initializr.utils.message_utils")
 local picker = require("spring-initializr.telescope.telescope")
-local dependency_card = require("spring-initializr.ui.components.dependency_card")
+local dependency_card = require("spring-initializr.ui.components.dependencies.dependency_card")
 
 ----------------------------------------------------------------------------
 -- Module
