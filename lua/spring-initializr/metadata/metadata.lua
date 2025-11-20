@@ -29,14 +29,14 @@
 
 ----------------------------------------------------------------------------
 -- Dependencies
--- External modules used by this file.
 ----------------------------------------------------------------------------
-local Job = require("plenary.job")
+local curl = require("plenary.curl")
 
 ----------------------------------------------------------------------------
 -- Constants
 ----------------------------------------------------------------------------
 local METADATA_URL = "https://start.spring.io/metadata/client"
+local REQUEST_TIMEOUT = 10000 -- 10 seconds
 
 ----------------------------------------------------------------------------
 -- Module table
@@ -68,31 +68,20 @@ end
 
 ----------------------------------------------------------------------------
 --
--- Converts the curl result (array of lines) into a single string.
---
--- @param  result  table    Lines from stdout
--- @return string           Joined output
---
-----------------------------------------------------------------------------
-local function parse_output(result)
-    if type(result) == "table" then
-        return table.concat(result, "\n")
-    end
-    return ""
-end
-
-----------------------------------------------------------------------------
---
 -- Tries to decode a JSON string to a Lua table.
 --
--- @param  output  string        JSON payload
+-- @param  body    string        JSON payload
 --
 -- @return table|nil             Decoded table on success, or nil
 -- @return string|nil            Error message on failure, or nil
 --
 ----------------------------------------------------------------------------
-local function try_decode_json(output)
-    local ok, decoded = pcall(vim.json.decode, output)
+local function try_decode_json(body)
+    if not body or body == "" then
+        return nil, "Empty response body"
+    end
+
+    local ok, decoded = pcall(vim.json.decode, body)
     if ok and type(decoded) == "table" then
         return decoded, nil
     end
@@ -117,12 +106,11 @@ end
 --
 -- Updates module state with an error and flags.
 --
--- @param stderr        string  Raw stderr output
--- @param fallback_msg  string  Fallback error message
+-- @param error_msg  string  Error message
 --
 ----------------------------------------------------------------------------
-local function update_state_error(stderr, fallback_msg)
-    M.state.error = stderr ~= "" and stderr or fallback_msg
+local function update_state_error(error_msg)
+    M.state.error = error_msg
     M.state.loading = false
 end
 
@@ -142,54 +130,56 @@ end
 --
 -- Handle failure case: record error and notify callbacks.
 --
--- @param stderr_lines  table       Lines from stderr
--- @param decode_err    string|nil  JSON decode error (if any)
+-- @param error_msg  string  Error message
 --
 ----------------------------------------------------------------------------
-local function handle_failure(stderr_lines, decode_err)
-    update_state_error(table.concat(stderr_lines or {}, "\n"), decode_err)
+local function handle_failure(error_msg)
+    update_state_error(error_msg)
     call_callbacks(nil, M.state.error)
 end
 
 ----------------------------------------------------------------------------
 --
--- Handles curl job result and updates state, then invokes callbacks.
+-- Handles curl response and updates state, then invokes callbacks.
 --
--- @param result  table  Lines from stdout
--- @param stderr  table  Lines from stderr
+-- @param response  table  Response from plenary.curl
 --
 ----------------------------------------------------------------------------
-local function handle_response(result, stderr)
-    local output = parse_output(result)
-    local data, decode_err = try_decode_json(output)
-
+local function handle_response(response)
     vim.schedule(function()
+        if response.exit ~= 0 then
+            handle_failure("Network request failed")
+            return
+        end
+
+        if response.status < 200 or response.status >= 300 then
+            handle_failure(string.format("HTTP error %d", response.status))
+            return
+        end
+
+        local data, decode_err = try_decode_json(response.body)
         if data then
             handle_success(data)
         else
-            handle_failure(stderr, decode_err)
+            handle_failure(decode_err)
         end
     end)
 end
 
 ----------------------------------------------------------------------------
 --
--- Fetches metadata from the Spring Initializr endpoint using curl.
+-- Fetches metadata from the Spring Initializr endpoint using plenary.curl.
 --
 ----------------------------------------------------------------------------
 local function fetch_from_remote()
-    Job:new({
-        command = "curl",
-        args = {
-            "-s",
-            "-H",
-            "Accept: application/vnd.initializr.v2.3+json",
-            METADATA_URL,
+    local response = curl.get(METADATA_URL, {
+        headers = {
+            ["Accept"] = "application/vnd.initializr.v2.3+json",
         },
-        on_exit = function(j)
-            handle_response(j:result(), j:stderr_result())
-        end,
-    }):start()
+        timeout = REQUEST_TIMEOUT,
+    })
+
+    handle_response(response)
 end
 
 ----------------------------------------------------------------------------
