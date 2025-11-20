@@ -5,7 +5,7 @@
 -- ██╔██╗ ██║█████╗  ██║   ██║██║   ██║██║██╔████╔██║
 -- ██║╚██╗██║██╔══╝  ██║   ██║╚██╗ ██╔╝██║██║╚██╔╝██║
 -- ██║ ╚████║███████╗╚██████╔╝ ╚████╔╝ ██║██║ ╚═╝ ██║
--- ╚═╝  ╚═══╝╚══════╝ ╚═════╝   ╚═══╝  ╚═╝╚═╝     ╚═╝
+-- ╚═╝  ╚═══╝╚══════╝ ╚═════╝   ╚═╝╚═╝╚═╝     ╚═╝
 --
 --
 -- spring-initializr.nvim
@@ -24,7 +24,7 @@
 ----------------------------------------------------------------------------
 --
 -- Provides integration with Telescope for displaying and selecting
--- Spring Boot dependencies.
+-- Spring Boot dependencies. Stores full dependency metadata.
 --
 ----------------------------------------------------------------------------
 
@@ -52,6 +52,7 @@ local LAYOUT_STRATEGY = "vertical"
 ----------------------------------------------------------------------------
 local M = {
     selected_dependencies = {},
+    selected_dependencies_full = {},
     selected_set = nil,
 }
 
@@ -82,17 +83,20 @@ end
 
 -------------------------------------------------------------------------------
 --
--- Creates a normalized dependency entry.
+-- Creates a normalized dependency entry with full metadata.
 --
 -- @param group string   Group name
 -- @param dep   table    Dependency metadata
 --
--- @return table         Flat entry table
+-- @return table         Flat entry table with full metadata
 --
 -------------------------------------------------------------------------------
 local function build_entry(group, dep)
     return {
         id = dep.id,
+        name = dep.name,
+        description = dep.description or "No description available",
+        group = group,
         label = format_label(group, dep),
     }
 end
@@ -137,9 +141,9 @@ end
 
 -------------------------------------------------------------------------------
 --
--- Record user's selected dependency if not already selected.
+-- Record user's selected dependency with full metadata.
 --
--- @param entry table
+-- @param entry table  Full dependency entry with id, name, description
 --
 -------------------------------------------------------------------------------
 local function record_selection(entry)
@@ -148,9 +152,17 @@ local function record_selection(entry)
         message_utils.show_warn_message("Already selected: " .. entry.id)
         return
     end
+
     M.selected_set:add(entry.id)
     table.insert(M.selected_dependencies, entry.id)
-    message_utils.show_info_message("Selected Dependency: " .. entry.id)
+
+    table.insert(M.selected_dependencies_full, {
+        id = entry.id,
+        name = entry.name,
+        description = entry.description,
+    })
+
+    message_utils.show_info_message("Selected: " .. entry.name)
 end
 
 -------------------------------------------------------------------------------

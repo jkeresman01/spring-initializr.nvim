@@ -24,6 +24,7 @@
 ----------------------------------------------------------------------------
 --
 -- Manages the UI elements related to Spring Initializr dependency selection.
+-- Uses card-based view to display selected dependencies with full metadata.
 --
 ----------------------------------------------------------------------------
 
@@ -35,6 +36,7 @@ local Popup = require("nui.popup")
 local focus_manager = require("spring-initializr.ui.managers.focus_manager")
 local message_utils = require("spring-initializr.utils.message_utils")
 local picker = require("spring-initializr.telescope.telescope")
+local dependency_card = require("spring-initializr.ui.components.dependency_card")
 
 ----------------------------------------------------------------------------
 -- Module
@@ -50,8 +52,6 @@ local BUTTON_SIZE = { height = 3, width = 40 }
 local DISPLAY_SIZE = { height = "100%", width = 40 }
 local BUTTON_TITLE = "Add Dependencies (Telescope)"
 local DISPLAY_TITLE = "Selected Dependencies"
-local SELECTED_DEPENDENCIES = DISPLAY_TITLE .. ": "
-local MAX_DEP_LABEL_LEN = 38
 
 ----------------------------------------------------------------------------
 --
@@ -162,7 +162,7 @@ end
 --
 ----------------------------------------------------------------------------
 local function display_win_options()
-    return { winhighlight = "Normal:NormalFloat,FloatBorder:FloatBorder", wrap = true }
+    return { winhighlight = "Normal:NormalFloat,FloatBorder:FloatBorder", wrap = false }
 end
 
 ----------------------------------------------------------------------------
@@ -207,17 +207,36 @@ end
 
 ----------------------------------------------------------------------------
 --
+-- Get the actual display width of the panel window.
+--
+-- @return number  Width of the panel in characters
+--
+----------------------------------------------------------------------------
+local function get_panel_width()
+    local panel = M.state.dependencies_panel
+
+    if not panel or not panel.winid or not vim.api.nvim_win_is_valid(panel.winid) then
+        return 40
+    end
+
+    return vim.api.nvim_win_get_width(panel.winid)
+end
+
+----------------------------------------------------------------------------
+--
 -- Produce the lines to render for the selected dependencies list.
+-- Uses card-based view to display dependencies with full metadata.
 --
 -- @return table  List of strings for buffer rendering
 --
 ----------------------------------------------------------------------------
 local function render_dependency_lines()
-    local lines = { SELECTED_DEPENDENCIES }
-    for i, dep in ipairs(picker.selected_dependencies or {}) do
-        lines[#lines + 1] = string.format("%d. %s", i, dep:sub(1, MAX_DEP_LABEL_LEN))
+    if not picker.selected_dependencies_full or #picker.selected_dependencies_full == 0 then
+        return { "No dependencies selected" }
     end
-    return lines
+
+    local panel_width = get_panel_width()
+    return dependency_card.create_all_cards(picker.selected_dependencies_full, panel_width)
 end
 
 ----------------------------------------------------------------------------
@@ -229,11 +248,22 @@ function M.update_display()
     local panel = M.state.dependencies_panel
 
     if not panel or not vim.api.nvim_buf_is_valid(panel.bufnr) then
-        message_utils.show_error_message("Failed to updated dependencies display buffer")
+        message_utils.show_error_message("Failed to update dependencies display buffer")
         return
     end
 
-    vim.api.nvim_buf_set_lines(panel.bufnr, 0, -1, false, render_dependency_lines())
+    local lines = render_dependency_lines()
+    vim.api.nvim_buf_set_lines(panel.bufnr, 0, -1, false, lines)
+
+    if picker.selected_dependencies_full and #picker.selected_dependencies_full > 0 then
+        local panel_width = get_panel_width()
+        dependency_card.apply_highlights(
+            panel.bufnr,
+            0,
+            #picker.selected_dependencies_full,
+            panel_width
+        )
+    end
 end
 
 ----------------------------------------------------------------------------
