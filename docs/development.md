@@ -95,7 +95,9 @@ spring-initializr.nvim/
 │       │   └── telescope.lua
 │       ├── ui/                     # UI components
 │       │   ├── components/
-│       │   │   ├── dependencies_display.lua   # Manages UI elements
+│       │   │   ├── dependencies/
+│       │   │   │   ├── dependencies_display.lua   # Manages UI elements
+│       │   │   │   └── dependencies_card.lua      # Card component for individual dependencies
 │       │   │   ├── inputs.lua                 # Input fields
 │       │   │   └── radios.lua                 # Radio buttons
 │       │   ├── config/
