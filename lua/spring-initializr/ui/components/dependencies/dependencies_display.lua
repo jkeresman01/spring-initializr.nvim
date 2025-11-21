@@ -77,6 +77,21 @@ end
 
 ----------------------------------------------------------------------------
 --
+-- Returns the buffer options for the "Add Dependencies" button.
+-- Makes the button readonly to prevent text editing.
+--
+-- @return table  Buffer options
+--
+----------------------------------------------------------------------------
+local function button_buffer_options()
+    return {
+        modifiable = false,
+        readonly = true,
+    }
+end
+
+----------------------------------------------------------------------------
+--
 -- Builds the configuration table for the dependencies button popup.
 --
 -- @return table  Popup configuration
@@ -87,6 +102,7 @@ local function button_popup_config()
         border = button_border(),
         size = BUTTON_SIZE,
         enter = true,
+        buf_options = button_buffer_options(),
         win_options = button_win_options(),
     }
 end
