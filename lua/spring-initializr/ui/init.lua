@@ -108,10 +108,8 @@ end
 --
 -- Loads saved state and restores to UI.
 --
--- @param  data  table  Metadata for dependency resolution
---
 ----------------------------------------------------------------------------
-local function restore_saved_state(data)
+local function restore_saved_state()
     local repo = repository_factory.get_instance()
 
     if not repo.has_saved_project() then
@@ -219,7 +217,6 @@ end
 --
 ----------------------------------------------------------------------------
 function M.close()
-    -- Save state before closing
     if M.state.is_open then
         local dependencies = {}
         for _, dep in ipairs(telescope.selected_dependencies_full or {}) do

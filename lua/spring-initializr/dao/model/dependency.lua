@@ -65,10 +65,14 @@ end
 --
 ----------------------------------------------------------------------------
 function M:format_for_file_line()
-    return string.format("%s%s%s%s%s",
-        self.id, FIELD_DELIMITER,
-        self.name, FIELD_DELIMITER,
-        self.description)
+    return string.format(
+        "%s%s%s%s%s",
+        self.id,
+        FIELD_DELIMITER,
+        self.name,
+        FIELD_DELIMITER,
+        self.description
+    )
 end
 
 ----------------------------------------------------------------------------
