@@ -33,8 +33,8 @@
 local Layout = require("nui.layout")
 local Popup = require("nui.popup")
 
-local radios = require("spring-initializr.ui.components.radios")
-local inputs = require("spring-initializr.ui.components.inputs")
+local radios = require("spring-initializr.ui.components.common.radios.radios")
+local inputs = require("spring-initializr.ui.components.common.inputs.inputs")
 local config = require("spring-initializr.config.config")
 local dependencies_display =
     require("spring-initializr.ui.components.dependencies.dependencies_display")
