@@ -95,7 +95,7 @@ end
 --
 ----------------------------------------------------------------------------
 local function setup_layout(data)
-    local ui = layout_builder.build_ui(data, M.state.selections)
+    local ui = layout_builder.build_ui(data, M.state.selections, M)
     M.state.layout = ui.layout
     M.state.outer_popup = ui.outer_popup
 end

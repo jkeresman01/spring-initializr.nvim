@@ -257,13 +257,13 @@ end
 -- @return Layout.Box  Right panel
 --
 ----------------------------------------------------------------------------
-local function create_right_panel()
+local function create_right_panel(main_ui)
     return Layout.Box({
         Layout.Box(
             dependencies_display.create_button(dependencies_display.update_display),
             { size = 3 }
         ),
-        Layout.Box(dependencies_display.create_display(), { grow = 1 }),
+        Layout.Box(dependencies_display.create_display(main_ui), { grow = 1 }),
     }, { dir = "col", size = "50%" })
 end
 
@@ -277,7 +277,7 @@ end
 -- @return table              Contains the layout and the outer popup
 --
 ----------------------------------------------------------------------------
-function M.build_ui(metadata, selections)
+function M.build_ui(metadata, selections, main_ui)
     local outer_popup = create_outer_popup(metadata)
 
     selections.configurationFileFormat = config.get_config_format()
@@ -288,7 +288,7 @@ function M.build_ui(metadata, selections)
         outer_popup,
         Layout.Box({
             create_left_panel(form_context),
-            create_right_panel(),
+            create_right_panel(main_ui),
         }, { dir = "row" })
     )
 
