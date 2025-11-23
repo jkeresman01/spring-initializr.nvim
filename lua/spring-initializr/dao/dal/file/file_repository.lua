@@ -30,14 +30,13 @@
 ----------------------------------------------------------------------------
 -- Dependencies
 ----------------------------------------------------------------------------
-local Path = require("plenary.path")
+local file_utils = require("spring-initializr.utils.file_utils")
 local Project = require("spring-initializr.dao.model.project")
 local Dependency = require("spring-initializr.dao.model.dependency")
 
 ----------------------------------------------------------------------------
 -- Constants
 ----------------------------------------------------------------------------
-local DATA_DIR = vim.fn.stdpath("data") .. "/spring-initializr"
 local PROJECT_FILE = "last_project.txt"
 local DEPENDENCIES_FILE = "dependencies.txt"
 
@@ -48,30 +47,16 @@ local M = {}
 
 ----------------------------------------------------------------------------
 --
--- Ensures the data directory exists.
---
-----------------------------------------------------------------------------
-local function ensure_data_directory()
-    local dir = Path:new(DATA_DIR)
-    if not dir:exists() then
-        dir:mkdir({ parents = true })
-    end
-end
-
-----------------------------------------------------------------------------
---
 -- Saves a project to file.
 --
 -- @param  project   Project   Project instance to save
 --
 ----------------------------------------------------------------------------
 function M.save_project(project)
-    ensure_data_directory()
-
     -- Save project configuration
     local project_line = project:format_for_file_line()
-    local project_file = Path:new(DATA_DIR .. "/" .. PROJECT_FILE)
-    project_file:write(project_line, "w")
+    local project_path = file_utils.get_data_file_path(PROJECT_FILE)
+    file_utils.write_file(project_path, project_line)
 
     -- Save dependencies
     if project.dependencies and #project.dependencies > 0 then
@@ -79,8 +64,8 @@ function M.save_project(project)
         for _, dep in ipairs(project.dependencies) do
             table.insert(dep_lines, dep:format_for_file_line())
         end
-        local deps_file = Path:new(DATA_DIR .. "/" .. DEPENDENCIES_FILE)
-        deps_file:write(table.concat(dep_lines, "\n"), "w")
+        local deps_path = file_utils.get_data_file_path(DEPENDENCIES_FILE)
+        file_utils.write_file(deps_path, table.concat(dep_lines, "\n"))
     end
 end
 
@@ -92,18 +77,18 @@ end
 --
 ----------------------------------------------------------------------------
 function M.load_project()
-    local project_file = Path:new(DATA_DIR .. "/" .. PROJECT_FILE)
+    local project_path = file_utils.get_data_file_path(PROJECT_FILE)
 
-    if not project_file:exists() then
+    if not file_utils.file_exists(project_path) then
         return nil
     end
 
-    local content = project_file:read()
+    local content = file_utils.read_file(project_path)
     local project = Project.parse_from_file_line(content)
 
-    local deps_file = Path:new(DATA_DIR .. "/" .. DEPENDENCIES_FILE)
-    if deps_file:exists() then
-        local dep_content = deps_file:read()
+    local deps_path = file_utils.get_data_file_path(DEPENDENCIES_FILE)
+    if file_utils.file_exists(deps_path) then
+        local dep_content = file_utils.read_file(deps_path)
         local dependencies = {}
         for line in dep_content:gmatch("[^\r\n]+") do
             local dep = Dependency.parse_from_file_line(line)
@@ -125,8 +110,8 @@ end
 --
 ----------------------------------------------------------------------------
 function M.has_saved_project()
-    local file = Path:new(DATA_DIR .. "/" .. PROJECT_FILE)
-    return file:exists()
+    local project_path = file_utils.get_data_file_path(PROJECT_FILE)
+    return file_utils.file_exists(project_path)
 end
 
 ----------------------------------------------------------------------------
