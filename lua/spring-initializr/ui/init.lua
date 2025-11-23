@@ -39,6 +39,10 @@ local dependencies_display =
 local window_utils = require("spring-initializr.utils.window_utils")
 local message_utils = require("spring-initializr.utils.message_utils")
 local buffer_utils = require("spring-initializr.utils.buffer_utils")
+local repository_factory = require("spring-initializr.dao.dal.repository_factory")
+local Project = require("spring-initializr.dao.model.project")
+local Dependency = require("spring-initializr.dao.model.dependency")
+local telescope = require("spring-initializr.telescope.telescope")
 
 ----------------------------------------------------------------------------
 -- Module table
@@ -102,6 +106,52 @@ end
 
 ----------------------------------------------------------------------------
 --
+-- Loads saved state and restores to UI.
+--
+----------------------------------------------------------------------------
+local function restore_saved_state()
+    local repo = repository_factory.get_instance()
+
+    if not repo.has_saved_project() then
+        return
+    end
+
+    local project = repo.load_project()
+    if not project then
+        return
+    end
+
+    M.state.selections.project_type = project.project_type
+    M.state.selections.language = project.language
+    M.state.selections.boot_version = project.boot_version
+    M.state.selections.groupId = project.groupId
+    M.state.selections.artifactId = project.artifactId
+    M.state.selections.name = project.name
+    M.state.selections.description = project.description
+    M.state.selections.packageName = project.packageName
+    M.state.selections.packaging = project.packaging
+    M.state.selections.java_version = project.java_version
+    M.state.selections.configurationFileFormat = project.configurationFileFormat
+
+    telescope.selected_dependencies = {}
+    telescope.selected_dependencies_full = {}
+
+    if project.dependencies then
+        for _, dep in ipairs(project.dependencies) do
+            table.insert(telescope.selected_dependencies, dep.id)
+            table.insert(telescope.selected_dependencies_full, {
+                id = dep.id,
+                name = dep.name,
+                description = dep.description,
+            })
+        end
+    end
+
+    message_utils.show_info_message("Loaded previous project configuration")
+end
+
+----------------------------------------------------------------------------
+--
 -- Mounts the layout, sets focus_manager behavior and updates dependency display.
 --
 ----------------------------------------------------------------------------
@@ -127,6 +177,7 @@ end
 ----------------------------------------------------------------------------
 local function mount_ui(data)
     store_metadata(data)
+    restore_saved_state(data)
     setup_layout(data)
     activate_ui()
 end
@@ -162,9 +213,21 @@ end
 --
 -- Cleans up all active layout and popup UI components.
 -- Resets internal state and focus_manager tracking.
+-- Saves state before closing.
 --
 ----------------------------------------------------------------------------
 function M.close()
+    if M.state.is_open then
+        local dependencies = {}
+        for _, dep in ipairs(telescope.selected_dependencies_full or {}) do
+            table.insert(dependencies, Dependency.new(dep.id, dep.name, dep.description))
+        end
+
+        local project = Project.new(M.state.selections, dependencies)
+        local repo = repository_factory.get_instance()
+        repo.save_project(project)
+    end
+
     if M.state.layout then
         pcall(function()
             M.state.layout:unmount()
