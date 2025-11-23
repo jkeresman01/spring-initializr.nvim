@@ -254,6 +254,8 @@ end
 --
 -- Create the right-hand panel with dependency management.
 --
+-- @param main_ui      table  Module table from init.lua
+--
 -- @return Layout.Box  Right panel
 --
 ----------------------------------------------------------------------------
@@ -273,6 +275,7 @@ end
 --
 -- @param  metadata    table  Fetched Spring metadata
 -- @param  selections  table  State table of user selections
+-- @param  main_ui     table  Module table from init.lua
 --
 -- @return table              Contains the layout and the outer popup
 --

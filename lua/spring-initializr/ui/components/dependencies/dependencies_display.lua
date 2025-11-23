@@ -213,7 +213,9 @@ end
 --
 -- Create a popup to display selected dependencies.
 --
--- @return Popup  Nui popup used for showing dependencies
+-- @param main_ui  table  Module table from layout.lua
+--
+-- @return Popup          Nui popup used for showing dependencies
 --
 ----------------------------------------------------------------------------
 function M.create_display(main_ui)
