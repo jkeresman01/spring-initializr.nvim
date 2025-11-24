@@ -90,13 +90,13 @@ end
 -- Enable focus navigation across all registered components and closes UI
 -- if mapped key 'q' is pressed.
 --
--- @param main_ui    table  Module table passed from init.lua
+-- @param close_fn  function    Module closing function passed from init.lua
 --
 ----------------------------------------------------------------------------
-function M.enable_navigation(main_ui)
+function M.enable_navigation(close_fn)
     for _, comp in ipairs(M.focusables) do
         map_navigation_keys(comp)
-        buffer_manager.register_close_key(comp, main_ui)
+        buffer_manager.register_close_key(comp, close_fn)
     end
 end
 

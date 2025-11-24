@@ -213,15 +213,15 @@ end
 --
 -- Create a popup to display selected dependencies.
 --
--- @param main_ui  table  Module table from layout.lua
+-- @param close_fn  table  Module closing function from layout.lua
 --
--- @return Popup          Nui popup used for showing dependencies
+-- @return Popup           Nui popup used for showing dependencies
 --
 ----------------------------------------------------------------------------
-function M.create_display(main_ui)
+function M.create_display(close_fn)
     local popup = Popup(display_popup_config())
     M.state.dependencies_panel = popup
-    buffer_manager.register_close_key(popup, main_ui)
+    buffer_manager.register_close_key(popup, close_fn)
     return popup
 end
 

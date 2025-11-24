@@ -95,7 +95,7 @@ end
 --
 ----------------------------------------------------------------------------
 local function setup_layout(data)
-    local ui = layout_builder.build_ui(data, M.state.selections, M)
+    local ui = layout_builder.build_ui(data, M.state.selections, M.close)
     M.state.layout = ui.layout
     M.state.outer_popup = ui.outer_popup
 end
@@ -108,7 +108,7 @@ end
 local function activate_ui()
     M.state.layout:mount()
     M.state.is_open = true
-    focus_manager.enable_navigation(M)
+    focus_manager.enable_navigation(M.close)
     dependencies_display.update_display()
     buffer_utils.setup_close_on_buffer_delete(
         focus_manager.focusables,

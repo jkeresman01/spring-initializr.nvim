@@ -254,18 +254,18 @@ end
 --
 -- Create the right-hand panel with dependency management.
 --
--- @param main_ui      table  Module table from init.lua
+-- @param close_fn     function  Module closing function from init.lua
 --
--- @return Layout.Box  Right panel
+-- @return Layout.Box            Right panel
 --
 ----------------------------------------------------------------------------
-local function create_right_panel(main_ui)
+local function create_right_panel(close_fn)
     return Layout.Box({
         Layout.Box(
             dependencies_display.create_button(dependencies_display.update_display),
             { size = 3 }
         ),
-        Layout.Box(dependencies_display.create_display(main_ui), { grow = 1 }),
+        Layout.Box(dependencies_display.create_display(close_fn), { grow = 1 }),
     }, { dir = "col", size = "50%" })
 end
 
@@ -273,14 +273,14 @@ end
 --
 -- Build the entire Spring Initializr layout with dynamic sizing.
 --
--- @param  metadata    table  Fetched Spring metadata
--- @param  selections  table  State table of user selections
--- @param  main_ui     table  Module table from init.lua
+-- @param  metadata    table     Fetched Spring metadata
+-- @param  selections  table     State table of user selections
+-- @param  close_fn   function   Module closing function from init.lua
 --
--- @return table              Contains the layout and the outer popup
+-- @return table                 Contains the layout and the outer popup
 --
 ----------------------------------------------------------------------------
-function M.build_ui(metadata, selections, main_ui)
+function M.build_ui(metadata, selections, close_fn)
     local outer_popup = create_outer_popup(metadata)
 
     selections.configurationFileFormat = config.get_config_format()
@@ -291,7 +291,7 @@ function M.build_ui(metadata, selections, main_ui)
         outer_popup,
         Layout.Box({
             create_left_panel(form_context),
-            create_right_panel(main_ui),
+            create_right_panel(close_fn),
         }, { dir = "row" })
     )
 
