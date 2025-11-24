@@ -91,6 +91,25 @@ end
 
 ----------------------------------------------------------------------------
 --
+-- Find the index of an item by its value.
+--
+-- @param  items  table   List of items
+-- @param  value  string  Value to find
+--
+-- @return number         Index (1-based) or 1 if not found
+--
+----------------------------------------------------------------------------
+local function find_item_index(items, value)
+    for i, item in ipairs(items) do
+        if item.value == value then
+            return i
+        end
+    end
+    return 1
+end
+
+----------------------------------------------------------------------------
+--
 -- Format a single item line for display with a selection marker.
 --
 -- @param  item         table    Radio item
@@ -308,7 +327,13 @@ end
 ----------------------------------------------------------------------------
 function M.create_radio(config)
     local items = build_items(config.values)
-    local selected = { 1 }
+
+    local initial_index = 1
+    if config.selections[config.key] and config.selections[config.key] ~= "" then
+        initial_index = find_item_index(items, config.selections[config.key])
+    end
+
+    local selected = { initial_index }
 
     config.selections[config.key] = items[selected[1]].value
 

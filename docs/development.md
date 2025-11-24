@@ -70,74 +70,6 @@
 8. **Styles** (`styles/`)
    - Highlight configuration
    - Theme integration
-
-## Project Structure
-
-```
-spring-initializr.nvim/
-├── lua/
-│   └── spring-initializr/
-│       ├── algo/                   # Data structures
-│       │   └── hashset.lua
-│       ├── commands/               # User commands
-│       │   └── commands.lua
-│       ├── config/                 # Plugin config
-│       │   └── config.lua
-│       ├── constants/              # Config format constants
-│       │   └── config_format.lua   
-│       ├── core/                   # Business logic
-│       │   └── core.lua
-│       ├── metadata/               # Metadata fetching
-│       │   └── metadata.lua
-│       ├── styles/                 # Styling/highlights
-│       │   └── highlights.lua
-│       ├── telescope/              # Telescope integration
-│       │   └── telescope.lua
-│       ├── ui/                     # UI components
-│       │   ├── components/
-│       │   │   ├── dependencies/
-│       │   │   │   ├── dependencies_display.lua   # Manages UI elements
-│       │   │   │   └── dependencies_card.lua      # Card component for individual dependencies
-│       │   │   ├── inputs.lua                 # Input fields
-│       │   │   └── radios.lua                 # Radio buttons
-│       │   ├── config/
-│       │   │   ├── input_config.lua           # Generate parameter object for input field
-│       │   │   └── radio_config.lua           # Generate parameter object for radio button
-│       │   ├── context/                       
-│       │   │   └── form_context.lua           # Generate reusable config objects
-│       │   ├── layout/
-│       │   │   └── layout.lua                 # Layout builder
-│       │   ├── managers/
-│       │   │   ├── buffer_manager.lua         # Registers UI closing
-│       │   │   └── focus_manager.lua          # Focus management
-│       │   └── init.lua                       # UI entry point
-│       ├── utils/             # Utilities
-│       │   ├── file_utils.lua
-│       │   ├── http_utils.lua
-│       │   ├── message_utils.lua
-│       │   ├── url_utils.lua
-│       │   └── window_utils.lua
-│       └── init.lua           # Plugin entry point
-├── tests/                     # Test suite
-│   ├── algo/
-│   │   └── hashset_spec.lua
-│   ├── ui/
-│   │   └── focus_manager_spec.lua
-│   ├── utils/
-│   │   ├── url_utils_spec.lua           
-│   │   └── windows_utils_spec.lua 
-│   └── minimal_init.lua
-├── scripts/                   # Development scripts
-│   └── check-naming.sh
-├── .github/                   # CI/CD workflows
-│   └── workflows/
-│       ├── format.yml
-│       ├── lint.yml
-│       ├── spell-check.yml
-│       └── test.yml
-└── docs/                      # Documentation
-```
-
 ## Development Setup
 
 ### 1. Clone the Repository
@@ -365,6 +297,93 @@ Job:new({
 }):start()
 ```
 
+### Managing Module Dependencies and Coupling
+
+When passing dependencies between modules, follow these principles to maintain loose coupling:
+
+#### Bad: Tight Coupling (Passing Entire Module)
+
+```lua
+-- In ui/init.lua
+local function activate_ui()
+    focus_manager.enable_navigation(M)  -- Passing entire module
+end
+
+-- In focus_manager.lua
+function M.enable_navigation(main_ui)
+    for _, comp in ipairs(M.focusables) do
+        buffer_manager.register_close_key(comp, main_ui)  -- Passing entire module
+    end
+end
+
+-- In buffer_manager.lua
+function M.register_close_key(comp, main_ui)
+    comp:map("n", "q", function()
+        main_ui.close()  -- Depends on module structure
+    end, { noremap = true, nowait = true })
+end
+```
+
+**Problems with this approach:**
+- `focus_manager` and `buffer_manager` depend on the entire `ui/init` module structure
+- Unclear what parts of the module are actually needed
+- Increases risk of circular dependencies
+- Violates the Dependency Inversion Principle
+
+#### Good: Loose Coupling (Passing Only What's Needed)
+
+```lua
+-- In ui/init.lua
+local function activate_ui()
+    M.state.layout:mount()
+    M.state.is_open = true
+    focus_manager.enable_navigation(M.close)  -- Pass only the function
+    dependencies_display.update_display()
+    buffer_utils.setup_close_on_buffer_delete(
+        focus_manager.focusables,
+        M.state.outer_popup,
+        M.close
+    )
+    focus_manager.focus_first()
+end
+```
+
+```lua
+-- In focus_manager.lua
+function M.enable_navigation(close_fn)
+    for _, comp in ipairs(M.focusables) do
+        map_navigation_keys(comp)
+        buffer_manager.register_close_key(comp, close_fn)  -- Pass function
+    end
+end
+```
+
+```lua
+-- In buffer_manager.lua
+function M.register_close_key(comp, close_fn)
+    comp:map("n", "q", function()
+        close_fn()  -- Call the function directly
+    end, { noremap = true, nowait = true })
+end
+```
+
+```lua
+-- In dependencies/dependencies_display.lua
+function M.create_display(close_fn)
+    local popup = Popup(display_popup_config())
+    M.state.dependencies_panel = popup
+    buffer_manager.register_close_key(popup, close_fn)
+    return popup
+end
+```
+
+**Benefits of this approach:**
+
+1. **Loose Coupling**: Modules only depend on what they actually need (a close function)
+2. **Clear Interface**: The function signature clearly shows what's required
+4. **Better Encapsulation**: Implementation details of `ui/init` remain hidden
+5. **Follows Dependency Inversion Principle**: Depending on abstractions (functions) not concrete modules
+```
 ## Testing
 
 ### Running Tests

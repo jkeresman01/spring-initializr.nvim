@@ -31,6 +31,7 @@
 -- Dependencies
 ----------------------------------------------------------------------------
 local Job = require("plenary.job")
+local Path = require("plenary.path")
 
 ----------------------------------------------------------------------------
 -- Module table
@@ -81,6 +82,151 @@ function M.unzip(zip_path, destination, on_done)
         args = { "-o", zip_path, "-d", destination },
         on_exit = on_unzip_complete(zip_path, on_done),
     }):start()
+end
+
+----------------------------------------------------------------------------
+--
+-- Ensures a directory exists, creating it (with parents) if necessary.
+--
+-- @param  dir_path  string  Path to directory
+--
+-- @return boolean           True if directory exists or was created
+--
+----------------------------------------------------------------------------
+function M.ensure_directory(dir_path)
+    local dir = Path:new(dir_path)
+
+    if dir:exists() then
+        return true
+    end
+
+    local ok, err = pcall(function()
+        dir:mkdir({ parents = true })
+    end)
+
+    if not ok then
+        return false, "Failed to create directory: " .. (err or "unknown error")
+    end
+
+    return true
+end
+
+----------------------------------------------------------------------------
+--
+-- Checks if a file exists at the given path.
+--
+-- @param  file_path  string   Path to file
+--
+-- @return boolean             True if file exists
+--
+----------------------------------------------------------------------------
+function M.file_exists(file_path)
+    local file = Path:new(file_path)
+    return file:exists()
+end
+
+----------------------------------------------------------------------------
+--
+-- Reads the contents of a file.
+--
+-- @param  file_path  string       Path to file
+--
+-- @return string|nil              File contents, or nil if error
+-- @return string|nil              Error message if failed
+--
+----------------------------------------------------------------------------
+function M.read_file(file_path)
+    local file = Path:new(file_path)
+
+    if not file:exists() then
+        return nil, "File does not exist: " .. file_path
+    end
+
+    local ok, content = pcall(function()
+        return file:read()
+    end)
+
+    if not ok then
+        return nil, "Failed to read file: " .. (content or "unknown error")
+    end
+
+    return content, nil
+end
+
+----------------------------------------------------------------------------
+--
+-- Writes content to a file, creating parent directories if needed.
+--
+-- @param  file_path  string       Path to file
+-- @param  content    string       Content to write
+--
+-- @return boolean                 True if successful
+-- @return string|nil              Error message if failed
+--
+----------------------------------------------------------------------------
+function M.write_file(file_path, content)
+    local file = Path:new(file_path)
+
+    -- Ensure parent directory exists
+    local parent = file:parent()
+    if parent then
+        local dir_ok, dir_err = M.ensure_directory(parent:absolute())
+        if not dir_ok then
+            return false, dir_err
+        end
+    end
+
+    local ok, err = pcall(function()
+        file:write(content, "w")
+    end)
+
+    if not ok then
+        return false, "Failed to write file: " .. (err or "unknown error")
+    end
+
+    return true, nil
+end
+
+----------------------------------------------------------------------------
+--
+-- Deletes a file if it exists.
+--
+-- @param  file_path  string       Path to file
+--
+-- @return boolean                 True if deleted or didn't exist
+-- @return string|nil              Error message if failed
+--
+----------------------------------------------------------------------------
+function M.delete_file(file_path)
+    local file = Path:new(file_path)
+
+    if not file:exists() then
+        return true, nil
+    end
+
+    local ok, err = pcall(function()
+        file:rm()
+    end)
+
+    if not ok then
+        return false, "Failed to delete file: " .. (err or "unknown error")
+    end
+
+    return true, nil
+end
+
+----------------------------------------------------------------------------
+--
+-- Gets the full path to a file in the plugin's data directory.
+--
+-- @param  filename  string  Name of file
+--
+-- @return string            Full path to file
+--
+----------------------------------------------------------------------------
+function M.get_data_file_path(filename)
+    local data_dir = vim.fn.stdpath("data") .. "/spring-initializr"
+    return data_dir .. "/" .. filename
 end
 
 ----------------------------------------------------------------------------
