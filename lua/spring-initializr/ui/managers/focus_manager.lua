@@ -33,6 +33,7 @@
 ----------------------------------------------------------------------------
 local window_utils = require("spring-initializr.utils.window_utils")
 local buffer_manager = require("spring-initializr.ui.managers.buffer_manager")
+local reset_manager = require("spring-initializr.ui.managers.reset_manager")
 
 ----------------------------------------------------------------------------
 -- Module table
@@ -40,6 +41,7 @@ local buffer_manager = require("spring-initializr.ui.managers.buffer_manager")
 local M = {
     focusables = {},
     current_focus = 1,
+    _selections = nil,
 }
 
 ----------------------------------------------------------------------------
@@ -87,16 +89,41 @@ end
 
 ----------------------------------------------------------------------------
 --
--- Enable focus navigation across all registered components and closes UI
--- if mapped key 'q' is pressed.
+-- Create reset handler that resets form and refreshes dependencies display.
 --
--- @param close_fn  function    Module closing function passed from init.lua
+-- @param selections  table  Selections table to reset
+--
+-- @return function          Reset handler
 --
 ----------------------------------------------------------------------------
-function M.enable_navigation(close_fn)
+local function create_reset_handler(selections)
+    return function()
+        reset_manager.reset_form(selections)
+        -- Lazy require to avoid circular dependency
+        local dependencies_display =
+            require("spring-initializr.ui.components.dependencies.dependencies_display")
+        dependencies_display.update_display()
+        M.focus_first()
+    end
+end
+
+----------------------------------------------------------------------------
+--
+-- Enable focus navigation across all registered components and register
+-- close and reset keys.
+--
+-- @param close_fn    function  Function to close UI
+-- @param selections  table     Selections table for reset functionality
+--
+----------------------------------------------------------------------------
+function M.enable_navigation(close_fn, selections)
+    M._selections = selections
+    local reset_fn = create_reset_handler(selections)
+
     for _, comp in ipairs(M.focusables) do
         map_navigation_keys(comp)
         buffer_manager.register_close_key(comp, close_fn)
+        buffer_manager.register_reset_key(comp, reset_fn)
     end
 end
 
@@ -151,6 +178,7 @@ end
 function M.reset()
     M.focusables = {}
     M.current_focus = 1
+    M._selections = nil
 end
 
 ----------------------------------------------------------------------------

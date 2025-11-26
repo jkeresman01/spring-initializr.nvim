@@ -35,6 +35,7 @@ local Popup = require("nui.popup")
 local Layout = require("nui.layout")
 
 local focus_manager = require("spring-initializr.ui.managers.focus_manager")
+local reset_manager = require("spring-initializr.ui.managers.reset_manager")
 local message_utils = require("spring-initializr.utils.message_utils")
 
 ----------------------------------------------------------------------------
@@ -317,6 +318,29 @@ end
 
 ----------------------------------------------------------------------------
 --
+-- Create a reset handler for this radio component.
+--
+-- @param  popup  Popup       Popup instance
+-- @param  state  RadioState  State object
+--
+-- @return function           Reset handler
+--
+----------------------------------------------------------------------------
+local function create_reset_handler(popup, state)
+    return function()
+        vim.schedule(function()
+            if not vim.api.nvim_buf_is_valid(popup.bufnr) then
+                return
+            end
+            state.selected[1] = 1
+            state.selections[state.key] = state.items[1].value
+            render_all_items(popup, state.items, state.selected[1])
+        end)
+    end
+end
+
+----------------------------------------------------------------------------
+--
 -- Create a radio component as a layout box.
 --
 -- @param  config   table/RadioConfig  Containing configuration object
@@ -343,6 +367,9 @@ function M.create_radio(config)
     map_keys(popup, state)
     schedule_initial_render(popup, items, selected[1])
     register_focus_for_components(popup)
+
+    local reset_handler = create_reset_handler(popup, state)
+    reset_manager.register_reset_handler(reset_handler)
 
     return Layout.Box(popup, { size = #items + 2 })
 end

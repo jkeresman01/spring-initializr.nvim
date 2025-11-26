@@ -34,6 +34,7 @@ local Input = require("nui.input")
 local Layout = require("nui.layout")
 
 local focus_manager = require("spring-initializr.ui.managers.focus_manager")
+local reset_manager = require("spring-initializr.ui.managers.reset_manager")
 local message_utils = require("spring-initializr.utils.message_utils")
 
 ----------------------------------------------------------------------------
@@ -176,6 +177,28 @@ end
 
 ----------------------------------------------------------------------------
 --
+-- Create a reset handler for this input component.
+--
+-- @param  input_component  Input        Input component instance
+-- @param  config           InputConfig  Configuration object
+--
+-- @return function                      Reset handler
+--
+----------------------------------------------------------------------------
+local function create_reset_handler(input_component, config)
+    return function()
+        vim.schedule(function()
+            if not vim.api.nvim_buf_is_valid(input_component.bufnr) then
+                return
+            end
+            config.selections[config.key] = config.default
+            vim.api.nvim_buf_set_lines(input_component.bufnr, 0, -1, false, { config.default })
+        end)
+    end
+end
+
+----------------------------------------------------------------------------
+--
 -- Create a layout-wrapped input component for Spring Initializr.
 --
 -- @param  config   table/InputConfig  Containing configuration object with
@@ -188,6 +211,10 @@ function M.create_input(config)
     config.selections[config.key] = config.default
     local input_component = create_input_component(config)
     register_focus_for_components(input_component)
+
+    local reset_handler = create_reset_handler(input_component, config)
+    reset_manager.register_reset_handler(reset_handler)
+
     return Layout.Box(input_component, { size = 3 })
 end
 
