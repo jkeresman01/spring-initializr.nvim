@@ -58,21 +58,25 @@ end
 ----------------------------------------------------------------------------
 --
 -- Focus the next component in the focusables list.
+-- Ensures normal mode after switching to prevent auto-insert behavior.
 --
 ----------------------------------------------------------------------------
 local function focus_next()
     M.current_focus = (M.current_focus % #M.focusables) + 1
     vim.api.nvim_set_current_win(window_utils.get_winid(M.focusables[M.current_focus]))
+    vim.cmd("stopinsert")
 end
 
 ----------------------------------------------------------------------------
 --
 -- Focus the previous component in the focusables list.
+-- Ensures normal mode after switching to prevent auto-insert behavior.
 --
 ----------------------------------------------------------------------------
 local function focus_prev()
     M.current_focus = (M.current_focus - 2 + #M.focusables) % #M.focusables + 1
     vim.api.nvim_set_current_win(window_utils.get_winid(M.focusables[M.current_focus]))
+    vim.cmd("stopinsert")
 end
 
 ----------------------------------------------------------------------------
