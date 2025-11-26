@@ -147,8 +147,6 @@ Contributions are very welcome. You can help by:
 If you are unsure where to start, open an issue to discuss an idea before coding.
 
 
-
-
 ## License
 
 This project is licensed under the terms of the [GNU General Public License v3.0](./LICENSE).
