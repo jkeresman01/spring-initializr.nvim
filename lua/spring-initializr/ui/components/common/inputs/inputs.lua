@@ -176,19 +176,43 @@ end
 
 ----------------------------------------------------------------------------
 --
+-- Create a reset handler for an input component.
+--
+-- @param  input_component  Input   The input component
+-- @param  config           table   Input configuration
+--
+-- @return function                 Reset handler function
+--
+----------------------------------------------------------------------------
+local function create_reset_handler(input_component, config)
+    return function()
+        -- Reset to default value
+        config.selections[config.key] = config.default
+        vim.schedule(function()
+            if vim.api.nvim_buf_is_valid(input_component.bufnr) then
+                vim.api.nvim_buf_set_lines(input_component.bufnr, 0, -1, false, { config.default })
+            end
+        end)
+    end
+end
+
+----------------------------------------------------------------------------
+--
 -- Create a layout-wrapped input component for Spring Initializr.
 --
 -- @param  config   table/InputConfig  Containing configuration object with
 -- title, key, default value, and shared selections
 --
 -- @return Layout.Box                  Layout-wrapped input component
+-- @return function                    Reset handler for this input
 --
 ----------------------------------------------------------------------------
 function M.create_input(config)
     config.selections[config.key] = config.default
     local input_component = create_input_component(config)
     register_focus_for_components(input_component)
-    return Layout.Box(input_component, { size = 3 })
+    local reset_handler = create_reset_handler(input_component, config)
+    return Layout.Box(input_component, { size = 3 }), reset_handler
 end
 
 ----------------------------------------------------------------------------

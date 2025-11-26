@@ -38,6 +38,7 @@ local inputs = require("spring-initializr.ui.components.common.inputs.inputs")
 local config = require("spring-initializr.config.config")
 local dependencies_display =
     require("spring-initializr.ui.components.dependencies.dependencies_display")
+local reset_manager = require("spring-initializr.ui.managers.reset_manager")
 
 local FormContext = require("spring-initializr.ui.context.form_context")
 
@@ -83,12 +84,12 @@ end
 local function calculate_required_height(metadata)
     local height = 0
 
-    height = height + #metadata.type.values + 2 -- Project Type
-    height = height + #metadata.language.values + 2 -- Language
-    height = height + #metadata.bootVersion.values + 2 -- Boot Version
-    height = height + #metadata.packaging.values + 2 -- Packaging
-    height = height + #metadata.javaVersion.values + 2 -- Java Version
-    height = height + #metadata.configurationFileFormat.values + 2 -- Config Format
+    height = height + #metadata.type.values + 2
+    height = height + #metadata.language.values + 2
+    height = height + #metadata.bootVersion.values + 2
+    height = height + #metadata.packaging.values + 2
+    height = height + #metadata.javaVersion.values + 2
+    height = height + #metadata.configurationFileFormat.values + 2
 
     local input_count = 5 -- Group, Artifact, Name, Description, Package Name
     height = height + (input_count * 3)
@@ -177,38 +178,39 @@ end
 -- @param  form_context  FormContext  Context with metadata and selections
 --
 -- @return table                      List of Layout.Box components
+-- @return table                      List of reset handlers
 --
 ----------------------------------------------------------------------------
 local function create_radio_controls(form_context)
     local metadata = form_context.metadata
-    return {
-        radios.create_radio(
-            form_context:radio_config("Project Type", metadata.type.values, "project_type")
-        ),
-        radios.create_radio(
-            form_context:radio_config("Language", metadata.language.values, "language")
-        ),
-        radios.create_radio(
-            form_context:radio_config(
-                "Spring Boot Version",
-                format_boot_versions(metadata.bootVersion.values),
-                "boot_version"
-            )
-        ),
-        radios.create_radio(
-            form_context:radio_config("Packaging", metadata.packaging.values, "packaging")
-        ),
-        radios.create_radio(
-            form_context:radio_config("Java Version", metadata.javaVersion.values, "java_version")
-        ),
-        radios.create_radio(
-            form_context:radio_config(
-                "Config Format",
-                metadata.configurationFileFormat.values,
-                "configurationFileFormat"
-            )
-        ),
+    local boxes = {}
+    local handlers = {}
+
+    local radio_configs = {
+        { title = "Project Type", values = metadata.type.values, key = "project_type" },
+        { title = "Language", values = metadata.language.values, key = "language" },
+        {
+            title = "Spring Boot Version",
+            values = format_boot_versions(metadata.bootVersion.values),
+            key = "boot_version",
+        },
+        { title = "Packaging", values = metadata.packaging.values, key = "packaging" },
+        { title = "Java Version", values = metadata.javaVersion.values, key = "java_version" },
+        {
+            title = "Config Format",
+            values = metadata.configurationFileFormat.values,
+            key = "configurationFileFormat",
+        },
     }
+
+    for _, cfg in ipairs(radio_configs) do
+        local box, handler =
+            radios.create_radio(form_context:radio_config(cfg.title, cfg.values, cfg.key))
+        table.insert(boxes, box)
+        table.insert(handlers, handler)
+    end
+
+    return boxes, handlers
 end
 
 ----------------------------------------------------------------------------
@@ -218,20 +220,29 @@ end
 -- @param  form_context  FormContext  Context with selections
 --
 -- @return table                      List of Layout.Box components
+-- @return table                      List of reset handlers
 --
 ----------------------------------------------------------------------------
 local function create_input_controls(form_context)
-    return {
-        inputs.create_input(form_context:input_config("Group", "groupId", "com.example")),
-        inputs.create_input(form_context:input_config("Artifact", "artifactId", "demo")),
-        inputs.create_input(form_context:input_config("Name", "name", "demo")),
-        inputs.create_input(
-            form_context:input_config("Description", "description", "Demo project for Spring Boot")
-        ),
-        inputs.create_input(
-            form_context:input_config("Package Name", "packageName", "com.example.demo")
-        ),
+    local boxes = {}
+    local handlers = {}
+
+    local input_configs = {
+        { title = "Group", key = "groupId", default = "com.example" },
+        { title = "Artifact", key = "artifactId", default = "demo" },
+        { title = "Name", key = "name", default = "demo" },
+        { title = "Description", key = "description", default = "Demo project for Spring Boot" },
+        { title = "Package Name", key = "packageName", default = "com.example.demo" },
     }
+
+    for _, cfg in ipairs(input_configs) do
+        local box, handler =
+            inputs.create_input(form_context:input_config(cfg.title, cfg.key, cfg.default))
+        table.insert(boxes, box)
+        table.insert(handlers, handler)
+    end
+
+    return boxes, handlers
 end
 
 ----------------------------------------------------------------------------
@@ -241,13 +252,22 @@ end
 -- @param  form_context  FormContext  Context with metadata and selections
 --
 -- @return Layout.Box                 Left panel
+-- @return table                      List of reset handlers
 --
 ----------------------------------------------------------------------------
 local function create_left_panel(form_context)
     local children = {}
-    vim.list_extend(children, create_radio_controls(form_context))
-    vim.list_extend(children, create_input_controls(form_context))
-    return Layout.Box(children, { dir = "col", size = "50%" })
+    local handlers = {}
+
+    local radio_boxes, radio_handlers = create_radio_controls(form_context)
+    local input_boxes, input_handlers = create_input_controls(form_context)
+
+    vim.list_extend(children, radio_boxes)
+    vim.list_extend(children, input_boxes)
+    vim.list_extend(handlers, radio_handlers)
+    vim.list_extend(handlers, input_handlers)
+
+    return Layout.Box(children, { dir = "col", size = "50%" }), handlers
 end
 
 ----------------------------------------------------------------------------
@@ -284,13 +304,20 @@ function M.build_ui(metadata, selections)
 
     local form_context = FormContext.new(metadata, selections)
 
+    local left_panel, reset_handlers = create_left_panel(form_context)
+    local right_panel = create_right_panel()
+
     local layout = Layout(
         outer_popup,
         Layout.Box({
-            create_left_panel(form_context),
-            create_right_panel(),
+            left_panel,
+            right_panel,
         }, { dir = "row" })
     )
+
+    for _, handler in ipairs(reset_handlers) do
+        reset_manager.register_reset_handler(handler)
+    end
 
     return {
         layout = layout,

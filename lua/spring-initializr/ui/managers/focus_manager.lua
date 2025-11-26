@@ -33,6 +33,7 @@
 ----------------------------------------------------------------------------
 local window_utils = require("spring-initializr.utils.window_utils")
 local buffer_manager = require("spring-initializr.ui.managers.buffer_manager")
+local reset_manager = require("spring-initializr.ui.managers.reset_manager")
 
 ----------------------------------------------------------------------------
 -- Module table
@@ -87,16 +88,38 @@ end
 
 ----------------------------------------------------------------------------
 --
--- Enable focus navigation across all registered components and closes UI
--- if mapped key 'q' is pressed.
+-- Create reset handler that resets form and refreshes dependencies display.
 --
--- @param main_ui    table  Module table passed from init.lua
+-- @param selections  table  Selections table to reset
+--
+-- @return function           Reset handler
+--
+----------------------------------------------------------------------------
+local function create_reset_handler(selections)
+    return function()
+        reset_manager.reset_form(selections)
+        local dependencies_display =
+            require("spring-initializr.ui.components.dependencies.dependencies_display")
+        dependencies_display.update_display()
+        M.focus_first()
+    end
+end
+
+----------------------------------------------------------------------------
+--
+-- Enable focus navigation across all registered components and register
+-- close and reset keys.
+--
+-- @param main_ui  table  Module table passed from init.lua
 --
 ----------------------------------------------------------------------------
 function M.enable_navigation(main_ui)
+    local reset_fn = create_reset_handler(main_ui.state.selections)
+
     for _, comp in ipairs(M.focusables) do
         map_navigation_keys(comp)
-        buffer_manager.register_close_key(comp, main_ui)
+        buffer_manager.register_close_key(comp, main_ui.close)
+        buffer_manager.register_reset_key(comp, reset_fn)
     end
 end
 

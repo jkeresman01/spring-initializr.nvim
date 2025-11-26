@@ -23,8 +23,10 @@
 
 ----------------------------------------------------------------------------
 --
--- Provides functionality to map close key to 'q' and closing the UI
+-- Provides functionality to map keys for closing and resetting the UI
 --
+----------------------------------------------------------------------------
+
 ----------------------------------------------------------------------------
 -- Module table
 ----------------------------------------------------------------------------
@@ -32,15 +34,29 @@ local M = {}
 
 ----------------------------------------------------------------------------
 --
--- Register the close key and closes UI in normal mode.
+-- Register the close key that closes UI in normal mode.
 --
--- @param comp     table  Component to register
--- @param main_ui  table  Module table from layout.lua
+-- @param comp     table     Component to register
+-- @param close_fn function  Close function to call
 --
 ----------------------------------------------------------------------------
-function M.register_close_key(comp, main_ui)
+function M.register_close_key(comp, close_fn)
     comp:map("n", "q", function()
-        main_ui.close()
+        close_fn()
+    end, { noremap = true, nowait = true })
+end
+
+----------------------------------------------------------------------------
+--
+-- Register the reset key that resets the form to defaults.
+--
+-- @param comp      table     Component to register
+-- @param reset_fn  function  Reset function to call
+--
+----------------------------------------------------------------------------
+function M.register_reset_key(comp, reset_fn)
+    comp:map("n", "<C-r>", function()
+        reset_fn()
     end, { noremap = true, nowait = true })
 end
 

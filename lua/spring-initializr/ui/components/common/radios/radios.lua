@@ -317,12 +317,36 @@ end
 
 ----------------------------------------------------------------------------
 --
+-- Create a reset handler for a radio component.
+--
+-- @param  popup            Popup       The radio popup component
+-- @param  state            RadioState  The radio state object
+--
+-- @return function                     Reset handler function
+--
+----------------------------------------------------------------------------
+local function create_reset_handler(popup, state)
+    return function()
+        -- Reset to first item
+        state.selected[1] = 1
+        state.selections[state.key] = state.items[1].value
+        vim.schedule(function()
+            if vim.api.nvim_buf_is_valid(popup.bufnr) then
+                render_all_items(popup, state.items, 1)
+            end
+        end)
+    end
+end
+
+----------------------------------------------------------------------------
+--
 -- Create a radio component as a layout box.
 --
 -- @param  config   table/RadioConfig  Containing configuration object
 -- with title, values, key, and shared selections
 --
 -- @return Layout.Box                  Layout-wrapped popup
+-- @return function                    Reset handler for this radio
 --
 ----------------------------------------------------------------------------
 function M.create_radio(config)
@@ -344,7 +368,9 @@ function M.create_radio(config)
     schedule_initial_render(popup, items, selected[1])
     register_focus_for_components(popup)
 
-    return Layout.Box(popup, { size = #items + 2 })
+    local reset_handler = create_reset_handler(popup, state)
+
+    return Layout.Box(popup, { size = #items + 2 }), reset_handler
 end
 
 ----------------------------------------------------------------------------

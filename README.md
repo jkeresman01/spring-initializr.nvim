@@ -37,6 +37,7 @@ spring-initializr.nvim/
 │       ├── styles/
 │       ├── telescope/
 │       ├── ui/
+│       ├── dao/
 │       ├── utils/
 │       └── init.lua
 ├── scripts/
