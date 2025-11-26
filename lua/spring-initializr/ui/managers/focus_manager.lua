@@ -57,12 +57,27 @@ end
 
 ----------------------------------------------------------------------------
 --
+-- Focus a window and ensure normal mode.
+--
+-- @param winid  number  Window ID to focus
+--
+----------------------------------------------------------------------------
+local function focus_window(winid)
+    if not winid or not vim.api.nvim_win_is_valid(winid) then
+        return
+    end
+    vim.api.nvim_set_current_win(winid)
+    vim.cmd("stopinsert")
+end
+
+----------------------------------------------------------------------------
+--
 -- Focus the next component in the focusables list.
 --
 ----------------------------------------------------------------------------
 local function focus_next()
     M.current_focus = (M.current_focus % #M.focusables) + 1
-    vim.api.nvim_set_current_win(window_utils.get_winid(M.focusables[M.current_focus]))
+    focus_window(window_utils.get_winid(M.focusables[M.current_focus]))
 end
 
 ----------------------------------------------------------------------------
@@ -72,7 +87,7 @@ end
 ----------------------------------------------------------------------------
 local function focus_prev()
     M.current_focus = (M.current_focus - 2 + #M.focusables) % #M.focusables + 1
-    vim.api.nvim_set_current_win(window_utils.get_winid(M.focusables[M.current_focus]))
+    focus_window(window_utils.get_winid(M.focusables[M.current_focus]))
 end
 
 ----------------------------------------------------------------------------
@@ -144,21 +159,6 @@ end
 
 ----------------------------------------------------------------------------
 --
--- Sets focus to a window and ensures normal mode.
---
--- @param winid  number  Window ID to focus
---
-----------------------------------------------------------------------------
-local function focus_window_in_normal_mode(winid)
-    if not winid or not vim.api.nvim_win_is_valid(winid) then
-        return
-    end
-    vim.api.nvim_set_current_win(winid)
-    vim.cmd("stopinsert")
-end
-
-----------------------------------------------------------------------------
---
 -- Sets focus to the first registered component in normal mode.
 -- Should be called after all components are registered and mounted.
 --
@@ -166,7 +166,7 @@ end
 function M.focus_first()
     vim.schedule(function()
         local winid = get_first_component_winid()
-        focus_window_in_normal_mode(winid)
+        focus_window(winid)
     end)
 end
 

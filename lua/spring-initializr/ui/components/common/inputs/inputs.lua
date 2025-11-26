@@ -141,6 +141,8 @@ local function build_input_handlers(config)
         on_submit = function(value)
             update_selection(config, value)
             show_selection(config, value)
+            -- Return to normal mode after submit
+            vim.cmd("stopinsert")
         end,
     }
 end
@@ -201,6 +203,35 @@ end
 
 ----------------------------------------------------------------------------
 --
+-- Sets up the input component to disable auto-insert on BufEnter.
+-- NUI Input components may auto-enter insert mode; this prevents that.
+--
+-- @param  input_component  Input  Input component instance
+--
+----------------------------------------------------------------------------
+local function disable_auto_insert(input_component)
+    vim.api.nvim_create_autocmd("BufEnter", {
+        buffer = input_component.bufnr,
+        callback = function()
+            -- Use vim.schedule to ensure this runs after any NUI auto-insert
+            vim.schedule(function()
+                -- Only stop insert if we're in insert mode and this is from navigation
+                -- Check if the buffer is still valid
+                if vim.api.nvim_buf_is_valid(input_component.bufnr) then
+                    local mode = vim.api.nvim_get_mode().mode
+                    -- If we're in insert mode but the user didn't explicitly enter it,
+                    -- switch back to normal mode
+                    if mode == "i" or mode == "ic" then
+                        vim.cmd("stopinsert")
+                    end
+                end
+            end)
+        end,
+    })
+end
+
+----------------------------------------------------------------------------
+--
 -- Create a layout-wrapped input component for Spring Initializr.
 --
 -- @param  config   table/InputConfig  Containing configuration object with
@@ -213,6 +244,13 @@ function M.create_input(config)
     config.selections[config.key] = config.default
     local input_component = create_input_component(config)
     register_focus_for_components(input_component)
+
+    -- Disable auto-insert when navigating to this input
+    vim.schedule(function()
+        if input_component.bufnr and vim.api.nvim_buf_is_valid(input_component.bufnr) then
+            disable_auto_insert(input_component)
+        end
+    end)
 
     local reset_handler = create_reset_handler(input_component, config)
     reset_manager.register_reset_handler(reset_handler)
