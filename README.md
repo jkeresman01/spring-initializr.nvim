@@ -13,6 +13,10 @@
 [![asciicast](https://asciinema.org/a/723220.svg)](https://asciinema.org/a/723220)
 
 
+## Preview ##
+<img width="1389" height="834" alt="image" src="https://github.com/user-attachments/assets/80756160-243a-4e9a-80ae-7a9ca95a0263" />
+
+
 ## 🔧 Features
 
 - [x] Full Spring Initializr metadata support  
