@@ -32,6 +32,7 @@
 ----------------------------------------------------------------------------
 local layout_builder = require("spring-initializr.ui.layout.layout")
 local focus_manager = require("spring-initializr.ui.managers.focus_manager")
+local reset_manager = require("spring-initializr.ui.managers.reset_manager")
 local highlights = require("spring-initializr.styles.highlights")
 local metadata = require("spring-initializr.metadata.metadata")
 local dependencies_display =
@@ -116,34 +117,46 @@ local function restore_saved_state()
         return
     end
 
-    local project = repo.load_project()
-    if not project then
+    local ok, project = pcall(function()
+        return repo.load_project()
+    end)
+
+    if not ok or not project then
         return
     end
 
-    M.state.selections.project_type = project.project_type
-    M.state.selections.language = project.language
-    M.state.selections.boot_version = project.boot_version
-    M.state.selections.groupId = project.groupId
-    M.state.selections.artifactId = project.artifactId
-    M.state.selections.name = project.name
-    M.state.selections.description = project.description
-    M.state.selections.packageName = project.packageName
-    M.state.selections.packaging = project.packaging
-    M.state.selections.java_version = project.java_version
-    M.state.selections.configurationFileFormat = project.configurationFileFormat
+    M.state.selections.project_type = project.project_type or ""
+    M.state.selections.language = project.language or ""
+    M.state.selections.boot_version = project.boot_version or ""
+    M.state.selections.groupId = project.groupId or "com.example"
+    M.state.selections.artifactId = project.artifactId or "demo"
+    M.state.selections.name = project.name or "demo"
+    M.state.selections.description = project.description or "Demo project for Spring Boot"
+    M.state.selections.packageName = project.packageName or "com.example.demo"
+    M.state.selections.packaging = project.packaging or ""
+    M.state.selections.java_version = project.java_version or ""
+    M.state.selections.configurationFileFormat = project.configurationFileFormat or "properties"
 
     telescope.selected_dependencies = {}
     telescope.selected_dependencies_full = {}
 
     if project.dependencies then
         for _, dep in ipairs(project.dependencies) do
-            table.insert(telescope.selected_dependencies, dep.id)
-            table.insert(telescope.selected_dependencies_full, {
-                id = dep.id,
-                name = dep.name,
-                description = dep.description,
-            })
+            if type(dep) == "table" and dep.id then
+                table.insert(telescope.selected_dependencies, dep.id)
+                table.insert(telescope.selected_dependencies_full, {
+                    id = dep.id,
+                    name = dep.name or dep.id,
+                    description = dep.description or "",
+                })
+            elseif type(dep) == "string" then
+                table.insert(telescope.selected_dependencies, dep)
+                table.insert(telescope.selected_dependencies_full, {
+                    id = dep,
+                    name = dep,
+                    description = "",
+                })
+            end
         end
     end
 
@@ -158,7 +171,7 @@ end
 local function activate_ui()
     M.state.layout:mount()
     M.state.is_open = true
-    focus_manager.enable_navigation(M.close)
+    focus_manager.enable_navigation(M.close, M.state.selections)
     dependencies_display.update_display()
     buffer_utils.setup_close_on_buffer_delete(
         focus_manager.focusables,
@@ -177,7 +190,7 @@ end
 ----------------------------------------------------------------------------
 local function mount_ui(data)
     store_metadata(data)
-    restore_saved_state(data)
+    restore_saved_state()
     setup_layout(data)
     activate_ui()
 end
@@ -225,7 +238,9 @@ function M.close()
 
         local project = Project.new(M.state.selections, dependencies)
         local repo = repository_factory.get_instance()
-        repo.save_project(project)
+        pcall(function()
+            repo.save_project(project)
+        end)
     end
 
     if M.state.layout then
@@ -240,6 +255,7 @@ function M.close()
     M.state.is_open = false
 
     focus_manager.reset()
+    reset_manager.clear_handlers()
 end
 
 ----------------------------------------------------------------------------

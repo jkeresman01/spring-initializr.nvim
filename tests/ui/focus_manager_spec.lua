@@ -8,7 +8,7 @@
 -- ╚═╝  ╚═══╝╚══════╝ ╚═════╝   ╚═══╝  ╚═╝╚═╝     ╚═╝
 --
 --
--- Unit tests for spring-initializr/ui/focus_manager.lua
+-- Unit tests for spring-initializr/ui/managers/focus_manager.lua
 --
 ----------------------------------------------------------------------------
 
@@ -18,6 +18,8 @@ describe("focus_manager management", function()
     local original_set_current_win
     local set_win_calls
     local mock_components
+    local mock_close_fn
+    local mock_selections
 
     before_each(function()
         -- Reset focus_manager state
@@ -44,6 +46,18 @@ describe("focus_manager management", function()
                 popup = { winid = 1003 },
                 map = function() end,
             },
+        }
+
+        -- Create mock close function
+        mock_close_fn = function() end
+
+        -- Create mock selections
+        mock_selections = {
+            groupId = "com.example",
+            artifactId = "demo",
+            name = "demo",
+            description = "Demo project for Spring Boot",
+            packageName = "com.example.demo",
         }
     end)
 
@@ -103,7 +117,7 @@ describe("focus_manager management", function()
         end)
     end)
 
-    describe("enable", function()
+    describe("enable_navigation", function()
         it("maps navigation keys on all components", function()
             -- Arrange
             local map_calls = {}
@@ -117,28 +131,59 @@ describe("focus_manager management", function()
             focus_manager.register_component(mock_components[2])
 
             -- Act
-            focus_manager.enable_navigation()
+            focus_manager.enable_navigation(mock_close_fn, mock_selections)
+
+            -- Assert - 4 keys per component: <Tab>, <S-Tab>, q (close), <C-r> (reset)
+            assert.are.equal(8, #map_calls)
+            local keys = vim.tbl_map(function(c)
+                return c.key
+            end, map_calls)
+            assert.is_true(vim.tbl_contains(keys, "<Tab>"))
+            assert.is_true(vim.tbl_contains(keys, "<S-Tab>"))
+            assert.is_true(vim.tbl_contains(keys, "q"))
+            assert.is_true(vim.tbl_contains(keys, "<C-r>"))
+        end)
+
+        it("registers close key on all components", function()
+            -- Arrange
+            local close_key_mapped = false
+            mock_components[1].map = function(self, mode, key, fn, opts)
+                if key == "q" then
+                    close_key_mapped = true
+                end
+            end
+
+            focus_manager.register_component(mock_components[1])
+
+            -- Act
+            focus_manager.enable_navigation(mock_close_fn, mock_selections)
 
             -- Assert
-            assert.are.equal(6, #map_calls) -- 2 keys per component
-            assert.is_true(vim.tbl_contains(
-                vim.tbl_map(function(c)
-                    return c.key
-                end, map_calls),
-                "<Tab>"
-            ))
-            assert.is_true(vim.tbl_contains(
-                vim.tbl_map(function(c)
-                    return c.key
-                end, map_calls),
-                "<S-Tab>"
-            ))
+            assert.is_true(close_key_mapped)
+        end)
+
+        it("registers reset key on all components", function()
+            -- Arrange
+            local reset_key_mapped = false
+            mock_components[1].map = function(self, mode, key, fn, opts)
+                if key == "<C-r>" then
+                    reset_key_mapped = true
+                end
+            end
+
+            focus_manager.register_component(mock_components[1])
+
+            -- Act
+            focus_manager.enable_navigation(mock_close_fn, mock_selections)
+
+            -- Assert
+            assert.is_true(reset_key_mapped)
         end)
     end)
 
     describe("navigation", function()
         before_each(function()
-            -- Register components and enable focus_manager
+            -- Register components
             for _, comp in ipairs(mock_components) do
                 focus_manager.register_component(comp)
             end
@@ -152,7 +197,7 @@ describe("focus_manager management", function()
                     tab_handler = fn
                 end
             end
-            focus_manager.enable_navigation()
+            focus_manager.enable_navigation(mock_close_fn, mock_selections)
 
             -- Act - simulate pressing Tab
             tab_handler()
@@ -172,7 +217,7 @@ describe("focus_manager management", function()
                     tab_handler = fn
                 end
             end
-            focus_manager.enable_navigation()
+            focus_manager.enable_navigation(mock_close_fn, mock_selections)
 
             -- Act
             tab_handler()
@@ -191,7 +236,7 @@ describe("focus_manager management", function()
                     shift_tab_handler = fn
                 end
             end
-            focus_manager.enable_navigation()
+            focus_manager.enable_navigation(mock_close_fn, mock_selections)
 
             -- Act
             shift_tab_handler()
@@ -210,7 +255,7 @@ describe("focus_manager management", function()
                     shift_tab_handler = fn
                 end
             end
-            focus_manager.enable_navigation()
+            focus_manager.enable_navigation(mock_close_fn, mock_selections)
 
             -- Act
             shift_tab_handler()
@@ -231,7 +276,7 @@ describe("focus_manager management", function()
                     tab_handler = fn
                 end
             end
-            focus_manager.enable_navigation()
+            focus_manager.enable_navigation(mock_close_fn, mock_selections)
 
             -- Act
             tab_handler()
@@ -243,7 +288,7 @@ describe("focus_manager management", function()
         it("handles no components gracefully", function()
             -- Act & Assert - should not throw
             assert.has_no.errors(function()
-                focus_manager.enable_navigation()
+                focus_manager.enable_navigation(mock_close_fn, mock_selections)
             end)
         end)
     end)
