@@ -274,16 +274,18 @@ end
 --
 -- Create the right-hand panel with dependency management.
 --
--- @return Layout.Box  Right panel
+-- @param close_fn     function  Module closing function from init.lua
+--
+-- @return Layout.Box            Right panel
 --
 ----------------------------------------------------------------------------
-local function create_right_panel()
+local function create_right_panel(close_fn)
     return Layout.Box({
         Layout.Box(
             dependencies_display.create_button(dependencies_display.update_display),
             { size = 3 }
         ),
-        Layout.Box(dependencies_display.create_display(), { grow = 1 }),
+        Layout.Box(dependencies_display.create_display(close_fn), { grow = 1 }),
     }, { dir = "col", size = "50%" })
 end
 
@@ -291,13 +293,14 @@ end
 --
 -- Build the entire Spring Initializr layout with dynamic sizing.
 --
--- @param  metadata    table  Fetched Spring metadata
--- @param  selections  table  State table of user selections
+-- @param  metadata    table     Fetched Spring metadata
+-- @param  selections  table     State table of user selections
+-- @param  close_fn   function   Module closing function from init.lua
 --
--- @return table              Contains the layout and the outer popup
+-- @return table                 Contains the layout and the outer popup
 --
 ----------------------------------------------------------------------------
-function M.build_ui(metadata, selections)
+function M.build_ui(metadata, selections, close_fn)
     local outer_popup = create_outer_popup(metadata)
 
     selections.configurationFileFormat = config.get_config_format()
@@ -310,8 +313,8 @@ function M.build_ui(metadata, selections)
     local layout = Layout(
         outer_popup,
         Layout.Box({
-            left_panel,
-            right_panel,
+            create_left_panel(form_context),
+            create_right_panel(close_fn),
         }, { dir = "row" })
     )
 

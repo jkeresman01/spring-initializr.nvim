@@ -90,36 +90,13 @@ end
 --
 -- Create reset handler that resets form and refreshes dependencies display.
 --
--- @param selections  table  Selections table to reset
---
--- @return function           Reset handler
+-- @param close_fn  function    Module closing function passed from init.lua
 --
 ----------------------------------------------------------------------------
-local function create_reset_handler(selections)
-    return function()
-        reset_manager.reset_form(selections)
-        local dependencies_display =
-            require("spring-initializr.ui.components.dependencies.dependencies_display")
-        dependencies_display.update_display()
-        M.focus_first()
-    end
-end
-
-----------------------------------------------------------------------------
---
--- Enable focus navigation across all registered components and register
--- close and reset keys.
---
--- @param main_ui  table  Module table passed from init.lua
---
-----------------------------------------------------------------------------
-function M.enable_navigation(main_ui)
-    local reset_fn = create_reset_handler(main_ui.state.selections)
-
+function M.enable_navigation(close_fn)
     for _, comp in ipairs(M.focusables) do
         map_navigation_keys(comp)
-        buffer_manager.register_close_key(comp, main_ui.close)
-        buffer_manager.register_reset_key(comp, reset_fn)
+        buffer_manager.register_close_key(comp, close_fn)
     end
 end
 

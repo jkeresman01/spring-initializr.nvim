@@ -33,6 +33,7 @@
 ----------------------------------------------------------------------------
 local Popup = require("nui.popup")
 
+local buffer_manager = require("spring-initializr.ui.managers.buffer_manager")
 local focus_manager = require("spring-initializr.ui.managers.focus_manager")
 local message_utils = require("spring-initializr.utils.message_utils")
 local picker = require("spring-initializr.telescope.telescope")
@@ -212,12 +213,15 @@ end
 --
 -- Create a popup to display selected dependencies.
 --
--- @return Popup  Nui popup used for showing dependencies
+-- @param close_fn  table  Module closing function from layout.lua
+--
+-- @return Popup           Nui popup used for showing dependencies
 --
 ----------------------------------------------------------------------------
-function M.create_display()
+function M.create_display(close_fn)
     local popup = Popup(display_popup_config())
     M.state.dependencies_panel = popup
+    buffer_manager.register_close_key(popup, close_fn)
     return popup
 end
 
