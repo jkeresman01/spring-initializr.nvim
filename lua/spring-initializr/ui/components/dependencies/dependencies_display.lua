@@ -38,6 +38,7 @@ local focus_manager = require("spring-initializr.ui.managers.focus_manager")
 local message_utils = require("spring-initializr.utils.message_utils")
 local picker = require("spring-initializr.telescope.telescope")
 local dependency_card = require("spring-initializr.ui.components.dependencies.dependency_card")
+local icons = require("spring-initializr.ui.icons.icons")
 
 ----------------------------------------------------------------------------
 -- Module
@@ -62,7 +63,8 @@ local DISPLAY_TITLE = "Selected Dependencies"
 --
 ----------------------------------------------------------------------------
 local function button_border()
-    return { style = "rounded", text = { top = BUTTON_TITLE, top_align = "center" } }
+    local formatted_title = icons.format_section_title(BUTTON_TITLE)
+    return { style = "rounded", text = { top = formatted_title, top_align = "center" } }
 end
 
 ----------------------------------------------------------------------------
@@ -168,7 +170,8 @@ end
 --
 ----------------------------------------------------------------------------
 local function display_border()
-    return { style = "rounded", text = { top = DISPLAY_TITLE, top_align = "center" } }
+    local formatted_title = icons.format_section_title(DISPLAY_TITLE)
+    return { style = "rounded", text = { top = formatted_title, top_align = "center" } }
 end
 
 ----------------------------------------------------------------------------

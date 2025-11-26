@@ -37,6 +37,7 @@ local Layout = require("nui.layout")
 local focus_manager = require("spring-initializr.ui.managers.focus_manager")
 local reset_manager = require("spring-initializr.ui.managers.reset_manager")
 local message_utils = require("spring-initializr.utils.message_utils")
+local icons = require("spring-initializr.ui.icons.icons")
 
 ----------------------------------------------------------------------------
 -- Module table
@@ -120,7 +121,7 @@ end
 --
 ----------------------------------------------------------------------------
 local function render_item_line(item, is_selected)
-    local prefix = is_selected and "(x)" or "( )"
+    local prefix = is_selected and icons.get_radio_selected() or icons.get_radio_unselected()
     return string.format("%s %s", prefix, item.label)
 end
 
@@ -255,9 +256,10 @@ end
 --
 ----------------------------------------------------------------------------
 local function radio_border(title)
+    local formatted_title = icons.format_section_title(title)
     return {
         style = "rounded",
-        text = { top = title, top_align = "center" },
+        text = { top = formatted_title, top_align = "left" },
     }
 end
 

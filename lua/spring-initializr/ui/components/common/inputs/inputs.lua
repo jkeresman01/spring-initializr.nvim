@@ -36,6 +36,7 @@ local Layout = require("nui.layout")
 local focus_manager = require("spring-initializr.ui.managers.focus_manager")
 local reset_manager = require("spring-initializr.ui.managers.reset_manager")
 local message_utils = require("spring-initializr.utils.message_utils")
+local icons = require("spring-initializr.ui.icons.icons")
 
 ----------------------------------------------------------------------------
 -- Constants
@@ -57,7 +58,8 @@ local M = {}
 --
 ----------------------------------------------------------------------------
 local function input_border(title)
-    return { style = "rounded", text = { top = title, top_align = "left" } }
+    local formatted_title = icons.format_input_title(title)
+    return { style = "rounded", text = { top = formatted_title, top_align = "left" } }
 end
 
 ----------------------------------------------------------------------------

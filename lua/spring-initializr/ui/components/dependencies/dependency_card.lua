@@ -29,6 +29,11 @@
 ----------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------
+-- Dependencies
+----------------------------------------------------------------------------
+local icons = require("spring-initializr.ui.icons.icons")
+
+----------------------------------------------------------------------------
 -- Module table
 ----------------------------------------------------------------------------
 local M = {}
@@ -36,12 +41,22 @@ local M = {}
 ----------------------------------------------------------------------------
 -- Constants
 ----------------------------------------------------------------------------
-local CHECKBOX_CHECKED = "[x]"
 local MIN_NAME_LENGTH = 10
 local MIN_DESC_LENGTH = 10
 local TAG_MAX_LENGTH = 8
 local CARD_BORDER_WIDTH = 2
 local DESC_INDENT = 2
+
+----------------------------------------------------------------------------
+--
+-- Get the checkbox icon for selected dependencies.
+--
+-- @return string  Checkbox icon
+--
+----------------------------------------------------------------------------
+local function get_checkbox()
+    return icons.get_dependency_checked()
+end
 
 ----------------------------------------------------------------------------
 --
@@ -85,7 +100,8 @@ end
 --
 ----------------------------------------------------------------------------
 local function calculate_max_name_width(content_width, tag_width)
-    local checkbox_width = vim.fn.strwidth(CHECKBOX_CHECKED)
+    local checkbox = get_checkbox()
+    local checkbox_width = vim.fn.strwidth(checkbox)
     local spacing = 2 -- Space after checkbox and before tag
     local available = content_width - checkbox_width - tag_width - spacing
     return math.max(MIN_NAME_LENGTH, available)
@@ -118,6 +134,7 @@ end
 --
 ----------------------------------------------------------------------------
 local function create_header_line(name, id, content_width)
+    local checkbox = get_checkbox()
     local tag = format_tag(id)
     local tag_width = vim.fn.strwidth(tag)
     local max_name_length = calculate_max_name_width(content_width, tag_width)
@@ -125,11 +142,11 @@ local function create_header_line(name, id, content_width)
     local truncated_name = truncate_text(name, max_name_length)
     local name_width = vim.fn.strwidth(truncated_name)
 
-    local checkbox_width = vim.fn.strwidth(CHECKBOX_CHECKED)
+    local checkbox_width = vim.fn.strwidth(checkbox)
     local used_width = checkbox_width + 1 + name_width + tag_width
     local padding = create_padding(used_width, content_width)
 
-    return CHECKBOX_CHECKED .. " " .. truncated_name .. padding .. tag
+    return checkbox .. " " .. truncated_name .. padding .. tag
 end
 
 ----------------------------------------------------------------------------
