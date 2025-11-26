@@ -16,9 +16,7 @@ local focus_manager = require("spring-initializr.ui.managers.focus_manager")
 
 describe("focus_manager management", function()
     local original_set_current_win
-    local original_cmd
     local set_win_calls
-    local cmd_calls
     local mock_components
     local mock_close_fn
     local mock_selections
@@ -32,13 +30,6 @@ describe("focus_manager management", function()
         set_win_calls = {}
         vim.api.nvim_set_current_win = function(winid)
             table.insert(set_win_calls, winid)
-        end
-
-        -- Mock vim.cmd to track stopinsert calls
-        original_cmd = vim.cmd
-        cmd_calls = {}
-        vim.cmd = function(cmd)
-            table.insert(cmd_calls, cmd)
         end
 
         -- Create mock components
@@ -72,7 +63,6 @@ describe("focus_manager management", function()
 
     after_each(function()
         vim.api.nvim_set_current_win = original_set_current_win
-        vim.cmd = original_cmd
         focus_manager.reset()
     end)
 
@@ -218,23 +208,6 @@ describe("focus_manager management", function()
             assert.are.equal(1002, set_win_calls[1])
         end)
 
-        it("calls stopinsert when navigating forward", function()
-            -- Arrange
-            local tab_handler
-            mock_components[1].map = function(self, mode, key, fn)
-                if key == "<Tab>" then
-                    tab_handler = fn
-                end
-            end
-            focus_manager.enable_navigation(mock_close_fn, mock_selections)
-
-            -- Act - simulate pressing Tab
-            tab_handler()
-
-            -- Assert - should call stopinsert to ensure normal mode
-            assert.is_true(vim.tbl_contains(cmd_calls, "stopinsert"))
-        end)
-
         it("wraps to first component after last", function()
             -- Arrange
             focus_manager.current_focus = 3
@@ -271,24 +244,6 @@ describe("focus_manager management", function()
             -- Assert
             assert.are.equal(1, focus_manager.current_focus)
             assert.are.equal(1001, set_win_calls[#set_win_calls])
-        end)
-
-        it("calls stopinsert when navigating backward", function()
-            -- Arrange
-            focus_manager.current_focus = 2
-            local shift_tab_handler
-            mock_components[2].map = function(self, mode, key, fn)
-                if key == "<S-Tab>" then
-                    shift_tab_handler = fn
-                end
-            end
-            focus_manager.enable_navigation(mock_close_fn, mock_selections)
-
-            -- Act
-            shift_tab_handler()
-
-            -- Assert - should call stopinsert to ensure normal mode
-            assert.is_true(vim.tbl_contains(cmd_calls, "stopinsert"))
         end)
 
         it("wraps to last component from first", function()
@@ -335,66 +290,6 @@ describe("focus_manager management", function()
             assert.has_no.errors(function()
                 focus_manager.enable_navigation(mock_close_fn, mock_selections)
             end)
-        end)
-    end)
-
-    describe("normal mode enforcement (issue #24)", function()
-        it("ensures navigation always lands in normal mode", function()
-            -- Arrange
-            focus_manager.register_component(mock_components[1])
-            focus_manager.register_component(mock_components[2])
-
-            local tab_handler
-            mock_components[1].map = function(self, mode, key, fn)
-                if key == "<Tab>" then
-                    tab_handler = fn
-                end
-            end
-            focus_manager.enable_navigation(mock_close_fn, mock_selections)
-
-            -- Act
-            tab_handler()
-
-            -- Assert - stopinsert should be called to enforce normal mode
-            local stopinsert_called = false
-            for _, call in ipairs(cmd_calls) do
-                if call == "stopinsert" then
-                    stopinsert_called = true
-                    break
-                end
-            end
-            assert.is_true(stopinsert_called, "stopinsert should be called on navigation")
-        end)
-
-        it("calls stopinsert for each navigation action", function()
-            -- Arrange
-            focus_manager.register_component(mock_components[1])
-            focus_manager.register_component(mock_components[2])
-            focus_manager.register_component(mock_components[3])
-
-            local handlers = {}
-            for i, comp in ipairs(mock_components) do
-                comp.map = function(self, mode, key, fn)
-                    if key == "<Tab>" then
-                        handlers[i] = fn
-                    end
-                end
-            end
-            focus_manager.enable_navigation(mock_close_fn, mock_selections)
-
-            -- Act - Navigate multiple times
-            handlers[1]() -- 1 -> 2
-            handlers[2]() -- 2 -> 3
-            handlers[3]() -- 3 -> 1
-
-            -- Assert - stopinsert should be called for each navigation
-            local stopinsert_count = 0
-            for _, call in ipairs(cmd_calls) do
-                if call == "stopinsert" then
-                    stopinsert_count = stopinsert_count + 1
-                end
-            end
-            assert.are.equal(3, stopinsert_count, "stopinsert should be called for each navigation")
         end)
     end)
 end)

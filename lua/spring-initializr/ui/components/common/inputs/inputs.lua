@@ -127,6 +127,16 @@ end
 
 ----------------------------------------------------------------------------
 --
+-- Exits insert mode, switches back  to normal mode
+--
+----------------------------------------------------------------------------
+
+local function switch_to_normal_mode()
+    vim.cmd("stopinsert")
+end
+
+----------------------------------------------------------------------------
+--
 -- Creates input change and submit handlers that update user selections.
 --
 -- @param  config   table/InputConfig  Containing configuration object with
@@ -141,8 +151,7 @@ local function build_input_handlers(config)
         on_submit = function(value)
             update_selection(config, value)
             show_selection(config, value)
-            -- Return to normal mode after submit
-            vim.cmd("stopinsert")
+            switch_to_normal_mode()
         end,
     }
 end
