@@ -25,6 +25,7 @@
 --
 -- Manages the UI elements related to Spring Initializr dependency selection.
 -- Uses card-based view to display selected dependencies with full metadata.
+-- Supports card navigation and removal with dd keybinding.
 --
 ----------------------------------------------------------------------------
 
@@ -44,7 +45,10 @@ local icons = require("spring-initializr.ui.icons.icons")
 -- Module
 ----------------------------------------------------------------------------
 local M = {
-    state = { dependencies_panel = nil },
+    state = {
+        dependencies_panel = nil,
+        focused_card_index = nil,
+    },
 }
 
 ----------------------------------------------------------------------------
@@ -54,6 +58,7 @@ local BUTTON_SIZE = { height = 3, width = 40 }
 local DISPLAY_SIZE = { height = "100%", width = 40 }
 local BUTTON_TITLE = "Add Dependencies (Telescope)"
 local DISPLAY_TITLE = "Selected Dependencies"
+local LINES_PER_CARD = 4
 
 ----------------------------------------------------------------------------
 --
@@ -214,6 +219,146 @@ end
 
 ----------------------------------------------------------------------------
 --
+-- Move focus to a specific card index.
+--
+-- @param  card_index  number  1-indexed card index
+--
+----------------------------------------------------------------------------
+local function focus_card(card_index)
+    local panel = M.state.dependencies_panel
+
+    if not panel or not vim.api.nvim_buf_is_valid(panel.bufnr) then
+        return
+    end
+
+    if not picker.selected_dependencies_full or #picker.selected_dependencies_full == 0 then
+        M.state.focused_card_index = nil
+        return
+    end
+
+    card_index = math.max(1, math.min(card_index, #picker.selected_dependencies_full))
+    M.state.focused_card_index = card_index
+
+    local target_line = (card_index - 1) * LINES_PER_CARD + 1
+
+    if vim.api.nvim_win_is_valid(panel.winid) then
+        vim.api.nvim_win_set_cursor(panel.winid, { target_line + 1, 0 })
+    end
+
+    M.update_display()
+end
+
+----------------------------------------------------------------------------
+--
+-- Move focus to next card.
+--
+----------------------------------------------------------------------------
+local function focus_next_card()
+    if not M.state.focused_card_index then
+        focus_card(1)
+        return
+    end
+
+    local next_index = M.state.focused_card_index + 1
+    if next_index <= #picker.selected_dependencies_full then
+        focus_card(next_index)
+    end
+end
+
+----------------------------------------------------------------------------
+--
+-- Move focus to previous card.
+--
+----------------------------------------------------------------------------
+local function focus_prev_card()
+    if not M.state.focused_card_index then
+        focus_card(#picker.selected_dependencies_full)
+        return
+    end
+
+    local prev_index = M.state.focused_card_index - 1
+    if prev_index >= 1 then
+        focus_card(prev_index)
+    end
+end
+
+----------------------------------------------------------------------------
+--
+-- Remove the currently focused card.
+--
+----------------------------------------------------------------------------
+local function remove_focused_card()
+    if not M.state.focused_card_index then
+        message_utils.show_warn_message("No dependency selected")
+        return
+    end
+
+    local deps = picker.selected_dependencies_full
+    if not deps or M.state.focused_card_index > #deps then
+        return
+    end
+
+    local dep = deps[M.state.focused_card_index]
+    local removed = picker.remove_dependency(dep.id)
+
+    if removed then
+        message_utils.show_info_message("Removed: " .. dep.name)
+
+        if #picker.selected_dependencies_full == 0 then
+            M.state.focused_card_index = nil
+        elseif M.state.focused_card_index > #picker.selected_dependencies_full then
+            M.state.focused_card_index = #picker.selected_dependencies_full
+        end
+
+        M.update_display()
+    end
+end
+
+----------------------------------------------------------------------------
+--
+-- Setup card navigation and deletion keybindings.
+--
+-- @param popup  Popup  Dependencies display popup
+--
+----------------------------------------------------------------------------
+local function setup_card_keybindings(popup)
+    popup:map("n", "j", function()
+        focus_next_card()
+    end, { noremap = true, nowait = true })
+
+    popup:map("n", "k", function()
+        focus_prev_card()
+    end, { noremap = true, nowait = true })
+
+    popup:map("n", "dd", function()
+        remove_focused_card()
+    end, { noremap = true, nowait = true })
+
+    vim.api.nvim_create_autocmd("BufEnter", {
+        buffer = popup.bufnr,
+        callback = function()
+            if
+                not M.state.focused_card_index
+                and picker.selected_dependencies_full
+                and #picker.selected_dependencies_full > 0
+            then
+                M.state.focused_card_index = 1
+                M.update_display()
+            end
+        end,
+    })
+
+    vim.api.nvim_create_autocmd("BufLeave", {
+        buffer = popup.bufnr,
+        callback = function()
+            M.state.focused_card_index = nil
+            M.update_display()
+        end,
+    })
+end
+
+----------------------------------------------------------------------------
+--
 -- Create a popup to display selected dependencies.
 --
 -- @param close_fn  table  Module closing function from layout.lua
@@ -225,6 +370,15 @@ function M.create_display(close_fn)
     local popup = Popup(display_popup_config())
     M.state.dependencies_panel = popup
     buffer_manager.register_close_key(popup, close_fn)
+
+    register_focus_for_components(popup)
+
+    vim.schedule(function()
+        if popup.bufnr and vim.api.nvim_buf_is_valid(popup.bufnr) then
+            setup_card_keybindings(popup)
+        end
+    end)
+
     return popup
 end
 
@@ -284,7 +438,8 @@ function M.update_display()
             panel.bufnr,
             0,
             #picker.selected_dependencies_full,
-            panel_width
+            panel_width,
+            M.state.focused_card_index
         )
     end
 end
