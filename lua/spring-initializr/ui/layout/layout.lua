@@ -152,6 +152,7 @@ local function create_outer_popup(metadata)
         position = outer_position(),
         size = outer_size(metadata),
         win_options = outer_win_options(),
+        focusable = false
     })
 end
 
