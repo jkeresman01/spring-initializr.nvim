@@ -123,7 +123,7 @@ vim.keymap.set("n", "<leader>sg", "<CMD>SpringGenerateProject<CR>")
 | `<S-Tab>`    | Navigate backward                       |
 | `j` / `k`    | Move between radio options              |
 | `<CR>`       | Confirm field selection or submit       |
-| `dd`         | Remove selected dependecy               |
+| `dd`         | Remove selected dependency              |
 
 ## Contributing
 
