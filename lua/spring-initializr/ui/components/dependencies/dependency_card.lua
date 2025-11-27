@@ -312,10 +312,11 @@ end
 -- @param  bufnr      number  Buffer number
 -- @param  namespace  number  Highlight namespace
 -- @param  line_num   number  Line number (0-indexed)
+-- @param  hl_group   string  Highlight group to use
 --
 ----------------------------------------------------------------------------
-local function highlight_left_border(bufnr, namespace, line_num)
-    vim.api.nvim_buf_add_highlight(bufnr, namespace, "FloatBorder", line_num, 0, 1)
+local function highlight_left_border(bufnr, namespace, line_num, hl_group)
+    vim.api.nvim_buf_add_highlight(bufnr, namespace, hl_group, line_num, 0, 1)
 end
 
 ----------------------------------------------------------------------------
@@ -325,16 +326,17 @@ end
 -- @param  bufnr      number  Buffer number
 -- @param  namespace  number  Highlight namespace
 -- @param  line_num   number  Line number (0-indexed)
+-- @param  hl_group   string  Highlight group to use
 --
 ----------------------------------------------------------------------------
-local function highlight_right_border(bufnr, namespace, line_num)
+local function highlight_right_border(bufnr, namespace, line_num, hl_group)
     local line = vim.api.nvim_buf_get_lines(bufnr, line_num, line_num + 1, false)[1]
     if not line then
         return
     end
 
     local line_width = vim.fn.strwidth(line)
-    vim.api.nvim_buf_add_highlight(bufnr, namespace, "FloatBorder", line_num, line_width - 1, -1)
+    vim.api.nvim_buf_add_highlight(bufnr, namespace, hl_group, line_num, line_width - 1, -1)
 end
 
 ----------------------------------------------------------------------------
@@ -344,27 +346,55 @@ end
 -- @param  bufnr      number  Buffer number
 -- @param  namespace  number  Highlight namespace
 -- @param  line_num   number  Line number (0-indexed)
+-- @param  hl_group   string  Highlight group to use
 --
 ----------------------------------------------------------------------------
-local function highlight_line_borders(bufnr, namespace, line_num)
-    highlight_left_border(bufnr, namespace, line_num)
-    highlight_right_border(bufnr, namespace, line_num)
+local function highlight_line_borders(bufnr, namespace, line_num, hl_group)
+    highlight_left_border(bufnr, namespace, line_num, hl_group)
+    highlight_right_border(bufnr, namespace, line_num, hl_group)
+end
+
+----------------------------------------------------------------------------
+--
+-- Highlight content area of a line for focused card.
+--
+-- @param  bufnr      number  Buffer number
+-- @param  namespace  number  Highlight namespace
+-- @param  line_num   number  Line number (0-indexed)
+--
+----------------------------------------------------------------------------
+local function highlight_focused_content(bufnr, namespace, line_num)
+    local line = vim.api.nvim_buf_get_lines(bufnr, line_num, line_num + 1, false)[1]
+    if not line then
+        return
+    end
+
+    local line_width = vim.fn.strwidth(line)
+    vim.api.nvim_buf_add_highlight(bufnr, namespace, "Visual", line_num, 0, line_width)
 end
 
 ----------------------------------------------------------------------------
 --
 -- Highlight all lines of a single dependency card.
 --
--- @param  bufnr       number  Buffer number
--- @param  namespace   number  Highlight namespace
--- @param  card_start  number  Starting line of card (0-indexed)
+-- @param  bufnr       number      Buffer number
+-- @param  namespace   number      Highlight namespace
+-- @param  card_start  number      Starting line of card (0-indexed)
+-- @param  is_focused  boolean     Whether this card is focused
 --
 ----------------------------------------------------------------------------
-local function highlight_card(bufnr, namespace, card_start)
+local function highlight_card(bufnr, namespace, card_start, is_focused)
     local lines_per_card = 4
+    local hl_group = "FloatBorder"
+
     for line_offset = 0, lines_per_card - 1 do
         local line_num = card_start + line_offset
-        highlight_line_borders(bufnr, namespace, line_num)
+
+        if is_focused then
+            highlight_focused_content(bufnr, namespace, line_num)
+        end
+
+        highlight_line_borders(bufnr, namespace, line_num, hl_group)
     end
 end
 
@@ -372,19 +402,22 @@ end
 --
 -- Apply syntax highlighting to a buffer with dependency cards.
 -- Uses existing FloatBorder highlight group for consistency.
+-- Highlights focused card with Visual highlight.
 --
--- @param  bufnr         number  Buffer number to apply highlights
--- @param  line_start    number  Starting line number (0-indexed)
--- @param  num_deps      number  Number of dependencies
+-- @param  bufnr            number      Buffer number to apply highlights
+-- @param  line_start       number      Starting line number (0-indexed)
+-- @param  num_deps         number      Number of dependencies
+-- @param  focused_index    number|nil  1-indexed focused card (nil if none)
 --
 ----------------------------------------------------------------------------
-function M.apply_highlights(bufnr, line_start, num_deps)
+function M.apply_highlights(bufnr, line_start, num_deps, focused_index)
     local namespace = vim.api.nvim_create_namespace("spring_dep_cards")
     vim.api.nvim_buf_clear_namespace(bufnr, namespace, 0, -1)
 
     for i = 0, num_deps - 1 do
         local card_start = get_card_start_line(line_start, i)
-        highlight_card(bufnr, namespace, card_start)
+        local is_focused = focused_index and (i + 1 == focused_index)
+        highlight_card(bufnr, namespace, card_start, is_focused)
     end
 end
 

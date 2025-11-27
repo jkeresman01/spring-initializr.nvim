@@ -5,7 +5,7 @@
 -- ██╔██╗ ██║█████╗  ██║   ██║██║   ██║██║██╔████╔██║
 -- ██║╚██╗██║██╔══╝  ██║   ██║╚██╗ ██╔╝██║██║╚██╔╝██║
 -- ██║ ╚████║███████╗╚██████╔╝ ╚████╔╝ ██║██║ ╚═╝ ██║
--- ╚═╝  ╚═══╝╚══════╝ ╚═════╝   ╚═╝╚═╝╚═╝     ╚═╝
+-- ╚═╝  ╚═══╝╚══════╝ ╚═════╝   ╚═══╝  ╚═╝╚═╝     ╚═╝
 --
 --
 -- spring-initializr.nvim
@@ -163,6 +163,38 @@ local function record_selection(entry)
     })
 
     message_utils.show_info_message("Selected: " .. entry.name)
+end
+
+-------------------------------------------------------------------------------
+--
+-- Remove a dependency by ID.
+--
+-- @param dep_id string  Dependency ID to remove
+-- @return boolean       true if removed, false if not found
+--
+-------------------------------------------------------------------------------
+function M.remove_dependency(dep_id)
+    init_hashset()
+
+    if not M.selected_set:has(dep_id) then
+        return false
+    end
+
+    M.selected_set:remove(dep_id)
+
+    for i = #M.selected_dependencies, 1, -1 do
+        if M.selected_dependencies[i] == dep_id then
+            table.remove(M.selected_dependencies, i)
+        end
+    end
+
+    for i = #M.selected_dependencies_full, 1, -1 do
+        if M.selected_dependencies_full[i].id == dep_id then
+            table.remove(M.selected_dependencies_full, i)
+        end
+    end
+
+    return true
 end
 
 -------------------------------------------------------------------------------
