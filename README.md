@@ -151,6 +151,14 @@ Contributions are very welcome. You can help by:
 
 If you are unsure where to start, open an issue to discuss an idea before coding.
 
+## 🧱 Supporters Wall
+
+**Kevin Lopez**  
+_First Donoation 💛_ - Thanks Kevin we appreaciate it a lot
+
+> “Hey bro thanks a lot for your spring plugin on nvim, I loved it - that was exactly what I was looking for. The best for your project, I'll come back later :D Greetings from Mexico!”  
+> - **Kevin Lopez**
+
 
 ## License
 
