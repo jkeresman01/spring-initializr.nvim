@@ -170,8 +170,10 @@ local function create_input_component(config)
     local popup_opts = build_input_popup_opts(config.title)
     local input_handlers = build_input_handlers(config)
 
+    local current_value = config.selections[config.key] or config.default
+
     return Input(popup_opts, {
-        default_value = config.default,
+        default_value = current_value,
         on_change = input_handlers.on_change,
         on_submit = input_handlers.on_submit,
     })
@@ -249,7 +251,10 @@ end
 --
 ----------------------------------------------------------------------------
 function M.create_input(config)
-    config.selections[config.key] = config.default
+    if not config.selections[config.key] or config.selections[config.key] == "" then
+        config.selections[config.key] = config.default
+    end
+
     local input_component = create_input_component(config)
     register_focus_for_components(input_component)
 
