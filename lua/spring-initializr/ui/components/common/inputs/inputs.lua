@@ -224,9 +224,8 @@ local function disable_auto_insert(input_component)
         callback = function()
             -- Use vim.schedule to ensure this runs after any NUI auto-insert
             vim.schedule(function()
-                -- Only stop insert if we're in insert mode and this is from navigation
-                -- Check if the buffer is still valid
-                if vim.api.nvim_buf_is_valid(input_component.bufnr) then
+                -- Check if bufnr exists and is valid before accessing
+                if input_component.bufnr and vim.api.nvim_buf_is_valid(input_component.bufnr) then
                     local mode = vim.api.nvim_get_mode().mode
                     -- If we're in insert mode but the user didn't explicitly enter it,
                     -- switch back to normal mode
