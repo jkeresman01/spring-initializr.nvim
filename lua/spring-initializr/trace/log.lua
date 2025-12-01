@@ -144,13 +144,12 @@ end
 --
 -- Format log message
 --
--- @param  level  string  Log level name
 -- @param  args   table   Arguments to format
 --
 -- @return string         Formatted message
 --
 ----------------------------------------------------------------------------
-local function format_message(level, args)
+local function format_message(args)
     local parts = {}
 
     for _, arg in ipairs(args) do
