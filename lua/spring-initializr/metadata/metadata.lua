@@ -1,3 +1,4 @@
+-- lua/spring-initializr/metadata/metadata.lua
 ----------------------------------------------------------------------------
 --
 -- ███╗   ██╗███████╗ ██████╗ ██╗   ██╗██╗███╗   ███╗
@@ -31,6 +32,7 @@
 -- Dependencies
 ----------------------------------------------------------------------------
 local curl = require("plenary.curl")
+local log = require("spring-initializr.trace.log")
 
 ----------------------------------------------------------------------------
 -- Constants
@@ -60,10 +62,12 @@ local M = {
 --
 ----------------------------------------------------------------------------
 local function call_callbacks(data, err)
+    log.debug("Calling", #M.state.callbacks, "registered callbacks")
     for _, cb in ipairs(M.state.callbacks) do
         cb(data, err)
     end
     M.state.callbacks = {}
+    log.trace("Callbacks cleared")
 end
 
 ----------------------------------------------------------------------------
@@ -77,14 +81,23 @@ end
 --
 ----------------------------------------------------------------------------
 local function try_decode_json(body)
+    log.trace("Attempting to decode JSON response")
+
     if not body or body == "" then
+        log.error("Empty response body from metadata endpoint")
         return nil, "Empty response body"
     end
 
+    log.fmt_debug("Response body length: %d bytes", #body)
+
     local ok, decoded = pcall(vim.json.decode, body)
     if ok and type(decoded) == "table" then
+        log.info("Successfully decoded metadata JSON")
+        log.fmt_debug("Decoded metadata contains %d top-level keys", vim.tbl_count(decoded))
         return decoded, nil
     end
+
+    log.error("Failed to parse metadata JSON:", decoded)
     return nil, "Failed to parse Spring metadata"
 end
 
@@ -96,10 +109,12 @@ end
 --
 ----------------------------------------------------------------------------
 local function update_state_success(data)
+    log.info("Updating state with successful metadata")
     M.state.metadata = data
     M.state.loaded = true
     M.state.error = nil
     M.state.loading = false
+    log.trace("State updated: loaded=true, error=nil, loading=false")
 end
 
 ----------------------------------------------------------------------------
@@ -110,8 +125,10 @@ end
 --
 ----------------------------------------------------------------------------
 local function update_state_error(error_msg)
+    log.error("Updating state with error:", error_msg)
     M.state.error = error_msg
     M.state.loading = false
+    log.trace("State updated: error set, loading=false")
 end
 
 ----------------------------------------------------------------------------
@@ -122,6 +139,7 @@ end
 --
 ----------------------------------------------------------------------------
 local function handle_success(data)
+    log.info("Handling successful metadata fetch")
     update_state_success(data)
     call_callbacks(data, nil)
 end
@@ -134,6 +152,7 @@ end
 --
 ----------------------------------------------------------------------------
 local function handle_failure(error_msg)
+    log.warn("Handling metadata fetch failure")
     update_state_error(error_msg)
     call_callbacks(nil, M.state.error)
 end
@@ -146,13 +165,19 @@ end
 --
 ----------------------------------------------------------------------------
 local function handle_response(response)
+    log.debug("Processing HTTP response")
+
     vim.schedule(function()
         if response.exit ~= 0 then
+            log.error("Network request failed with exit code:", response.exit)
             handle_failure("Network request failed")
             return
         end
 
+        log.fmt_debug("HTTP status code: %d", response.status)
+
         if response.status < 200 or response.status >= 300 then
+            log.error("HTTP error:", response.status)
             handle_failure(string.format("HTTP error %d", response.status))
             return
         end
@@ -172,6 +197,9 @@ end
 --
 ----------------------------------------------------------------------------
 local function fetch_from_remote()
+    log.info("Fetching metadata from", METADATA_URL)
+    log.fmt_debug("Request timeout: %d ms", REQUEST_TIMEOUT)
+
     local response = curl.get(METADATA_URL, {
         headers = {
             ["Accept"] = "application/vnd.initializr.v2.3+json",
@@ -179,6 +207,7 @@ local function fetch_from_remote()
         timeout = REQUEST_TIMEOUT,
     })
 
+    log.trace("HTTP request completed, processing response")
     handle_response(response)
 end
 
@@ -190,17 +219,24 @@ end
 --
 ----------------------------------------------------------------------------
 function M.fetch_metadata(callback)
+    log.debug("fetch_metadata called")
+
     if M.state.loaded and M.state.metadata then
+        log.info("Using cached metadata")
         callback(M.state.metadata, nil)
         return
     end
 
+    log.debug("Registering callback for metadata fetch")
     table.insert(M.state.callbacks, callback)
+    log.fmt_trace("Total callbacks registered: %d", #M.state.callbacks)
 
     if M.state.loading then
+        log.debug("Metadata fetch already in progress, callback queued")
         return
     end
 
+    log.info("Starting new metadata fetch")
     M.state.loading = true
     fetch_from_remote()
 end

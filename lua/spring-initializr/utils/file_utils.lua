@@ -32,6 +32,7 @@
 ----------------------------------------------------------------------------
 local Job = require("plenary.job")
 local Path = require("plenary.path")
+local log = require("spring-initializr.trace.log")
 
 ----------------------------------------------------------------------------
 -- Module table
@@ -77,11 +78,22 @@ end
 --
 ----------------------------------------------------------------------------
 function M.unzip(zip_path, destination, on_done)
+    log.fmt_info("Unzipping file: %s to %s", zip_path, destination)
+
     Job:new({
         command = "unzip",
         args = { "-o", zip_path, "-d", destination },
-        on_exit = on_unzip_complete(zip_path, on_done),
+        on_exit = function(return_val)
+            if return_val == 0 then
+                log.info("Unzip completed successfully")
+            else
+                log.error("Unzip failed with code:", return_val)
+            end
+            on_unzip_complete(zip_path, on_done)()
+        end,
     }):start()
+
+    log.trace("Unzip job started")
 end
 
 ----------------------------------------------------------------------------
@@ -165,13 +177,16 @@ end
 --
 ----------------------------------------------------------------------------
 function M.write_file(file_path, content)
+    log.fmt_debug("Writing file: %s", file_path)
+    log.fmt_trace("Content length: %d bytes", #content)
+
     local file = Path:new(file_path)
 
-    -- Ensure parent directory exists
     local parent = file:parent()
     if parent then
         local dir_ok, dir_err = M.ensure_directory(parent:absolute())
         if not dir_ok then
+            log.error("Failed to create parent directory:", dir_err)
             return false, dir_err
         end
     end
@@ -181,9 +196,11 @@ function M.write_file(file_path, content)
     end)
 
     if not ok then
+        log.error("File write failed:", err)
         return false, "Failed to write file: " .. (err or "unknown error")
     end
 
+    log.info("File written successfully:", file_path)
     return true, nil
 end
 

@@ -42,6 +42,7 @@ spring-initializr.nvim/
 │       ├── telescope/
 │       ├── ui/
 │       ├── dao/
+│       ├── trace/
 │       ├── utils/
 │       └── init.lua
 ├── scripts/

@@ -43,6 +43,7 @@ local buffer_utils = require("spring-initializr.utils.buffer_utils")
 local repository_factory = require("spring-initializr.dao.dal.repository_factory")
 local Project = require("spring-initializr.dao.model.project")
 local Dependency = require("spring-initializr.dao.model.dependency")
+local log = require("spring-initializr.trace.log")
 local telescope = require("spring-initializr.telescope.telescope")
 
 ----------------------------------------------------------------------------
@@ -169,21 +170,28 @@ end
 --
 ----------------------------------------------------------------------------
 local function activate_ui()
+    log.info("Activating UI")
+    log.trace("Mounting layout")
     M.state.layout:mount()
     M.state.is_open = true
+    log.debug("Enabling navigation")
     focus_manager.enable_navigation(M.close, M.state.selections)
+    log.trace("Updating dependencies display")
     dependencies_display.update_display()
+    log.debug("Setting up close-on-buffer-delete")
     buffer_utils.setup_close_on_buffer_delete(
         focus_manager.focusables,
         M.state.outer_popup,
         M.close
     )
+    log.trace("Focusing first component")
     focus_manager.focus_first()
+    log.info("UI activated successfully")
 end
 
 ----------------------------------------------------------------------------
 --
--- Orchestrates layout setup using fetched metadata.
+-- Handles layout setup using fetched metadata.
 --
 -- @param  data  table  Metadata used to drive UI creation
 --
@@ -203,19 +211,25 @@ end
 --
 ----------------------------------------------------------------------------
 function M.setup()
+    log.debug("UI setup called")
+
     if M.state.is_open then
+        log.warn("Spring Initializr is already open")
         message_utils.show_warn_message("Spring Initializr is already open")
         return
     end
 
+    log.info("Setting up Spring Initializr UI")
     setup_highlights()
 
     metadata.fetch_metadata(function(data, err)
         if err or not data then
+            log.error("Metadata fetch failed:", err)
             handle_metadata_error(err)
             return
         end
 
+        log.info("Metadata received, mounting UI")
         vim.schedule(function()
             mount_ui(data)
         end)
@@ -230,7 +244,10 @@ end
 --
 ----------------------------------------------------------------------------
 function M.close()
+    log.info("Closing Spring Initializr UI")
+
     if M.state.is_open then
+        log.debug("Saving project state before close")
         local dependencies = {}
         for _, dep in ipairs(telescope.selected_dependencies_full or {}) do
             table.insert(dependencies, Dependency.new(dep.id, dep.name, dep.description))
@@ -238,11 +255,18 @@ function M.close()
 
         local project = Project.new(M.state.selections, dependencies)
         local repo = repository_factory.get_instance()
-        pcall(function()
+        local ok, err = pcall(function()
             repo.save_project(project)
         end)
+
+        if ok then
+            log.info("Project state saved successfully")
+        else
+            log.error("Failed to save project state:", err)
+        end
     end
 
+    log.trace("Unmounting layout")
     if M.state.layout then
         pcall(function()
             M.state.layout:unmount()
@@ -250,12 +274,16 @@ function M.close()
         M.state.layout = nil
     end
 
+    log.trace("Closing windows")
     window_utils.safe_close(M.state.outer_popup and M.state.outer_popup.winid)
     M.state.outer_popup = nil
     M.state.is_open = false
 
+    log.debug("Resetting focus manager")
     focus_manager.reset()
+    log.debug("Clearing reset handlers")
     reset_manager.clear_handlers()
+    log.info("UI closed successfully")
 end
 
 ----------------------------------------------------------------------------

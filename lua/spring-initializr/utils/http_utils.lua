@@ -30,6 +30,7 @@
 ----------------------------------------------------------------------------
 -- Dependencies
 ----------------------------------------------------------------------------
+local log = require("spring-initializr.trace.log")
 local curl = require("plenary.curl")
 
 ----------------------------------------------------------------------------
@@ -52,17 +53,24 @@ local DOWNLOAD_TIMEOUT = 30000 -- 30 seconds
 --
 ----------------------------------------------------------------------------
 local function handle_download_response(response, on_success, on_error)
+    log.debug("Handling download response")
+
     vim.schedule(function()
         if response.exit ~= 0 then
+            log.error("Download failed with exit code:", response.exit)
             on_error()
             return
         end
+
+        log.fmt_debug("Download HTTP status: %d", response.status)
 
         if response.status < 200 or response.status >= 300 then
+            log.error("Download HTTP error:", response.status)
             on_error()
             return
         end
 
+        log.info("File downloaded successfully")
         on_success()
     end)
 end
@@ -78,11 +86,16 @@ end
 --
 ----------------------------------------------------------------------------
 function M.download_file(url, output_path, on_success, on_error)
+    log.fmt_info("Starting file download from: %s", url:sub(1, 50) .. "...")
+    log.fmt_debug("Output path: %s", output_path)
+    log.fmt_debug("Timeout: %d ms", DOWNLOAD_TIMEOUT)
+
     local response = curl.get(url, {
         output = output_path,
         timeout = DOWNLOAD_TIMEOUT,
     })
 
+    log.trace("Download request completed")
     handle_download_response(response, on_success, on_error)
 end
 
