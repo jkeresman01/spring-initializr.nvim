@@ -184,7 +184,6 @@ function Set:get_all()
     return self:to_list()
 end
 
-
 ----------------------------------------------------------------------------
 --
 -- Number of elements.

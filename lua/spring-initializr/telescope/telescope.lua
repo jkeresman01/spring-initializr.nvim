@@ -157,7 +157,7 @@ local function record_selection(entry)
         message_utils.show_warn_message("Already selected: " .. entry.id)
         return
     end
-  
+
     log.trace("Adding dependency to set")
     M.selected_dependencies_set:add(entry)
 
