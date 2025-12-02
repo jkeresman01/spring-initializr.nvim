@@ -15,28 +15,6 @@
 
 ### High-Level Design
 
-```
-┌─────────────────┐
-│   User (Nvim)   │
-└────────┬────────┘
-         │ Commands
-         ▼
-┌─────────────────┐
-│  Commands Layer │ (:SpringInitializr, :SpringGenerateProject)
-└────────┬────────┘
-         │
-    ┌────┴────┐
-    ▼         ▼
-┌────────┐ ┌──────┐
-│   UI   │ │ Core │
-└───┬────┘ └───┬──┘
-    │          │
-    ▼          ▼
-┌──────────┐ ┌────────┐
-│ Metadata │ │ Utils  │
-└──────────┘ └────────┘
-```
-
 ### Component Responsibilities
 
 1. **Commands** (`commands/`)
@@ -384,6 +362,56 @@ end
 4. **Better Encapsulation**: Implementation details of `ui/init` remain hidden
 5. **Follows Dependency Inversion Principle**: Depending on abstractions (functions) not concrete modules
 ```
+
+### Using the Logging API
+
+Import the logging module in any file:
+```lua
+local log = require("spring-initializr.trace.log")
+```
+
+#### Basic Logging
+```lua
+-- Simple messages
+log.trace("Entering function")
+log.debug("Processing item")
+log.info("Operation completed")
+log.warn("Deprecated API used")
+log.error("Failed to connect")
+log.fatal("Critical system failure")
+
+-- Multiple arguments (will be concatenated with spaces)
+log.debug("User ID:", user_id, "Status:", status)
+
+-- Logging tables (automatically uses vim.inspect)
+log.debug("Configuration:", { host = "localhost", port = 8080 })
+```
+
+#### Formatted Logging
+
+Use the `fmt_*` variants for string formatting:
+```lua
+log.fmt_info("Fetching metadata from %s", url)
+log.fmt_debug("Processing %d dependencies", count)
+log.fmt_error("HTTP error: %d - %s", status_code, error_message)
+```
+
+### Log Output Format
+
+#### Console Output
+```
+[DEBUG] metadata/metadata.lua:123 - Fetching metadata from https://start.spring.io/...
+[INFO] ui/init.lua:45 - UI activated successfully
+[ERROR] utils/http_utils.lua:67 - Download failed with exit code: 1
+```
+
+#### File Output
+```
+[2025-01-15 14:32:01] [DEBUG] metadata/metadata.lua:123 - Fetching metadata from https://start.spring.io/...
+[2025-01-15 14:32:02] [INFO] ui/init.lua:45 - UI activated successfully
+[2025-01-15 14:32:05] [ERROR] utils/http_utils.lua:67 - Download failed with exit code: 1
+```
+
 ## Testing
 
 ### Running Tests
@@ -685,6 +713,132 @@ print(vim.inspect(focus.focusables))
 
 ```bash
 curl -s https://start.spring.io/metadata/client
+```
+
+
+### Troubleshooting with Logs
+
+#### Scenario 1: Metadata Not Loading
+
+Enable debug logging and check the log file:
+```bash
+# In Neovim config
+vim.g.spring_initializr_log_file = true
+vim.g.spring_initializr_log_level = "debug"
+
+# Open the log file
+tail -f ~/.local/share/nvim/spring-initializr.log
+```
+
+Look for lines like:
+```
+[DEBUG] metadata/metadata.lua:X - fetch_metadata called
+[INFO] metadata/metadata.lua:X - Fetching metadata from https://start.spring.io/...
+[ERROR] metadata/metadata.lua:X - Network request failed
+```
+
+#### Scenario 2: Dependency Picker Issues
+```lua
+-- Add trace logging to see the flow
+vim.g.spring_initializr_log_level = "trace"
+```
+
+You'll see detailed logs like:
+```
+[TRACE] telescope/telescope.lua:X - Recording dependency selection: web
+[TRACE] telescope/telescope.lua:X - Adding dependency to set
+[DEBUG] telescope/telescope.lua:X - Total dependencies selected: 1
+```
+
+#### Scenario 3: UI Navigation Problems
+```bash
+# Enable trace level to see every focus change
+vim.g.spring_initializr_log_level = "trace"
+```
+
+Logs will show:
+```
+[TRACE] focus_manager.lua:X - Focusing next component
+[DEBUG] focus_manager.lua:X - Current focus: 2/5
+[TRACE] focus_manager.lua:X - Registering focusable component
+```
+
+### Performance Considerations
+
+- Logging has **zero performance impact** when disabled (`use_console = false` and `use_file = false`)
+- Log level filtering happens before message formatting, so debug/trace calls are cheap at higher levels
+- File I/O is synchronous but buffered by the OS
+
+### Best Practices for Adding Logs
+
+1. **Log at appropriate levels**:
+```lua
+   log.trace("Loop iteration", i)          -- Very detailed
+   log.debug("Variable value:", value)     -- Diagnostic info
+   log.info("Operation completed")         -- Important milestones
+   log.warn("Unexpected condition")        -- Warnings
+   log.error("Operation failed:", err)     -- Errors
+```
+
+2. **Include context**:
+```lua
+   -- Bad
+   log.error("Failed")
+   
+   -- Good
+   log.error("Failed to download file from", url, ":", err)
+```
+
+3. **Use formatted logging for readability**:
+```lua
+   -- Easier to read
+   log.fmt_debug("Processing %d/%d items", current, total)
+```
+
+4. **Log entry and exit of critical functions**:
+```lua
+   function M.critical_operation()
+       log.info("Starting critical operation")
+       -- ... logic ...
+       log.info("Critical operation completed successfully")
+   end
+```
+
+5. **Log state transitions**:
+```lua
+   log.debug("State transition: loading=false, loaded=true")
+   M.state.loading = false
+   M.state.loaded = true
+```
+
+### Programmatic Log Control
+
+You can change log levels at runtime:
+```lua
+local log = require("spring-initializr.trace.log")
+
+-- Enable debug logging temporarily
+log.set_level("debug")
+perform_operation()
+
+-- Restore to warn
+log.set_level("warn")
+
+-- Check current level
+print("Current log level:", log.get_level())
+```
+
+### Disabling Logs in Production
+
+For end users, logging should be disabled by default (which it is). Users can opt-in:
+```lua
+-- Default (no logging)
+require('spring-initializr').setup()
+
+-- User enables logging for troubleshooting
+vim.g.spring_initializr_log_file = true
+vim.g.spring_initializr_log_level = "info"
+require('spring-initializr').setup()
 ```
 
 ## CI/CD

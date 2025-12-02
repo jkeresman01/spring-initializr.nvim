@@ -32,6 +32,7 @@
 -- Dependencies
 ----------------------------------------------------------------------------
 local window_utils = require("spring-initializr.utils.window_utils")
+local log = require("spring-initializr.trace.log")
 local buffer_manager = require("spring-initializr.ui.managers.buffer_manager")
 local reset_manager = require("spring-initializr.ui.managers.reset_manager")
 
@@ -52,7 +53,9 @@ local M = {
 --
 ----------------------------------------------------------------------------
 function M.register_component(comp)
+    log.trace("Registering focusable component")
     table.insert(M.focusables, comp)
+    log.fmt_debug("Total focusable components: %d", #M.focusables)
 end
 
 ----------------------------------------------------------------------------
@@ -62,7 +65,9 @@ end
 --
 ----------------------------------------------------------------------------
 local function focus_next()
+    log.trace("Focusing next component")
     M.current_focus = (M.current_focus % #M.focusables) + 1
+    log.fmt_debug("Current focus: %d/%d", M.current_focus, #M.focusables)
     vim.api.nvim_set_current_win(window_utils.get_winid(M.focusables[M.current_focus]))
     vim.cmd("stopinsert")
 end
@@ -74,7 +79,9 @@ end
 --
 ----------------------------------------------------------------------------
 local function focus_prev()
+    log.trace("Focusing previous component")
     M.current_focus = (M.current_focus - 2 + #M.focusables) % #M.focusables + 1
+    log.fmt_debug("Current focus: %d/%d", M.current_focus, #M.focusables)
     vim.api.nvim_set_current_win(window_utils.get_winid(M.focusables[M.current_focus]))
     vim.cmd("stopinsert")
 end
@@ -121,6 +128,8 @@ end
 --
 ----------------------------------------------------------------------------
 function M.enable_navigation(close_fn, selections)
+    log.info("Enabling navigation")
+    log.fmt_debug("Enabling for %d components", #M.focusables)
     M._selections = selections
     local reset_fn = create_reset_handler(selections)
 
@@ -129,6 +138,8 @@ function M.enable_navigation(close_fn, selections)
         buffer_manager.register_close_key(comp, close_fn)
         buffer_manager.register_reset_key(comp, reset_fn)
     end
+
+    log.trace("Navigation enabled successfully")
 end
 
 ----------------------------------------------------------------------------
@@ -180,9 +191,12 @@ end
 --
 ----------------------------------------------------------------------------
 function M.reset()
+    log.debug("Resetting focus manager")
+    log.fmt_trace("Clearing %d focusables", #M.focusables)
     M.focusables = {}
     M.current_focus = 1
     M._selections = nil
+    log.trace("Focus manager reset complete")
 end
 
 ----------------------------------------------------------------------------

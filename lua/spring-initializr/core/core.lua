@@ -33,6 +33,7 @@
 local ui = require("spring-initializr.ui.init")
 local deps = require("spring-initializr.telescope.telescope")
 local message_utils = require("spring-initializr.utils.message_utils")
+local log = require("spring-initializr.trace.log")
 local url_utils = require("spring-initializr.utils.url_utils")
 local http_utils = require("spring-initializr.utils.http_utils")
 local file_utils = require("spring-initializr.utils.file_utils")
@@ -134,11 +135,20 @@ end
 --
 ----------------------------------------------------------------------------
 function M.generate_project()
+    log.info("Starting project generation")
+
     local params = collect_params()
+    log.debug("Project parameters:", params)
+
     local url = make_download_url(params)
+    log.fmt_debug("Download URL: %s", url:sub(1, 100) .. "...")
+
     local cwd = vim.fn.getcwd()
     local zip_path = cwd .. "/spring-init.zip"
+
+    log.fmt_info("Downloading project to: %s", zip_path)
     message_utils.show_info_message("Just a second, we are setting things up for you...")
+
     start_download(url, zip_path, cwd)
 end
 

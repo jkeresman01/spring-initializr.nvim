@@ -42,6 +42,7 @@ spring-initializr.nvim/
 │       ├── telescope/
 │       ├── ui/
 │       ├── dao/
+│       ├── trace/
 │       ├── utils/
 │       └── init.lua
 ├── scripts/
@@ -123,6 +124,7 @@ vim.keymap.set("n", "<leader>sg", "<CMD>SpringGenerateProject<CR>")
 | `<S-Tab>`    | Navigate backward                       |
 | `j` / `k`    | Move between radio options              |
 | `<CR>`       | Confirm field selection or submit       |
+| `j` / `k`    | Move between selected dependencies      |
 | `dd`         | Remove selected dependency              |
 
 ## Contributing
