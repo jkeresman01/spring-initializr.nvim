@@ -24,12 +24,7 @@ describe("reset_manager", function()
 
         -- Mock telescope module
         mock_telescope = {
-            selected_dependencies = { "web", "data-jpa" },
-            selected_dependencies_full = {
-                { id = "web", name = "Spring Web", description = "Web support" },
-                { id = "data-jpa", name = "Spring Data JPA", description = "JPA support" },
-            },
-            selected_set = {
+            selected_dependencies_set = {
                 clear = function(self)
                     self._cleared = true
                 end,
@@ -162,24 +157,6 @@ describe("reset_manager", function()
             assert.are.equal("com.example.demo", selections.packageName)
         end)
 
-        it("clears selected dependencies arrays", function()
-            -- Arrange
-            local selections = {
-                groupId = "com.test",
-                artifactId = "test",
-                name = "test",
-                description = "test",
-                packageName = "com.test",
-            }
-
-            -- Act
-            reset_manager.reset_form(selections)
-
-            -- Assert
-            assert.are.equal(0, #mock_telescope.selected_dependencies)
-            assert.are.equal(0, #mock_telescope.selected_dependencies_full)
-        end)
-
         it("clears selected_set if present", function()
             -- Arrange
             local selections = {
@@ -194,7 +171,7 @@ describe("reset_manager", function()
             reset_manager.reset_form(selections)
 
             -- Assert
-            assert.is_true(mock_telescope.selected_set._cleared)
+            assert.is_true(mock_telescope.selected_dependencies_set._cleared)
         end)
 
         it("executes all registered handlers", function()
@@ -305,7 +282,7 @@ describe("reset_manager", function()
             assert.is_true(input_reset_called)
 
             -- Assert - dependencies cleared
-            assert.are.equal(0, #mock_telescope.selected_dependencies)
+            assert.is_true(mock_telescope.selected_dependencies_set._cleared)
 
             -- Note: project_type and language are NOT reset by reset_manager
             -- They are reset by the radio component handlers
