@@ -137,25 +137,36 @@ local function restore_saved_state()
     M.state.selections.java_version = project.java_version or ""
     M.state.selections.configurationFileFormat = project.configurationFileFormat or "properties"
 
-    telescope.selected_dependencies = {}
-    telescope.selected_dependencies_full = {}
+    telescope.selected_dependencies_set = nil
 
     if project.dependencies then
+        local key_fn = function(entry)
+            return entry.id
+        end
+        telescope.selected_dependencies_set =
+            require("spring-initializr.algo.hashset").new({ key_fn = key_fn })
         for _, dep in ipairs(project.dependencies) do
+            local entry
             if type(dep) == "table" and dep.id then
-                table.insert(telescope.selected_dependencies, dep.id)
-                table.insert(telescope.selected_dependencies_full, {
+                entry = {
                     id = dep.id,
                     name = dep.name or dep.id,
                     description = dep.description or "",
-                })
+                    group = dep.group or "",
+                    label = string.format("[%s] %s", dep.group or "", dep.name or dep.id),
+                }
             elseif type(dep) == "string" then
-                table.insert(telescope.selected_dependencies, dep)
-                table.insert(telescope.selected_dependencies_full, {
+                entry = {
                     id = dep,
                     name = dep,
                     description = "",
-                })
+                    group = "",
+                    label = dep,
+                }
+            end
+
+            if entry then
+                telescope.selected_dependencies_set:add(entry)
             end
         end
     end
@@ -232,8 +243,10 @@ end
 function M.close()
     if M.state.is_open then
         local dependencies = {}
-        for _, dep in ipairs(telescope.selected_dependencies_full or {}) do
-            table.insert(dependencies, Dependency.new(dep.id, dep.name, dep.description))
+        if telescope.selected_dependencies_set then
+            for _, dep in ipairs(telescope.selected_dependencies_set:get_all() or {}) do
+                table.insert(dependencies, Dependency.new(dep.id, dep.name, dep.description))
+            end
         end
 
         local project = Project.new(M.state.selections, dependencies)

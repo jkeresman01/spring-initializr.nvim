@@ -51,9 +51,7 @@ local LAYOUT_STRATEGY = "vertical"
 -- Module table
 ----------------------------------------------------------------------------
 local M = {
-    selected_dependencies = {},
-    selected_dependencies_full = {},
-    selected_set = nil,
+    selected_dependencies_set = nil,
 }
 
 -------------------------------------------------------------------------------
@@ -62,8 +60,11 @@ local M = {
 --
 -------------------------------------------------------------------------------
 local function init_hashset()
-    if not M.selected_set then
-        M.selected_set = HashSet.new()
+    if not M.selected_dependencies_set then
+        local key_fn = function(entry)
+            return entry.id
+        end
+        M.selected_dependencies_set = HashSet.new({ key_fn = key_fn })
     end
 end
 
@@ -148,19 +149,19 @@ end
 -------------------------------------------------------------------------------
 local function record_selection(entry)
     init_hashset()
-    if M.selected_set:has(entry.id) then
+    if M.selected_dependencies_set:has_key(entry.id) then
         message_utils.show_warn_message("Already selected: " .. entry.id)
         return
     end
 
-    M.selected_set:add(entry.id)
-    table.insert(M.selected_dependencies, entry.id)
+    M.selected_dependencies_set:add(entry)
+    -- table.insert(M.selected_dependencies, entry.id)
 
-    table.insert(M.selected_dependencies_full, {
-        id = entry.id,
-        name = entry.name,
-        description = entry.description,
-    })
+    -- table.insert(M.selected_dependencies_full, {
+    --     id = entry.id,
+    --     name = entry.name,
+    --     description = entry.description,
+    -- })
 
     message_utils.show_info_message("Selected: " .. entry.name)
 end
@@ -176,25 +177,13 @@ end
 function M.remove_dependency(dep_id)
     init_hashset()
 
-    if not M.selected_set:has(dep_id) then
-        return false
+    local removed = M.selected_dependencies_set:remove_key(dep_id)
+
+    if removed then
+        return true
     end
 
-    M.selected_set:remove(dep_id)
-
-    for i = #M.selected_dependencies, 1, -1 do
-        if M.selected_dependencies[i] == dep_id then
-            table.remove(M.selected_dependencies, i)
-        end
-    end
-
-    for i = #M.selected_dependencies_full, 1, -1 do
-        if M.selected_dependencies_full[i].id == dep_id then
-            table.remove(M.selected_dependencies_full, i)
-        end
-    end
-
-    return true
+    return false
 end
 
 -------------------------------------------------------------------------------

@@ -62,6 +62,46 @@ local LINES_PER_CARD = 4
 
 ----------------------------------------------------------------------------
 --
+-- Helper function to get dependencies array from HashSet
+--
+-- @return table  Array of dependencies
+--
+----------------------------------------------------------------------------
+local function get_dependencies_array()
+    if not picker.selected_dependencies_set then
+        return {}
+    end
+
+    local deps = picker.selected_dependencies_set:get_all()
+    if not deps then
+        return {}
+    end
+
+    local array = {}
+    for _, dep in pairs(deps) do
+        table.insert(array, dep)
+    end
+
+    return array
+end
+
+----------------------------------------------------------------------------
+--
+-- Helper function to get the count of selected dependencies
+--
+-- @return number  Count of dependencies
+--
+----------------------------------------------------------------------------
+local function get_dependencies_count()
+    if not picker.selected_dependencies_set then
+        return 0
+    end
+
+    return picker.selected_dependencies_set:size()
+end
+
+----------------------------------------------------------------------------
+--
 -- Returns the border configuration for the "Add Dependencies" button.
 --
 -- @return table  Border configuration table
@@ -231,12 +271,13 @@ local function focus_card(card_index)
         return
     end
 
-    if not picker.selected_dependencies_full or #picker.selected_dependencies_full == 0 then
+    local deps_array = get_dependencies_array()
+    if not deps_array or #deps_array == 0 then
         M.state.focused_card_index = nil
         return
     end
 
-    card_index = math.max(1, math.min(card_index, #picker.selected_dependencies_full))
+    card_index = math.max(1, math.min(card_index, #deps_array))
     M.state.focused_card_index = card_index
 
     local target_line = (card_index - 1) * LINES_PER_CARD + 1
@@ -260,7 +301,9 @@ local function focus_next_card()
     end
 
     local next_index = M.state.focused_card_index + 1
-    if next_index <= #picker.selected_dependencies_full then
+    local deps_count = get_dependencies_count()
+
+    if next_index <= deps_count then
         focus_card(next_index)
     end
 end
@@ -272,7 +315,8 @@ end
 ----------------------------------------------------------------------------
 local function focus_prev_card()
     if not M.state.focused_card_index then
-        focus_card(#picker.selected_dependencies_full)
+        local deps_count = get_dependencies_count()
+        focus_card(deps_count)
         return
     end
 
@@ -293,21 +337,23 @@ local function remove_focused_card()
         return
     end
 
-    local deps = picker.selected_dependencies_full
-    if not deps or M.state.focused_card_index > #deps then
+    local deps_array = get_dependencies_array()
+    if not deps_array or M.state.focused_card_index > #deps_array then
         return
     end
 
-    local dep = deps[M.state.focused_card_index]
+    local dep = deps_array[M.state.focused_card_index]
     local removed = picker.remove_dependency(dep.id)
 
     if removed then
         message_utils.show_info_message("Removed: " .. dep.name)
 
-        if #picker.selected_dependencies_full == 0 then
+        local current_size = get_dependencies_count()
+
+        if current_size == 0 then
             M.state.focused_card_index = nil
-        elseif M.state.focused_card_index > #picker.selected_dependencies_full then
-            M.state.focused_card_index = #picker.selected_dependencies_full
+        elseif M.state.focused_card_index > current_size then
+            M.state.focused_card_index = current_size
         end
 
         M.update_display()
@@ -337,11 +383,8 @@ local function setup_card_keybindings(popup)
     vim.api.nvim_create_autocmd("BufEnter", {
         buffer = popup.bufnr,
         callback = function()
-            if
-                not M.state.focused_card_index
-                and picker.selected_dependencies_full
-                and #picker.selected_dependencies_full > 0
-            then
+            local deps_count = get_dependencies_count()
+            if not M.state.focused_card_index and deps_count > 0 then
                 M.state.focused_card_index = 1
                 M.update_display()
             end
@@ -408,12 +451,14 @@ end
 --
 ----------------------------------------------------------------------------
 local function render_dependency_lines()
-    if not picker.selected_dependencies_full or #picker.selected_dependencies_full == 0 then
+    local selected_dependencies = get_dependencies_array()
+
+    if #selected_dependencies == 0 then
         return { "No dependencies selected" }
     end
 
     local panel_width = get_panel_width()
-    return dependency_card.create_all_cards(picker.selected_dependencies_full, panel_width)
+    return dependency_card.create_all_cards(selected_dependencies, panel_width)
 end
 
 ----------------------------------------------------------------------------
@@ -432,12 +477,13 @@ function M.update_display()
     local lines = render_dependency_lines()
     vim.api.nvim_buf_set_lines(panel.bufnr, 0, -1, false, lines)
 
-    if picker.selected_dependencies_full and #picker.selected_dependencies_full > 0 then
+    local deps_count = get_dependencies_count()
+    if deps_count > 0 then
         local panel_width = get_panel_width()
         dependency_card.apply_highlights(
             panel.bufnr,
             0,
-            #picker.selected_dependencies_full,
+            deps_count,
             panel_width,
             M.state.focused_card_index
         )
