@@ -64,7 +64,7 @@ local LINES_PER_CARD = 4
 --
 -- Helper function to get dependencies array from HashSet
 --
--- @return table  Array of dependencies
+-- @return  table   Array of dependencies
 --
 ----------------------------------------------------------------------------
 local function get_dependencies_array()
@@ -89,7 +89,7 @@ end
 --
 -- Helper function to get the count of selected dependencies
 --
--- @return number  Count of dependencies
+-- @return  number  Count of dependencies
 --
 ----------------------------------------------------------------------------
 local function get_dependencies_count()
