@@ -139,11 +139,11 @@ describe("reset_manager", function()
         it("resets input values to defaults", function()
             -- Arrange
             local selections = {
-                groupId = "com.mycompany",
+                groupId = "com.test",
                 artifactId = "myproject",
                 name = "myproject",
                 description = "My custom project",
-                packageName = "com.mycompany.myproject",
+                packageName = "com.test.myproject",
             }
 
             -- Act
@@ -261,11 +261,11 @@ describe("reset_manager", function()
             end)
 
             local selections = {
-                groupId = "com.mycompany",
+                groupId = "com.test",
                 artifactId = "myproject",
                 name = "myproject",
                 description = "Custom description",
-                packageName = "com.mycompany.myproject",
+                packageName = "com.test.myproject",
                 project_type = "gradle-project",
                 language = "kotlin",
             }
