@@ -8,6 +8,8 @@
     "stdpath",
     "modifed",
     "ipairs",
+    "deepcopy",
+    "flexbox",
     "tjdevries",
     "vlog",
     "modified",
