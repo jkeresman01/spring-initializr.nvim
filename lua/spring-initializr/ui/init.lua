@@ -59,6 +59,7 @@ local M = {
         },
         metadata = nil,
         is_open = false,
+        resize_autocmd_id = nil,
     },
 }
 
@@ -166,6 +167,126 @@ end
 
 ----------------------------------------------------------------------------
 --
+-- Removes the resize autocmd.
+--
+----------------------------------------------------------------------------
+local function remove_resize_autocmd()
+    if M.state.resize_autocmd_id then
+        log.trace("Removing resize autocmd")
+        vim.api.nvim_del_autocmd(M.state.resize_autocmd_id)
+        M.state.resize_autocmd_id = nil
+    end
+end
+
+----------------------------------------------------------------------------
+--
+-- Closes UI without saving state (used internally for resize).
+--
+----------------------------------------------------------------------------
+local function close_for_resize()
+    log.trace("Closing UI for resize")
+
+    remove_resize_autocmd()
+
+    if M.state.layout then
+        pcall(function()
+            M.state.layout:unmount()
+        end)
+        M.state.layout = nil
+    end
+
+    -- Explicitly unmount the outer popup (Layout doesn't do this automatically)
+    if M.state.outer_popup then
+        pcall(function()
+            M.state.outer_popup:unmount()
+        end)
+        M.state.outer_popup = nil
+    end
+
+    M.state.is_open = false
+
+    focus_manager.reset()
+    reset_manager.clear_handlers()
+end
+
+----------------------------------------------------------------------------
+--
+-- Reopens the UI with existing metadata (used for resize).
+--
+-- @param  data  table  Metadata to use
+--
+----------------------------------------------------------------------------
+local function reopen_after_resize(data)
+    if M.state.is_open then
+        return
+    end
+
+    log.trace("Reopening UI after resize")
+    store_metadata(data)
+    setup_layout(data)
+
+    log.trace("Mounting layout")
+    M.state.layout:mount()
+    M.state.is_open = true
+
+    focus_manager.enable_navigation(M.close, M.state.selections)
+    dependencies_display.update_display()
+    buffer_utils.setup_close_on_buffer_delete(
+        focus_manager.focusables,
+        M.state.outer_popup,
+        M.close
+    )
+    focus_manager.focus_first()
+
+    -- Re-setup resize autocmd
+    M.state.resize_autocmd_id = vim.api.nvim_create_autocmd("VimResized", {
+        callback = function()
+            if M.state.is_open and M.state.metadata then
+                local saved_metadata = M.state.metadata
+                local saved_selections = vim.deepcopy(M.state.selections)
+
+                close_for_resize()
+
+                vim.defer_fn(function()
+                    M.state.selections = saved_selections
+                    reopen_after_resize(saved_metadata)
+                end, 50)
+            end
+        end,
+        desc = "Spring Initializr resize handler",
+    })
+
+    log.info("UI reopened after resize")
+end
+
+----------------------------------------------------------------------------
+--
+-- Sets up autocmd for VimResized event to handle terminal resize.
+--
+----------------------------------------------------------------------------
+local function setup_resize_autocmd()
+    log.trace("Setting up resize autocmd")
+    M.state.resize_autocmd_id = vim.api.nvim_create_autocmd("VimResized", {
+        callback = function()
+            if M.state.is_open and M.state.metadata then
+                local saved_metadata = M.state.metadata
+                local saved_selections = vim.deepcopy(M.state.selections)
+
+                close_for_resize()
+
+                vim.defer_fn(function()
+                    M.state.selections = saved_selections
+                    reopen_after_resize(saved_metadata)
+                end, 50)
+            end
+        end,
+        desc = "Spring Initializr resize handler",
+    })
+    log.debug("Resize autocmd created")
+end
+
+----------------------------------------------------------------------------
+--
 -- Mounts the layout, sets focus_manager behavior and updates dependency display.
 --
 ----------------------------------------------------------------------------
@@ -186,6 +307,8 @@ local function activate_ui()
     )
     log.trace("Focusing first component")
     focus_manager.focus_first()
+    log.trace("Setting up resize handler")
+    setup_resize_autocmd()
     log.info("UI activated successfully")
 end
 
@@ -246,6 +369,8 @@ end
 function M.close()
     log.info("Closing Spring Initializr UI")
 
+    remove_resize_autocmd()
+
     if M.state.is_open then
         log.debug("Saving project state before close")
         local dependencies = {}
@@ -274,9 +399,16 @@ function M.close()
         M.state.layout = nil
     end
 
+    -- Explicitly unmount the outer popup
+    if M.state.outer_popup then
+        pcall(function()
+            M.state.outer_popup:unmount()
+        end)
+        M.state.outer_popup = nil
+    end
+
     log.trace("Closing windows")
     window_utils.safe_close(M.state.outer_popup and M.state.outer_popup.winid)
-    M.state.outer_popup = nil
     M.state.is_open = false
 
     log.debug("Resetting focus manager")
