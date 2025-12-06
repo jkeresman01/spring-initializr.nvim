@@ -117,15 +117,15 @@ vim.keymap.set("n", "<leader>sg", "<CMD>SpringGenerateProject<CR>")
 | Keybinding   | Action                                  |
 |--------------|-----------------------------------------|
 | `<leader>si` | Open Spring Initializr TUI              |
-| `<leader>q`  | Close Spring Initializr TUI             |
 | `<leader>sg` | Generate project to current directory   |
 | `<Tab>`      | Navigate forward between fields         |
-| `<Ctrl-r>`   | Reset the form (selections && deps)     |
 | `<S-Tab>`    | Navigate backward                       |
+| `<Ctrl-r>`   | Reset the form (selections && deps)     |
 | `j` / `k`    | Move between radio options              |
-| `<CR>`       | Confirm field selection or submit       |
 | `j` / `k`    | Move between selected dependencies      |
+| `<CR>`       | Confirm field selection or submit       |
 | `dd`         | Remove selected dependency              |
+| `q`          | Close Spring Initializr TUI             |
 
 ## Contributing
 

@@ -24,6 +24,7 @@
 ----------------------------------------------------------------------------
 --
 -- Constructs the full Spring Initializr layout UI using NUI components.
+-- Implements responsive flexbox-like layout for radio components.
 --
 ----------------------------------------------------------------------------
 
@@ -45,6 +46,16 @@ local FormContext = require("spring-initializr.ui.context.form_context")
 -- Module table
 ----------------------------------------------------------------------------
 local M = {}
+
+----------------------------------------------------------------------------
+-- Constants
+----------------------------------------------------------------------------
+local INPUT_HEIGHT = 3
+local INPUT_COUNT = 5
+local OUTER_BORDER_HEIGHT = 2
+local MIN_COLUMNS = 1
+local MAX_COLUMNS = 3
+local MAX_HEIGHT_PERCENT = 0.90
 
 ----------------------------------------------------------------------------
 --
@@ -73,52 +84,19 @@ end
 
 ----------------------------------------------------------------------------
 --
--- Calculate minimum height needed for left panel content.
+-- Build size for the outer popup with dynamic height.
 --
--- @param  metadata  table  Spring Initializr metadata
+-- @param  content_height  number  Height needed for content
 --
--- @return number            Minimum lines needed
---
-----------------------------------------------------------------------------
-local function calculate_required_height(metadata)
-    local height = 0
-
-    height = height + #metadata.type.values + 2 -- Project Type
-    height = height + #metadata.language.values + 2 -- Language
-    height = height + #metadata.bootVersion.values + 2 -- Boot Version
-    height = height + #metadata.packaging.values + 2 -- Packaging
-    height = height + #metadata.javaVersion.values + 2 -- Java Version
-    height = height + #metadata.configurationFileFormat.values + 2 -- Config Format
-
-    local input_count = 5 -- Group, Artifact, Name, Description, Package Name
-    height = height + (input_count * 3)
-
-    return height
-end
-
-----------------------------------------------------------------------------
---
--- Build size for the outer popup with dynamic height calculation.
--- Calculates height based on actual content needs with min/max constraints.
---
--- @param  metadata  table  Spring Initializr metadata for precise calculation
---
--- @return table            Size configuration
+-- @return table                   Size configuration
 --
 ----------------------------------------------------------------------------
-local function outer_size(metadata)
+local function outer_size(content_height)
     local screen_height = vim.o.lines
+    local max_height = math.floor(screen_height * MAX_HEIGHT_PERCENT)
 
-    local required_height = calculate_required_height(metadata)
-
-    -- Cap at 90% of screen height (leave space for status line, command line)
-    local max_height = math.floor(screen_height * 0.90)
-
-    -- Use the smaller of required or max
-    local actual_height = math.min(required_height, max_height)
-
-    -- Ensure absolute minimum for very small terminals
-    actual_height = math.max(actual_height, 45)
+    -- Use content height + border, capped at max
+    local actual_height = math.min(content_height, max_height)
 
     return {
         width = "70%",
@@ -139,18 +117,18 @@ end
 
 ----------------------------------------------------------------------------
 --
--- Create the outer wrapper popup window with dynamic sizing.
+-- Create the outer wrapper popup window.
 --
--- @param  metadata  table  Spring Initializr metadata for height calculation
+-- @param  content_height  number  Height needed for content
 --
--- @return Popup            Main floating container
+-- @return Popup                   Main floating container
 --
 ----------------------------------------------------------------------------
-local function create_outer_popup(metadata)
+local function create_outer_popup(content_height)
     return Popup({
         border = outer_border(),
         position = outer_position(),
-        size = outer_size(metadata),
+        size = outer_size(content_height),
         win_options = outer_win_options(),
         focusable = false,
     })
@@ -173,56 +151,360 @@ end
 
 ----------------------------------------------------------------------------
 --
--- Create all radio components.
+-- Calculate the height needed for a single radio component.
+--
+-- @param  values  table   List of options
+--
+-- @return number          Height in lines (options + border)
+--
+----------------------------------------------------------------------------
+local function calculate_radio_height(values)
+    return #values + 2
+end
+
+----------------------------------------------------------------------------
+--
+-- Calculate the maximum label width for a radio's values.
+--
+-- @param  values  table   List of options
+--
+-- @return number          Max label width in characters
+--
+----------------------------------------------------------------------------
+local function calculate_max_label_width(values)
+    local max_width = 0
+    for _, v in ipairs(values) do
+        local label = v.name or v.id or ""
+        if #label > max_width then
+            max_width = #label
+        end
+    end
+    -- Add padding for radio icon (2), spacing (2), and borders (2)
+    return max_width + 6
+end
+
+----------------------------------------------------------------------------
+--
+-- Calculate total height needed for all radios stacked vertically.
+--
+-- @param  radio_configs  table  List of radio configurations
+--
+-- @return number                Total height needed
+--
+----------------------------------------------------------------------------
+local function calculate_total_radios_height(radio_configs)
+    local total = 0
+    for _, cfg in ipairs(radio_configs) do
+        total = total + calculate_radio_height(cfg.values)
+    end
+    return total
+end
+
+----------------------------------------------------------------------------
+--
+-- Calculate maximum available height for the layout.
+--
+-- @return number  Maximum height in lines
+--
+----------------------------------------------------------------------------
+local function calculate_max_available_height()
+    local screen_height = vim.o.lines
+    return math.floor(screen_height * MAX_HEIGHT_PERCENT) - OUTER_BORDER_HEIGHT
+end
+
+----------------------------------------------------------------------------
+--
+-- Calculate available height for radios section.
+--
+-- @return number  Available height for radios
+--
+----------------------------------------------------------------------------
+local function calculate_available_radios_height()
+    local available = calculate_max_available_height()
+    local inputs_height = INPUT_COUNT * INPUT_HEIGHT
+    return available - inputs_height
+end
+
+----------------------------------------------------------------------------
+--
+-- Find the maximum height among radio configs in a group.
+--
+-- @param  configs  table   List of radio configurations
+--
+-- @return number           Maximum height needed
+--
+----------------------------------------------------------------------------
+local function find_max_height_in_group(configs)
+    local max_height = 0
+    for _, cfg in ipairs(configs) do
+        local height = calculate_radio_height(cfg.values)
+        if height > max_height then
+            max_height = height
+        end
+    end
+    return max_height
+end
+
+----------------------------------------------------------------------------
+--
+-- Calculate total height for radio section based on layout.
+--
+-- @param  radio_configs  table   List of radio configurations
+-- @param  columns        number  Number of columns
+--
+-- @return number                 Total height needed
+--
+----------------------------------------------------------------------------
+local function calculate_radio_section_height(radio_configs, columns)
+    if columns == 1 then
+        return calculate_total_radios_height(radio_configs)
+    end
+
+    local total_height = 0
+    for i = 1, #radio_configs, columns do
+        local group = {}
+        for j = 0, columns - 1 do
+            if radio_configs[i + j] then
+                table.insert(group, radio_configs[i + j])
+            end
+        end
+        total_height = total_height + find_max_height_in_group(group)
+    end
+
+    return total_height
+end
+
+----------------------------------------------------------------------------
+--
+-- Determine optimal number of columns based on available space.
+--
+-- @param  radio_configs    table   List of radio configurations
+-- @param  available_height number  Available height for radios
+--
+-- @return number                   Number of columns (1, 2, or 3)
+--
+----------------------------------------------------------------------------
+local function determine_columns(radio_configs, available_height)
+    local total_vertical = calculate_total_radios_height(radio_configs)
+
+    -- If everything fits in one column, use one column
+    if total_vertical <= available_height then
+        return MIN_COLUMNS
+    end
+
+    -- Try 2 columns
+    local height_for_2_cols = calculate_radio_section_height(radio_configs, 2)
+
+    if height_for_2_cols <= available_height then
+        return 2
+    end
+
+    -- Use 3 columns
+    return MAX_COLUMNS
+end
+
+----------------------------------------------------------------------------
+--
+-- Create radio configurations from metadata.
 --
 -- @param  form_context  FormContext  Context with metadata and selections
 --
--- @return table                      List of Layout.Box components
+-- @return table                      List of radio configurations
 --
 ----------------------------------------------------------------------------
-local function create_radio_controls(form_context)
+local function create_radio_configs(form_context)
     local metadata = form_context.metadata
     return {
-        radios.create_radio(
-            form_context:radio_config("Project Type", metadata.type.values, "project_type")
+        form_context:radio_config("Language", metadata.language.values, "language"),
+        form_context:radio_config(
+            "Spring Boot Version",
+            format_boot_versions(metadata.bootVersion.values),
+            "boot_version"
         ),
-        radios.create_radio(
-            form_context:radio_config("Language", metadata.language.values, "language")
-        ),
-        radios.create_radio(
-            form_context:radio_config(
-                "Spring Boot Version",
-                format_boot_versions(metadata.bootVersion.values),
-                "boot_version"
-            )
-        ),
-        radios.create_radio(
-            form_context:radio_config("Packaging", metadata.packaging.values, "packaging")
-        ),
-        radios.create_radio(
-            form_context:radio_config("Java Version", metadata.javaVersion.values, "java_version")
-        ),
-        radios.create_radio(
-            form_context:radio_config(
-                "Config Format",
-                metadata.configurationFileFormat.values,
-                "configurationFileFormat"
-            )
+        form_context:radio_config("Packaging", metadata.packaging.values, "packaging"),
+        form_context:radio_config("Java Version", metadata.javaVersion.values, "java_version"),
+        form_context:radio_config("Project Type", metadata.type.values, "project_type"),
+        form_context:radio_config(
+            "Config Format",
+            metadata.configurationFileFormat.values,
+            "configurationFileFormat"
         ),
     }
 end
 
 ----------------------------------------------------------------------------
 --
--- Create all input fields.
+-- Create a single row of radio components.
+-- 2 items: equal width (50% each)
+-- 3 items: proportional width based on content
+--
+-- @param  configs     table   Radio configurations for this row
+-- @param  row_height  number  Height for this row
+--
+-- @return Layout.Box          Row containing radio components
+--
+----------------------------------------------------------------------------
+local function create_radio_row(configs, row_height)
+    local row_children = {}
+
+    -- For 2 items, use equal width; for 3+, use proportional
+    if #configs <= 2 then
+        local equal_percent = math.floor(100 / #configs)
+        for i, cfg in ipairs(configs) do
+            local radio_popup = radios.create_radio(cfg)
+            local width_percent
+            if i == #configs then
+                width_percent = 100 - (equal_percent * (#configs - 1))
+            else
+                width_percent = equal_percent
+            end
+            table.insert(row_children, Layout.Box(radio_popup, { size = width_percent .. "%" }))
+        end
+    else
+        -- Calculate width needed for each radio based on content
+        local widths = {}
+        local total_width = 0
+        for _, cfg in ipairs(configs) do
+            local w = calculate_max_label_width(cfg.values)
+            table.insert(widths, w)
+            total_width = total_width + w
+        end
+
+        -- Create radios with proportional widths
+        local used_percent = 0
+        for i, cfg in ipairs(configs) do
+            local radio_popup = radios.create_radio(cfg)
+
+            local width_percent
+            if i == #configs then
+                -- Last item gets remainder to ensure 100% total
+                width_percent = 100 - used_percent
+            else
+                width_percent = math.floor((widths[i] / total_width) * 100)
+                used_percent = used_percent + width_percent
+            end
+
+            table.insert(row_children, Layout.Box(radio_popup, { size = width_percent .. "%" }))
+        end
+    end
+
+    return Layout.Box(row_children, { dir = "row", size = row_height })
+end
+
+----------------------------------------------------------------------------
+--
+-- Create single-column radio layout.
+--
+-- @param  radio_configs  table  List of radio configurations
+--
+-- @return table                 List of Layout.Box children
+--
+----------------------------------------------------------------------------
+local function create_single_column_radios(radio_configs)
+    local children = {}
+    for _, cfg in ipairs(radio_configs) do
+        local height = calculate_radio_height(cfg.values)
+        local radio_popup = radios.create_radio(cfg)
+        table.insert(children, Layout.Box(radio_popup, { size = height }))
+    end
+    return children
+end
+
+----------------------------------------------------------------------------
+--
+-- Create multi-column radio layout.
+--
+-- @param  radio_configs  table   List of radio configurations
+-- @param  columns        number  Number of columns per row
+--
+-- @return table                  List of Layout.Box row children
+--
+----------------------------------------------------------------------------
+local function create_multi_column_radios(radio_configs, columns)
+    local rows = {}
+
+    for i = 1, #radio_configs, columns do
+        local row_configs = {}
+        for j = 0, columns - 1 do
+            if radio_configs[i + j] then
+                table.insert(row_configs, radio_configs[i + j])
+            end
+        end
+
+        local row_height = find_max_height_in_group(row_configs)
+        table.insert(rows, create_radio_row(row_configs, row_height))
+    end
+
+    return rows
+end
+
+----------------------------------------------------------------------------
+--
+-- Create responsive radio section with flexbox-like wrapping.
+--
+-- @param  form_context  FormContext  Context with metadata and selections
+--
+-- @return table                      { box = Layout.Box, height = number }
+--
+----------------------------------------------------------------------------
+local function create_radio_section(form_context)
+    local radio_configs = create_radio_configs(form_context)
+    local available_height = calculate_available_radios_height()
+    local columns = determine_columns(radio_configs, available_height)
+    local section_height = calculate_radio_section_height(radio_configs, columns)
+
+    local children
+    if columns == 1 then
+        children = create_single_column_radios(radio_configs)
+    else
+        children = create_multi_column_radios(radio_configs, columns)
+    end
+
+    return {
+        box = Layout.Box(children, { dir = "col", size = section_height }),
+        height = section_height,
+    }
+end
+
+----------------------------------------------------------------------------
+--
+-- Calculate total content height needed for left panel.
+--
+-- @param  metadata  table  Spring Initializr metadata
+--
+-- @return number           Total height needed
+--
+----------------------------------------------------------------------------
+local function calculate_content_height(metadata)
+    -- Build temporary radio configs to calculate height
+    local radio_configs = {
+        { values = metadata.language.values },
+        { values = metadata.bootVersion.values },
+        { values = metadata.packaging.values },
+        { values = metadata.javaVersion.values },
+        { values = metadata.type.values },
+        { values = metadata.configurationFileFormat.values },
+    }
+
+    local available_height = calculate_available_radios_height()
+    local columns = determine_columns(radio_configs, available_height)
+    local radio_section_height = calculate_radio_section_height(radio_configs, columns)
+    local inputs_height = INPUT_COUNT * INPUT_HEIGHT
+
+    return radio_section_height + inputs_height
+end
+
+----------------------------------------------------------------------------
+--
+-- Create input section with all input fields.
 --
 -- @param  form_context  FormContext  Context with selections
 --
--- @return table                      List of Layout.Box components
+-- @return Layout.Box                 Input section container
 --
 ----------------------------------------------------------------------------
-local function create_input_controls(form_context)
-    return {
+local function create_input_section(form_context)
+    local children = {
         inputs.create_input(form_context:input_config("Group", "groupId", "com.example")),
         inputs.create_input(form_context:input_config("Artifact", "artifactId", "demo")),
         inputs.create_input(form_context:input_config("Name", "name", "demo")),
@@ -233,11 +515,13 @@ local function create_input_controls(form_context)
             form_context:input_config("Package Name", "packageName", "com.example.demo")
         ),
     }
+
+    return Layout.Box(children, { dir = "col", size = INPUT_COUNT * INPUT_HEIGHT })
 end
 
 ----------------------------------------------------------------------------
 --
--- Create the left-hand UI panel with all user-configurable fields.
+-- Create the left-hand UI panel with responsive radios and inputs.
 --
 -- @param  form_context  FormContext  Context with metadata and selections
 --
@@ -245,19 +529,22 @@ end
 --
 ----------------------------------------------------------------------------
 local function create_left_panel(form_context)
-    local children = {}
-    vim.list_extend(children, create_radio_controls(form_context))
-    vim.list_extend(children, create_input_controls(form_context))
-    return Layout.Box(children, { dir = "col", size = "50%" })
+    local radio_section = create_radio_section(form_context)
+    local input_section = create_input_section(form_context)
+
+    return Layout.Box({
+        radio_section.box,
+        input_section,
+    }, { dir = "col", size = "50%" })
 end
 
 ----------------------------------------------------------------------------
 --
 -- Create the right-hand panel with dependency management.
 --
--- @param close_fn     function  Module closing function from init.lua
+-- @param close_fn  function  Module closing function from init.lua
 --
--- @return Layout.Box            Right panel
+-- @return Layout.Box         Right panel
 --
 ----------------------------------------------------------------------------
 local function create_right_panel(close_fn)
@@ -272,17 +559,19 @@ end
 
 ----------------------------------------------------------------------------
 --
--- Build the entire Spring Initializr layout with dynamic sizing.
+-- Build the entire Spring Initializr layout with responsive design.
 --
 -- @param  metadata    table     Fetched Spring metadata
 -- @param  selections  table     State table of user selections
--- @param  close_fn   function   Module closing function from init.lua
+-- @param  close_fn    function  Module closing function from init.lua
 --
 -- @return table                 Contains the layout and the outer popup
 --
 ----------------------------------------------------------------------------
 function M.build_ui(metadata, selections, close_fn)
-    local outer_popup = create_outer_popup(metadata)
+    -- Calculate content height first to size outer popup
+    local content_height = calculate_content_height(metadata)
+    local outer_popup = create_outer_popup(content_height)
 
     selections.configurationFileFormat = config.get_config_format()
 

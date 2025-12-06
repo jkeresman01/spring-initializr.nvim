@@ -24,7 +24,7 @@
 ----------------------------------------------------------------------------
 --
 -- Provides a reusable radio button UI component for selecting options
--- in a popup.
+-- in a popup. Supports flexible width for responsive layouts.
 --
 ----------------------------------------------------------------------------
 
@@ -32,7 +32,6 @@
 -- Dependencies
 ----------------------------------------------------------------------------
 local Popup = require("nui.popup")
-local Layout = require("nui.layout")
 
 local focus_manager = require("spring-initializr.ui.managers.focus_manager")
 local reset_manager = require("spring-initializr.ui.managers.reset_manager")
@@ -265,7 +264,7 @@ end
 
 ----------------------------------------------------------------------------
 --
--- Build size for a radio popup.
+-- Build size for a radio popup (flexible width).
 --
 -- @param  item_count  number  Used to compute height
 --
@@ -273,7 +272,7 @@ end
 --
 ----------------------------------------------------------------------------
 local function radio_size(item_count)
-    return { width = 30, height = item_count + 2 }
+    return { width = "100%", height = item_count + 2 }
 end
 
 ----------------------------------------------------------------------------
@@ -343,12 +342,12 @@ end
 
 ----------------------------------------------------------------------------
 --
--- Create a radio component as a layout box.
+-- Create a radio component (returns popup directly for flexible layout).
 --
--- @param  config   table/RadioConfig  Containing configuration object
+-- @param  config  table/RadioConfig  Containing configuration object
 -- with title, values, key, and shared selections
 --
--- @return Layout.Box                  Layout-wrapped popup
+-- @return Popup                      Radio popup component
 --
 ----------------------------------------------------------------------------
 function M.create_radio(config)
@@ -373,7 +372,7 @@ function M.create_radio(config)
     local reset_handler = create_reset_handler(popup, state)
     reset_manager.register_reset_handler(reset_handler)
 
-    return Layout.Box(popup, { size = #items + 2 })
+    return popup
 end
 
 ----------------------------------------------------------------------------
