@@ -162,7 +162,7 @@ local function record_selection(entry)
     M.selected_dependencies_set:add(entry)
 
     log.fmt_info("Dependency selected: %s (%s)", entry.name, entry.id)
-    log.fmt_debug("Total dependencies selected: %d", #M.selected_dependencies)
+    log.fmt_debug("Total dependencies selected: %d", #M.selected_dependencies_set)
     message_utils.show_info_message("Selected: " .. entry.name)
 end
 
@@ -183,7 +183,7 @@ function M.remove_dependency(dep_id)
 
     if removed then
         log.info("Dependency removed successfully:", dep_id)
-        log.fmt_debug("Remaining dependencies: %d", #M.selected_dependencies)
+        log.fmt_debug("Remaining dependencies: %d", #M.selected_dependencies_set)
         return true
     end
 
