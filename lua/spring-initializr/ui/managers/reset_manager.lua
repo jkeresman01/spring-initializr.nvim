@@ -97,10 +97,10 @@ end
 ----------------------------------------------------------------------------
 local function clear_dependencies()
     local telescope = require("spring-initializr.telescope.telescope")
-    telescope.selected_dependencies = {}
-    telescope.selected_dependencies_full = {}
-    if telescope.selected_set then
-        telescope.selected_set:clear()
+    if telescope.selected_dependencies_set then
+        telescope.selected_dependencies_set:clear()
+    else
+        telescope.selected_dependencies_set = nil
     end
 end
 
