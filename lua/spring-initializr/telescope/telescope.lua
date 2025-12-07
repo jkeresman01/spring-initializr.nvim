@@ -179,7 +179,7 @@ function M.remove_dependency(dep_id)
     init_hashset()
 
     log.trace("Removing from set")
-    local removed = M.selected_dependencies_set:remove_key(dep_id)
+    local removed = M.selected_dependencies_set:remove(dep_id)
 
     if removed then
         log.info("Dependency removed successfully:", dep_id)
