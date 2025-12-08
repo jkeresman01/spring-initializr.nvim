@@ -42,6 +42,7 @@ local message_utils = require("spring-initializr.utils.message_utils")
 local buffer_utils = require("spring-initializr.utils.buffer_utils")
 local repository_factory = require("spring-initializr.dao.dal.repository_factory")
 local Project = require("spring-initializr.dao.model.project")
+local HashSet = require("spring-initializr.algo.hashset")
 local Dependency = require("spring-initializr.dao.model.dependency")
 local log = require("spring-initializr.trace.log")
 local telescope = require("spring-initializr.telescope.telescope")
@@ -112,6 +113,11 @@ end
 -- Loads saved state and restores to UI.
 --
 ----------------------------------------------------------------------------
+----------------------------------------------------------------------------
+--
+-- Loads saved state and restores to UI.
+--
+----------------------------------------------------------------------------
 local function restore_saved_state()
     local repo = repository_factory.get_instance()
 
@@ -142,6 +148,12 @@ local function restore_saved_state()
     telescope.selected_dependencies = {}
     telescope.selected_dependencies_full = {}
 
+    if not telescope.selected_set then
+        telescope.selected_set = HashSet.new()
+    else
+        telescope.selected_set:clear()
+    end
+
     if project.dependencies then
         for _, dep in ipairs(project.dependencies) do
             if type(dep) == "table" and dep.id then
@@ -151,6 +163,8 @@ local function restore_saved_state()
                     name = dep.name or dep.id,
                     description = dep.description or "",
                 })
+                -- Add to HashSet
+                telescope.selected_set:add(dep.id)
             elseif type(dep) == "string" then
                 table.insert(telescope.selected_dependencies, dep)
                 table.insert(telescope.selected_dependencies_full, {
@@ -158,6 +172,8 @@ local function restore_saved_state()
                     name = dep,
                     description = "",
                 })
+                -- Add to HashSet
+                telescope.selected_set:add(dep)
             end
         end
     end
