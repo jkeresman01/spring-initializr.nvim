@@ -15,10 +15,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Neovim
+      - name: Install Neovim (0.10.4)
         run: |
-          sudo apt-get update
-          sudo apt-get install -y neovim git
+            wget https://github.com/neovim/neovim/releases/download/v0.10.4/nvim-linux64.tar.gz
+            tar xzf nvim-linux64.tar.gz
+            sudo mv nvim-linux64 /usr/local/nvim
+            sudo ln -sf /usr/local/nvim/bin/nvim /usr/bin/nvim
+            nvim --version
 
       - name: Install test dependencies (plenary.nvim)
         run: |
