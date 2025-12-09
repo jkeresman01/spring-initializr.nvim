@@ -198,7 +198,7 @@ end
 --
 ----------------------------------------------------------------------------
 local function display_buffer_options()
-    return { modifiable = true, readonly = false }
+    return { modifiable = false, readonly = false }
 end
 
 ----------------------------------------------------------------------------
@@ -333,9 +333,21 @@ local function setup_card_keybindings(popup)
     popup:map("n", "dd", function()
         remove_focused_card()
     end, { noremap = true, nowait = true })
+end
 
+----------------------------------------------------------------------------
+--
+-- Setup buffer listeners for focus management and readonly warnings.
+--
+-- @param popup  Popup  Dependencies display popup
+--
+----------------------------------------------------------------------------
+local function setup_listeners(popup)
+    local bufnr = popup.bufnr
+
+    -- Focus management: Set initial focus when entering buffer
     vim.api.nvim_create_autocmd("BufEnter", {
-        buffer = popup.bufnr,
+        buffer = bufnr,
         callback = function()
             if
                 not M.state.focused_card_index
@@ -346,14 +358,53 @@ local function setup_card_keybindings(popup)
                 M.update_display()
             end
         end,
+        desc = "Set initial focus on dependency card",
     })
 
+    -- Focus management: Clear focus when leaving buffer
     vim.api.nvim_create_autocmd("BufLeave", {
-        buffer = popup.bufnr,
+        buffer = bufnr,
         callback = function()
             M.state.focused_card_index = nil
             M.update_display()
         end,
+        desc = "Clear dependency card focus",
+    })
+
+    -- Readonly warning: Prevent insert mode
+    vim.api.nvim_create_autocmd("InsertEnter", {
+        buffer = bufnr,
+        callback = function()
+            vim.schedule(function()
+                vim.cmd("stopinsert")
+                message_utils.show_warn_message(
+                    "Dependency cards are read-only. Use 'dd' to remove or 'j'/'k' to navigate."
+                )
+            end)
+        end,
+        desc = "Prevent insert mode in dependency display",
+    })
+
+    -- Readonly warning: Warn on text modification
+    vim.api.nvim_create_autocmd("TextChanged", {
+        buffer = bufnr,
+        callback = function()
+            vim.schedule(function()
+                message_utils.show_warn_message("Dependency cards cannot be edited.")
+            end)
+        end,
+        desc = "Warn on dependency display modification attempt",
+    })
+
+    -- Readonly warning: Warn on text modification in insert mode
+    vim.api.nvim_create_autocmd("TextChangedI", {
+        buffer = bufnr,
+        callback = function()
+            vim.schedule(function()
+                message_utils.show_warn_message("Dependency cards cannot be edited.")
+            end)
+        end,
+        desc = "Warn on dependency display modification attempt in insert mode",
     })
 end
 
@@ -376,6 +427,7 @@ function M.create_display(close_fn)
     vim.schedule(function()
         if popup.bufnr and vim.api.nvim_buf_is_valid(popup.bufnr) then
             setup_card_keybindings(popup)
+            setup_listeners(popup)
         end
     end)
 
@@ -429,6 +481,10 @@ function M.update_display()
         return
     end
 
+    -- Temporarily make buffer modifiable for updates
+    vim.api.nvim_buf_set_option(panel.bufnr, "modifiable", true)
+    vim.api.nvim_buf_set_option(panel.bufnr, "readonly", false)
+
     local lines = render_dependency_lines()
     vim.api.nvim_buf_set_lines(panel.bufnr, 0, -1, false, lines)
 
@@ -442,6 +498,10 @@ function M.update_display()
             M.state.focused_card_index
         )
     end
+
+    -- Set back to read-only
+    vim.api.nvim_buf_set_option(panel.bufnr, "modifiable", false)
+    vim.api.nvim_buf_set_option(panel.bufnr, "readonly", true)
 end
 
 ----------------------------------------------------------------------------
