@@ -113,11 +113,6 @@ end
 -- Loads saved state and restores to UI.
 --
 ----------------------------------------------------------------------------
-----------------------------------------------------------------------------
---
--- Loads saved state and restores to UI.
---
-----------------------------------------------------------------------------
 local function restore_saved_state()
     local repo = repository_factory.get_instance()
 
