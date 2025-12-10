@@ -100,6 +100,20 @@ end
 
 ----------------------------------------------------------------------------
 --
+-- Map dependency picker key to a component.
+--
+-- @param comp            table     Component to map key for
+-- @param open_picker_fn  function  Function to open the picker
+--
+----------------------------------------------------------------------------
+local function map_picker_key(comp, open_picker_fn)
+    comp:map("n", "<C-b>", function()
+        open_picker_fn()
+    end, { noremap = true, nowait = true })
+end
+
+----------------------------------------------------------------------------
+--
 -- Create reset handler that resets form and refreshes dependencies display.
 --
 -- @param selections  table  Selections table to reset
@@ -121,13 +135,14 @@ end
 ----------------------------------------------------------------------------
 --
 -- Enable focus navigation across all registered components and register
--- close and reset keys.
+-- close, reset, and picker keys.
 --
--- @param close_fn    function  Function to close UI
--- @param selections  table     Selections table for reset functionality
+-- @param close_fn        function  Function to close UI
+-- @param selections      table     Selections table for reset functionality
+-- @param open_picker_fn  function  Function to open dependency picker (optional)
 --
 ----------------------------------------------------------------------------
-function M.enable_navigation(close_fn, selections)
+function M.enable_navigation(close_fn, selections, open_picker_fn)
     log.info("Enabling navigation")
     log.fmt_debug("Enabling for %d components", #M.focusables)
     M._selections = selections
@@ -137,6 +152,10 @@ function M.enable_navigation(close_fn, selections)
         map_navigation_keys(comp)
         buffer_manager.register_close_key(comp, close_fn)
         buffer_manager.register_reset_key(comp, reset_fn)
+
+        if open_picker_fn then
+            map_picker_key(comp, open_picker_fn)
+        end
     end
 
     log.trace("Navigation enabled successfully")
