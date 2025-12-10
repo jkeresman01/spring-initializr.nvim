@@ -9,6 +9,7 @@
 --
 --
 -- Unit tests for spring-initializr/ui/managers/focus_manager.lua
+-- Updated to test the new <C-b> keybinding for dependency picker
 --
 ----------------------------------------------------------------------------
 
@@ -179,6 +180,103 @@ describe("focus_manager management", function()
             -- Assert
             assert.is_true(reset_key_mapped)
         end)
+
+        -- NEW TEST: Verify picker key is mapped when open_picker_fn is provided
+        it("maps picker key when open_picker_fn is provided", function()
+            -- Arrange
+            local picker_key_mapped = false
+            mock_components[1].map = function(self, mode, key, fn, opts)
+                if key == "<C-b>" then
+                    picker_key_mapped = true
+                end
+            end
+
+            focus_manager.register_component(mock_components[1])
+            local mock_picker_fn = function() end
+
+            -- Act
+            focus_manager.enable_navigation(mock_close_fn, mock_selections, mock_picker_fn)
+
+            -- Assert
+            assert.is_true(picker_key_mapped)
+        end)
+
+        -- NEW TEST: Verify picker key is NOT mapped when open_picker_fn is nil
+        it("does not map picker key when open_picker_fn is nil", function()
+            -- Arrange
+            local picker_key_mapped = false
+            mock_components[1].map = function(self, mode, key, fn, opts)
+                if key == "<C-b>" then
+                    picker_key_mapped = true
+                end
+            end
+
+            focus_manager.register_component(mock_components[1])
+
+            -- Act
+            focus_manager.enable_navigation(mock_close_fn, mock_selections, nil)
+
+            -- Assert
+            assert.is_false(picker_key_mapped)
+        end)
+
+        -- NEW TEST: Verify picker function is called when <C-b> is pressed
+        it("calls open_picker_fn when <C-b> is pressed", function()
+            -- Arrange
+            local picker_called = false
+            local picker_handler
+            
+            mock_components[1].map = function(self, mode, key, fn, opts)
+                if key == "<C-b>" then
+                    picker_handler = fn
+                end
+            end
+
+            focus_manager.register_component(mock_components[1])
+            
+            local mock_picker_fn = function()
+                picker_called = true
+            end
+
+            -- Act
+            focus_manager.enable_navigation(mock_close_fn, mock_selections, mock_picker_fn)
+            
+            -- Simulate pressing <C-b>
+            if picker_handler then
+                picker_handler()
+            end
+
+            -- Assert
+            assert.is_true(picker_called)
+        end)
+
+        -- NEW TEST: Verify picker key is mapped to all components
+        it("maps picker key to all registered components", function()
+            -- Arrange
+            local map_counts = { 0, 0, 0 }
+            
+            for i, comp in ipairs(mock_components) do
+                comp.map = function(self, mode, key, fn, opts)
+                    if key == "<C-b>" then
+                        map_counts[i] = map_counts[i] + 1
+                    end
+                end
+            end
+
+            for _, comp in ipairs(mock_components) do
+                focus_manager.register_component(comp)
+            end
+
+            local mock_picker_fn = function() end
+
+            -- Act
+            focus_manager.enable_navigation(mock_close_fn, mock_selections, mock_picker_fn)
+
+            -- Assert - picker key should be mapped to all 3 components
+            assert.are.equal(1, map_counts[1])
+            assert.are.equal(1, map_counts[2])
+            assert.are.equal(1, map_counts[3])
+        end)
     end)
 
     describe("navigation", function()
@@ -289,6 +387,17 @@ describe("focus_manager management", function()
             -- Act & Assert - should not throw
             assert.has_no.errors(function()
                 focus_manager.enable_navigation(mock_close_fn, mock_selections)
+            end)
+        end)
+
+        -- NEW TEST: Handles nil picker function gracefully
+        it("handles nil picker function gracefully", function()
+            -- Arrange
+            focus_manager.register_component(mock_components[1])
+
+            -- Act & Assert - should not throw
+            assert.has_no.errors(function()
+                focus_manager.enable_navigation(mock_close_fn, mock_selections, nil)
             end)
         end)
     end)

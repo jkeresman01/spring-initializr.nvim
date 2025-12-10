@@ -121,6 +121,7 @@ vim.keymap.set("n", "<leader>sg", "<CMD>SpringGenerateProject<CR>")
 | `<Tab>`      | Navigate forward between fields         |
 | `<S-Tab>`    | Navigate backward                       |
 | `<Ctrl-r>`   | Reset the form (selections && deps)     |
+| `<Ctrl-b>`   | Open dependency picker                  |
 | `j` / `k`    | Move between radio options              |
 | `j` / `k`    | Move between selected dependencies      |
 | `<CR>`       | Confirm field selection or submit       |

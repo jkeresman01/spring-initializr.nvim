@@ -222,6 +222,19 @@ end
 
 ----------------------------------------------------------------------------
 --
+-- Creates a function to open the dependency picker.
+--
+-- @return function  Function that opens the picker and updates display
+--
+----------------------------------------------------------------------------
+local function create_open_picker_fn()
+    return function()
+        telescope.pick_dependencies({}, dependencies_display.update_display)
+    end
+end
+
+----------------------------------------------------------------------------
+--
 -- Reopens the UI with existing metadata (used for resize).
 --
 -- @param  data  table  Metadata to use
@@ -240,7 +253,8 @@ local function reopen_after_resize(data)
     M.state.layout:mount()
     M.state.is_open = true
 
-    focus_manager.enable_navigation(M.close, M.state.selections)
+    local open_picker_fn = create_open_picker_fn()
+    focus_manager.enable_navigation(M.close, M.state.selections, open_picker_fn)
     dependencies_display.update_display()
     buffer_utils.setup_close_on_buffer_delete(
         focus_manager.focusables,
@@ -307,7 +321,8 @@ local function activate_ui()
     M.state.layout:mount()
     M.state.is_open = true
     log.debug("Enabling navigation")
-    focus_manager.enable_navigation(M.close, M.state.selections)
+    local open_picker_fn = create_open_picker_fn()
+    focus_manager.enable_navigation(M.close, M.state.selections, open_picker_fn)
     log.trace("Updating dependencies display")
     dependencies_display.update_display()
     log.debug("Setting up close-on-buffer-delete")
