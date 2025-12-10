@@ -250,7 +250,7 @@ local function reopen_after_resize(data)
     focus_manager.focus_first()
 
     -- Re-setup resize autocmd
-    M.state.resize_autocmd_id = vim.api.nvim_create_autocmd({ "VimResized", "WinResized" }, {
+    M.state.resize_autocmd_id = vim.api.nvim_create_autocmd("VimResized", {
         callback = function()
             if M.state.is_open and M.state.metadata then
                 local saved_metadata = M.state.metadata
