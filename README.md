@@ -115,14 +115,14 @@ The `:SpringInitializr` command will open a UI window pointing to all the useful
 this plugin can provide.
 
 > [!TIP]
-> _See [`commands.lua`](./lua/spring-initalizr/commands.lua) for more info_.
+> _See [`commands.lua`](./lua/spring-initalizr/commands/commands.lua) for more info_.
 
 ### :SpringGenerateProject
 
 The `:SpringGenerateProject` command will scaffold a new Spring Boot Project with selections from the UI to your current working directory.
 
 > [!TIP]
-> _See [`commands.lua`](./lua/spring-initalizr/commands.lua) for more info_.
+> _See [`commands.lua`](./lua/spring-initalizr/commands/commands.lua) for more info_.
 
 > [!IMPORTANT]
 > This is the list of planned commands that will be available soon:
