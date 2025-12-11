@@ -119,7 +119,7 @@ this plugin can provide.
 
 ### :SpringGenerateProject
 
-The `:SpringGenerateProject` command will scafolld a new Spring Boot Project with selections from the UI to your current working directory.
+The `:SpringGenerateProject` command will scaffold a new Spring Boot Project with selections from the UI to your current working directory.
 
 > [!TIP]
 > _See [`commands.lua`](./lua/spring-initalizr/commands.lua) for more info_.
@@ -128,8 +128,8 @@ The `:SpringGenerateProject` command will scafolld a new Spring Boot Project wit
 > This is the list of planned commands that will be available soon:
 >
 > - `:SpringInitalizrHistory`
-> - `:SpringInitialzrHealth`
-> - `:SpringInitalzrLog`
+> - `:SpringInitalizrHealth`
+> - `:SpringInitalizrLog`
 > - `:SpringPreviewProject`
 
 ## Setup :gear: <a name="setup"></a>
