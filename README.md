@@ -105,6 +105,39 @@ use {
 }
 ```
 
+### pckr.nvim <a name="lazy"></a>
+```lua
+ require('pckr').add({
+    {
+      'jkeresman01/spring-initializr.nvim',
+      requires = {
+        'nvim-lua/plenary.nvim',
+        'MunifTanjim/nui.nvim',
+        'nvim-telescope/telescope.nvim',
+      },
+      config = function()
+        require('spring-initializr').setup()
+      end,
+    };
+  })
+```
+
+### paq-nvim
+
+```lua
+local paq = require('paq')
+
+paq({
+  'jkeresman01/spring-initializr.nvim',
+
+  'nvim-lua/plenary.nvim',
+  'MunifTanjim/nui.nvim',
+  'nvim-telescope/telescope.nvim',
+})
+
+require('spring-initializr').setup()
+```
+
 ## Commands
 
 These are the user commands you can call from the cmdline:
@@ -157,6 +190,7 @@ vim.keymap.set("n", "<leader>sg", "<CMD>SpringGenerateProject<CR>")
 | `<S-Tab>`    | Navigate backward                       |
 | `<Ctrl-r>`   | Reset the form (selections && deps)     |
 | `<Ctrl-b>`   | Open dependency picker                  |
+| `<Ctrl-d>`   | Reset selected dependencies             |
 | `j` / `k`    | Move between radio options              |
 | `j` / `k`    | Move between selected dependencies      |
 | `<CR>`       | Confirm field selection or submit       |
