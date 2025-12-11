@@ -21,6 +21,7 @@
     "keymap",
     "smth",
     "getcwd",
+    "cmdline",
     "pcall",
     "luacheckrc",
     "cmdheight",
