@@ -58,6 +58,12 @@
     "Neovim",
     "Josip",
     "Keresman",
-    "autocmds"
+    "autocmds",
+    "myapp",
+    "mycompany",
+    "newapp",
+    "verylongcompanyname",
+    "verylongdepartment",
+    "verylongprojectnamewithlotofcharacters"
   ]
 }
