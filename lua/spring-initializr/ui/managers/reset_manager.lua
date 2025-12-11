@@ -138,6 +138,16 @@ function M.reset_form(selections)
 end
 
 ----------------------------------------------------------------------------
+--
+-- Reset only the selected dependencies without affecting other fields.
+--
+----------------------------------------------------------------------------
+function M.reset_dependencies_only()
+    clear_dependencies()
+    message_utils.show_info_message("Dependencies cleared")
+end
+
+----------------------------------------------------------------------------
 -- Exports
 ----------------------------------------------------------------------------
 return M
