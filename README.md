@@ -170,7 +170,7 @@ The `:SpringGenerateProject` command will scaffold a new Spring Boot Project wit
 To enable the plugin you must call `setup()`:
 
 ```lua
-require('project').setup()
+require('spring-initializr').setup()
 ```
 
 Minimal setup and keybindings:
