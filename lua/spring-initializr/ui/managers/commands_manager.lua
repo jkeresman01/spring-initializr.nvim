@@ -74,7 +74,6 @@ local function handle_split_detected()
 
     if close_cb and reopen_cb then
         vim.schedule(function()
-
             close_cb()
 
             vim.defer_fn(function()
@@ -103,7 +102,7 @@ end
 --
 -- Check if a window is floating.
 --
--- @param winid  number  Window ID  
+-- @param winid  number  Window ID
 -- @return boolean  True if window is floating
 --
 ----------------------------------------------------------------------------
@@ -128,29 +127,29 @@ local function setup_winnew_detector()
             if M.state.is_handling_split then
                 return
             end
-            
+
             -- Only process if we have callbacks
             if not M.state.close_callback or not M.state.reopen_callback then
                 return
             end
-            
+
             local new_win = vim.api.nvim_get_current_win()
-            
+
             -- Check if window is valid
             if not vim.api.nvim_win_is_valid(new_win) then
                 return
             end
-            
+
             -- Ignore floating windows (Telescope, popups, etc.)
             if is_floating(new_win) then
                 return
             end
-            
+
             -- Ignore if it's a UI window
             if is_ui_window(new_win) then
                 return
             end
-            
+
             -- This is a non-floating, non-UI window - it's a split!
             log.fmt_warn("Split detected (window %d) - restoring layout", new_win)
             handle_split_detected()
@@ -187,11 +186,11 @@ function M.set_callbacks_and_windows(close_callback, reopen_callback, windows)
     M.state.close_callback = close_callback
     M.state.reopen_callback = reopen_callback
     M.state.ui_windows = {}
-    
+
     for _, winid in ipairs(windows or {}) do
         M.state.ui_windows[winid] = true
     end
-    
+
     log.fmt_debug("Callbacks set, registered %d UI windows", vim.tbl_count(M.state.ui_windows))
 end
 
