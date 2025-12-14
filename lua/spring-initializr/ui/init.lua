@@ -41,6 +41,7 @@
 local layout_builder = require("spring-initializr.ui.layout.layout")
 local focus_manager = require("spring-initializr.ui.managers.focus_manager")
 local reset_manager = require("spring-initializr.ui.managers.reset_manager")
+local commands_manager = require("spring-initializr.ui.managers.commands_manager")
 local highlights = require("spring-initializr.styles.highlights")
 local metadata = require("spring-initializr.metadata.metadata")
 local dependencies_display =
@@ -166,7 +167,6 @@ local function restore_saved_state()
                     name = dep.name or dep.id,
                     description = dep.description or "",
                 })
-                -- Add to HashSet
                 telescope.selected_set:add(dep.id)
             elseif type(dep) == "string" then
                 table.insert(telescope.selected_dependencies, dep)
@@ -175,13 +175,10 @@ local function restore_saved_state()
                     name = dep,
                     description = "",
                 })
-                -- Add to HashSet
                 telescope.selected_set:add(dep)
             end
         end
     end
-
-    message_utils.show_info_message("Loaded previous project configuration")
 end
 
 ----------------------------------------------------------------------------
@@ -206,6 +203,7 @@ local function close_for_resize()
     log.trace("Closing UI for resize")
 
     remove_resize_autocmd()
+    commands_manager.unblock_splits()
 
     if M.state.layout then
         pcall(function()
@@ -263,6 +261,20 @@ local function reopen_after_resize(data)
 
     local open_picker_fn = create_open_picker_fn()
     focus_manager.enable_navigation(M.close, M.state.selections, open_picker_fn)
+
+    local ui_windows = {}
+    if M.state.outer_popup and M.state.outer_popup.winid then
+        table.insert(ui_windows, M.state.outer_popup.winid)
+    end
+    for _, focusable in ipairs(focus_manager.focusables) do
+        if focusable.winid then
+            table.insert(ui_windows, focusable.winid)
+        end
+    end
+
+    commands_manager.set_callbacks_and_windows(M.close, M.setup, ui_windows)
+    commands_manager.block_splits()
+
     dependencies_display.update_display()
     buffer_utils.setup_close_on_buffer_delete(
         focus_manager.focusables,
@@ -271,7 +283,6 @@ local function reopen_after_resize(data)
     )
     focus_manager.focus_first()
 
-    -- Re-setup resize autocmd
     M.state.resize_autocmd_id = vim.api.nvim_create_autocmd("VimResized", {
         callback = function()
             if M.state.is_open and M.state.metadata then
@@ -328,9 +339,25 @@ local function activate_ui()
     log.trace("Mounting layout")
     M.state.layout:mount()
     M.state.is_open = true
+
     log.debug("Enabling navigation")
     local open_picker_fn = create_open_picker_fn()
     focus_manager.enable_navigation(M.close, M.state.selections, open_picker_fn)
+
+    log.debug("Setting up split auto-fix")
+    local ui_windows = {}
+    if M.state.outer_popup and M.state.outer_popup.winid then
+        table.insert(ui_windows, M.state.outer_popup.winid)
+    end
+    for _, focusable in ipairs(focus_manager.focusables) do
+        if focusable.winid then
+            table.insert(ui_windows, focusable.winid)
+        end
+    end
+
+    commands_manager.set_callbacks_and_windows(M.close, M.setup, ui_windows)
+    commands_manager.block_splits()
+
     log.trace("Updating dependencies display")
     dependencies_display.update_display()
     log.debug("Setting up close-on-buffer-delete")
@@ -404,6 +431,7 @@ function M.close()
     log.info("Closing Spring Initializr UI")
 
     remove_resize_autocmd()
+    commands_manager.unblock_splits()
 
     if M.state.is_open then
         log.debug("Saving project state before close")

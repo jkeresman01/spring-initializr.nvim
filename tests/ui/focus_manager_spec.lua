@@ -225,7 +225,7 @@ describe("focus_manager management", function()
             -- Arrange
             local picker_called = false
             local picker_handler
-            
+
             mock_components[1].map = function(self, mode, key, fn, opts)
                 if key == "<C-b>" then
                     picker_handler = fn
@@ -233,14 +233,14 @@ describe("focus_manager management", function()
             end
 
             focus_manager.register_component(mock_components[1])
-            
+
             local mock_picker_fn = function()
                 picker_called = true
             end
 
             -- Act
             focus_manager.enable_navigation(mock_close_fn, mock_selections, mock_picker_fn)
-            
+
             -- Simulate pressing <C-b>
             if picker_handler then
                 picker_handler()
@@ -254,7 +254,7 @@ describe("focus_manager management", function()
         it("maps picker key to all registered components", function()
             -- Arrange
             local map_counts = { 0, 0, 0 }
-            
+
             for i, comp in ipairs(mock_components) do
                 comp.map = function(self, mode, key, fn, opts)
                     if key == "<C-b>" then
