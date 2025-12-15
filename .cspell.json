@@ -4,6 +4,8 @@
     "asciicast",
     "vimplug",
     "Munif",
+    "pckr",
+    "winnew",
     "Tanjim",
     "stdpath",
     "modifed",
@@ -21,6 +23,7 @@
     "keymap",
     "smth",
     "getcwd",
+    "cmdline",
     "pcall",
     "luacheckrc",
     "cmdheight",
@@ -58,6 +61,12 @@
     "Neovim",
     "Josip",
     "Keresman",
-    "autocmds"
+    "autocmds",
+    "myapp",
+    "mycompany",
+    "newapp",
+    "verylongcompanyname",
+    "verylongdepartment",
+    "verylongprojectnamewithlotofcharacters"
   ]
 }

@@ -1,4 +1,4 @@
----------------------------------------------------------------------------
+----------------------------------------------------------------------------
 --
 -- ███╗   ██╗███████╗ ██████╗ ██╗   ██╗██╗███╗   ███╗
 -- ████╗  ██║██╔════╝██╔═══██╗██║   ██║██║████╗ ████║
@@ -19,11 +19,20 @@
 -- the Free Software Foundation, either version 3 of the License, or
 -- (at your option) any later version.
 --
+-- This program is distributed in the hope that it will be useful,
+-- but WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-- GNU General Public License for more details.
+
+-- You should have received a copy of the GNU General Public License
+-- along with this program.  If not, see <https://www.gnu.org/licenses/>.
+--
 ----------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------
 --
 -- Defines reusable input components used in the Spring Initializr UI.
+-- Includes auto-sync functionality for Package Name field.
 --
 ----------------------------------------------------------------------------
 
@@ -46,7 +55,15 @@ local INPUT_WIDTH = 40
 ----------------------------------------------------------------------------
 -- Module table
 ----------------------------------------------------------------------------
-local M = {}
+local M = {
+    -- Auto-sync state
+    auto_sync_state = {
+        enabled = true,
+        group_input = nil,
+        artifact_input = nil,
+        package_name_input = nil,
+    },
+}
 
 ----------------------------------------------------------------------------
 --
@@ -137,22 +154,127 @@ end
 
 ----------------------------------------------------------------------------
 --
+-- Computes the package name from group and artifact.
+--
+-- @param  group     string  Group ID value
+-- @param  artifact  string  Artifact ID value
+--
+-- @return string            Computed package name
+--
+----------------------------------------------------------------------------
+local function compute_package_name(group, artifact)
+    local group_val = group or ""
+    local artifact_val = artifact or ""
+
+    group_val = group_val:match("^%s*(.-)%s*$")
+    artifact_val = artifact_val:match("^%s*(.-)%s*$")
+
+    if group_val == "" and artifact_val == "" then
+        return ""
+    elseif group_val == "" then
+        return artifact_val
+    elseif artifact_val == "" then
+        return group_val
+    else
+        return group_val .. "." .. artifact_val
+    end
+end
+
+----------------------------------------------------------------------------
+--
+-- Updates the Package Name field with the computed value.
+--
+-- @param  config  table  Configuration object with selections
+--
+----------------------------------------------------------------------------
+local function sync_package_name(config)
+    if not M.auto_sync_state.enabled then
+        return
+    end
+
+    local group = config.selections.groupId or ""
+    local artifact = config.selections.artifactId or ""
+    local computed = compute_package_name(group, artifact)
+
+    -- Update the selection
+    config.selections.packageName = computed
+
+    -- Update the input buffer if it exists
+    local package_input = M.auto_sync_state.package_name_input
+    if package_input and vim.api.nvim_buf_is_valid(package_input.bufnr) then
+        vim.schedule(function()
+            if vim.api.nvim_buf_is_valid(package_input.bufnr) then
+                vim.api.nvim_buf_set_lines(package_input.bufnr, 0, -1, false, { computed })
+            end
+        end)
+    end
+end
+
+----------------------------------------------------------------------------
+--
+-- Checks if Package Name was manually edited by comparing with computed value.
+--
+-- @param  config  table   Configuration object with selections
+-- @param  value   string  Current Package Name value
+--
+-- @return boolean         True if manually edited
+--
+----------------------------------------------------------------------------
+local function is_manual_edit(config, value)
+    local group = config.selections.groupId or ""
+    local artifact = config.selections.artifactId or ""
+    local computed = compute_package_name(group, artifact)
+
+    return value ~= computed
+end
+
+----------------------------------------------------------------------------
+--
 -- Creates input change and submit handlers that update user selections.
+-- Includes auto-sync logic for Group, Artifact, and Package Name fields.
 --
 -- @param  config   table/InputConfig  Containing configuration object with
 -- title, key, default value, and shared selections
 --
 ----------------------------------------------------------------------------
 local function build_input_handlers(config)
+    local on_change_handler = function(value)
+        update_selection(config, value)
+
+        -- Auto-sync logic for Group and Artifact
+        if config.key == "groupId" or config.key == "artifactId" then
+            sync_package_name(config)
+        end
+
+        -- Detect manual edit of Package Name
+        if config.key == "packageName" then
+            if is_manual_edit(config, value) then
+                M.auto_sync_state.enabled = false
+            end
+        end
+    end
+
+    local on_submit_handler = function(value)
+        update_selection(config, value)
+        show_selection(config, value)
+        switch_to_normal_mode()
+
+        -- Auto-sync on submit as well
+        if config.key == "groupId" or config.key == "artifactId" then
+            sync_package_name(config)
+        end
+
+        -- Detect manual edit of Package Name on submit
+        if config.key == "packageName" then
+            if is_manual_edit(config, value) then
+                M.auto_sync_state.enabled = false
+            end
+        end
+    end
+
     return {
-        on_change = function(value)
-            update_selection(config, value)
-        end,
-        on_submit = function(value)
-            update_selection(config, value)
-            show_selection(config, value)
-            switch_to_normal_mode()
-        end,
+        on_change = on_change_handler,
+        on_submit = on_submit_handler,
     }
 end
 
@@ -193,6 +315,7 @@ end
 ----------------------------------------------------------------------------
 --
 -- Create a reset handler for this input component.
+-- Re-enables auto-sync when resetting.
 --
 -- @param  input_component  Input        Input component instance
 -- @param  config           InputConfig  Configuration object
@@ -208,6 +331,11 @@ local function create_reset_handler(input_component, config)
             end
             config.selections[config.key] = config.default
             vim.api.nvim_buf_set_lines(input_component.bufnr, 0, -1, false, { config.default })
+
+            -- Re-enable auto-sync on reset
+            if config.key == "packageName" then
+                M.auto_sync_state.enabled = true
+            end
         end)
     end
 end
@@ -243,6 +371,7 @@ end
 ----------------------------------------------------------------------------
 --
 -- Create a layout-wrapped input component for Spring Initializr.
+-- Stores references to Group, Artifact, and Package Name inputs for auto-sync.
 --
 -- @param  config   table/InputConfig  Containing configuration object with
 -- title, key, default value, and shared selections
@@ -268,7 +397,24 @@ function M.create_input(config)
     local reset_handler = create_reset_handler(input_component, config)
     reset_manager.register_reset_handler(reset_handler)
 
+    if config.key == "groupId" then
+        M.auto_sync_state.group_input = input_component
+    elseif config.key == "artifactId" then
+        M.auto_sync_state.artifact_input = input_component
+    elseif config.key == "packageName" then
+        M.auto_sync_state.package_name_input = input_component
+    end
+
     return Layout.Box(input_component, { size = 3 })
+end
+
+----------------------------------------------------------------------------
+--
+-- Re-enables auto-sync. Called by reset manager.
+--
+----------------------------------------------------------------------------
+function M.enable_auto_sync()
+    M.auto_sync_state.enabled = true
 end
 
 ----------------------------------------------------------------------------

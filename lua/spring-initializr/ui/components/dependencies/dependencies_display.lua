@@ -1,4 +1,4 @@
----------------------------------------------------------------------------
+----------------------------------------------------------------------------
 --
 -- ███╗   ██╗███████╗ ██████╗ ██╗   ██╗██╗███╗   ███╗
 -- ████╗  ██║██╔════╝██╔═══██╗██║   ██║██║████╗ ████║
@@ -18,6 +18,14 @@
 -- it under the terms of the GNU General Public License as published by
 -- the Free Software Foundation, either version 3 of the License, or
 -- (at your option) any later version.
+--
+-- This program is distributed in the hope that it will be useful,
+-- but WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-- GNU General Public License for more details.
+--
+-- You should have received a copy of the GNU General Public License
+-- along with this program.  If not, see <https://www.gnu.org/licenses/>.
 --
 ----------------------------------------------------------------------------
 
@@ -40,6 +48,7 @@ local message_utils = require("spring-initializr.utils.message_utils")
 local picker = require("spring-initializr.telescope.telescope")
 local dependency_card = require("spring-initializr.ui.components.dependencies.dependency_card")
 local icons = require("spring-initializr.ui.icons.icons")
+local log = require("spring-initializr.trace.log")
 
 ----------------------------------------------------------------------------
 -- Module
@@ -58,7 +67,13 @@ local BUTTON_SIZE = { height = 3, width = 40 }
 local DISPLAY_SIZE = { height = "100%", width = 40 }
 local BUTTON_TITLE = "Add Dependencies (Telescope)"
 local DISPLAY_TITLE = "Selected Dependencies"
+local MODIFIABLE = "modifiable"
+local READONLY = "readonly"
 local LINES_PER_CARD = 4
+local BUFFER_MODIFIABLE = true
+local BUFFER_READONLY = false
+local BUFFER_NOT_MODIFIABLE = false
+local BUFFER_READONLY_STRICT = true
 
 ----------------------------------------------------------------------------
 --
@@ -198,7 +213,7 @@ end
 --
 ----------------------------------------------------------------------------
 local function display_buffer_options()
-    return { modifiable = true, readonly = false }
+    return { modifiable = false, readonly = false }
 end
 
 ----------------------------------------------------------------------------
@@ -215,6 +230,24 @@ local function display_popup_config()
         buf_options = display_buffer_options(),
         win_options = display_win_options(),
     }
+end
+
+----------------------------------------------------------------------------
+--
+-- Clear all selected dependencies.
+--
+----------------------------------------------------------------------------
+local function clear_all_dependencies()
+    log.info("Clearing all dependencies")
+
+    local reset_manager = require("spring-initializr.ui.managers.reset_manager")
+    reset_manager.reset_dependencies_only()
+
+    M.state.focused_card_index = nil
+
+    M.update_display()
+
+    log.debug("All dependencies cleared")
 end
 
 ----------------------------------------------------------------------------
@@ -316,26 +349,80 @@ end
 
 ----------------------------------------------------------------------------
 --
+-- Setup keybinding for navigation down (j key).
+--
+-- @param popup  Popup  Dependencies display popup
+--
+----------------------------------------------------------------------------
+local function setup_navigation_down_key(popup)
+    popup:map("n", "j", function()
+        focus_next_card()
+    end, { noremap = true, nowait = true })
+end
+
+----------------------------------------------------------------------------
+--
+-- Setup keybinding for navigation up (k key).
+--
+-- @param popup  Popup  Dependencies display popup
+--
+----------------------------------------------------------------------------
+local function setup_navigation_up_key(popup)
+    popup:map("n", "k", function()
+        focus_prev_card()
+    end, { noremap = true, nowait = true })
+end
+
+----------------------------------------------------------------------------
+--
+-- Setup keybinding for removing focused dependency (dd key).
+--
+-- @param popup  Popup  Dependencies display popup
+--
+----------------------------------------------------------------------------
+local function setup_remove_dependency_key(popup)
+    popup:map("n", "dd", function()
+        remove_focused_card()
+    end, { noremap = true, nowait = true })
+end
+
+----------------------------------------------------------------------------
+--
+-- Setup keybinding for clearing all dependencies (Ctrl-d key).
+--
+-- @param popup  Popup  Dependencies display popup
+--
+----------------------------------------------------------------------------
+local function setup_clear_all_dependencies_key(popup)
+    popup:map("n", "<C-d>", function()
+        clear_all_dependencies()
+    end, { noremap = true, nowait = true })
+end
+
+----------------------------------------------------------------------------
+--
 -- Setup card navigation and deletion keybindings.
 --
 -- @param popup  Popup  Dependencies display popup
 --
 ----------------------------------------------------------------------------
 local function setup_card_keybindings(popup)
-    popup:map("n", "j", function()
-        focus_next_card()
-    end, { noremap = true, nowait = true })
+    setup_navigation_down_key(popup)
+    setup_navigation_up_key(popup)
+    setup_remove_dependency_key(popup)
+    setup_clear_all_dependencies_key(popup)
+end
 
-    popup:map("n", "k", function()
-        focus_prev_card()
-    end, { noremap = true, nowait = true })
-
-    popup:map("n", "dd", function()
-        remove_focused_card()
-    end, { noremap = true, nowait = true })
-
+----------------------------------------------------------------------------
+--
+-- Setup autocmd to set initial focus when entering buffer.
+--
+-- @param bufnr  number  Buffer number
+--
+----------------------------------------------------------------------------
+local function setup_focus_on_enter(bufnr)
     vim.api.nvim_create_autocmd("BufEnter", {
-        buffer = popup.bufnr,
+        buffer = bufnr,
         callback = function()
             if
                 not M.state.focused_card_index
@@ -346,15 +433,63 @@ local function setup_card_keybindings(popup)
                 M.update_display()
             end
         end,
+        desc = "Set initial focus on dependency card",
     })
+end
 
+----------------------------------------------------------------------------
+--
+-- Setup autocmd to clear focus when leaving buffer.
+--
+-- @param bufnr  number  Buffer number
+--
+----------------------------------------------------------------------------
+local function setup_focus_on_leave(bufnr)
     vim.api.nvim_create_autocmd("BufLeave", {
-        buffer = popup.bufnr,
+        buffer = bufnr,
         callback = function()
             M.state.focused_card_index = nil
             M.update_display()
         end,
+        desc = "Clear dependency card focus",
     })
+end
+
+----------------------------------------------------------------------------
+--
+-- Setup autocmd to prevent insert mode with warning.
+--
+-- @param bufnr  number  Buffer number
+--
+----------------------------------------------------------------------------
+local function setup_insert_mode_prevention(bufnr)
+    vim.api.nvim_create_autocmd("InsertEnter", {
+        buffer = bufnr,
+        callback = function()
+            vim.schedule(function()
+                vim.cmd("stopinsert")
+                message_utils.show_warn_message(
+                    "Dependency cards are read-only. Use 'dd' to remove or 'j'/'k' to navigate."
+                )
+            end)
+        end,
+        desc = "Prevent insert mode in dependency display",
+    })
+end
+
+----------------------------------------------------------------------------
+--
+-- Setup buffer listeners for focus management and readonly warnings.
+--
+-- @param popup  Popup  Dependencies display popup
+--
+----------------------------------------------------------------------------
+local function setup_listeners(popup)
+    local bufnr = popup.bufnr
+
+    setup_focus_on_enter(bufnr)
+    setup_focus_on_leave(bufnr)
+    setup_insert_mode_prevention(bufnr)
 end
 
 ----------------------------------------------------------------------------
@@ -376,6 +511,7 @@ function M.create_display(close_fn)
     vim.schedule(function()
         if popup.bufnr and vim.api.nvim_buf_is_valid(popup.bufnr) then
             setup_card_keybindings(popup)
+            setup_listeners(popup)
         end
     end)
 
@@ -429,6 +565,9 @@ function M.update_display()
         return
     end
 
+    vim.api.nvim_buf_set_option(panel.bufnr, MODIFIABLE, BUFFER_MODIFIABLE)
+    vim.api.nvim_buf_set_option(panel.bufnr, READONLY, BUFFER_READONLY)
+
     local lines = render_dependency_lines()
     vim.api.nvim_buf_set_lines(panel.bufnr, 0, -1, false, lines)
 
@@ -442,6 +581,9 @@ function M.update_display()
             M.state.focused_card_index
         )
     end
+
+    vim.api.nvim_buf_set_option(panel.bufnr, MODIFIABLE, BUFFER_NOT_MODIFIABLE)
+    vim.api.nvim_buf_set_option(panel.bufnr, READONLY, BUFFER_READONLY_STRICT)
 end
 
 ----------------------------------------------------------------------------
