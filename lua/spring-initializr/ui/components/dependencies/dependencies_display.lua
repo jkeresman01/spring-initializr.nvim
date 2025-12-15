@@ -23,7 +23,7 @@
 -- but WITHOUT ANY WARRANTY; without even the implied warranty of
 -- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 -- GNU General Public License for more details.
-
+--
 -- You should have received a copy of the GNU General Public License
 -- along with this program.  If not, see <https://www.gnu.org/licenses/>.
 --
@@ -67,7 +67,13 @@ local BUTTON_SIZE = { height = 3, width = 40 }
 local DISPLAY_SIZE = { height = "100%", width = 40 }
 local BUTTON_TITLE = "Add Dependencies (Telescope)"
 local DISPLAY_TITLE = "Selected Dependencies"
+local MODIFIABLE = "modifiable"
+local READONLY = "readonly"
 local LINES_PER_CARD = 4
+local BUFFER_MODIFIABLE = true
+local BUFFER_READONLY = false
+local BUFFER_NOT_MODIFIABLE = false
+local BUFFER_READONLY_STRICT = true
 
 ----------------------------------------------------------------------------
 --
@@ -343,24 +349,51 @@ end
 
 ----------------------------------------------------------------------------
 --
--- Setup card navigation and deletion keybindings.
+-- Setup keybinding for navigation down (j key).
 --
 -- @param popup  Popup  Dependencies display popup
 --
 ----------------------------------------------------------------------------
-local function setup_card_keybindings(popup)
+local function setup_navigation_down_key(popup)
     popup:map("n", "j", function()
         focus_next_card()
     end, { noremap = true, nowait = true })
+end
 
+----------------------------------------------------------------------------
+--
+-- Setup keybinding for navigation up (k key).
+--
+-- @param popup  Popup  Dependencies display popup
+--
+----------------------------------------------------------------------------
+local function setup_navigation_up_key(popup)
     popup:map("n", "k", function()
         focus_prev_card()
     end, { noremap = true, nowait = true })
+end
 
+----------------------------------------------------------------------------
+--
+-- Setup keybinding for removing focused dependency (dd key).
+--
+-- @param popup  Popup  Dependencies display popup
+--
+----------------------------------------------------------------------------
+local function setup_remove_dependency_key(popup)
     popup:map("n", "dd", function()
         remove_focused_card()
     end, { noremap = true, nowait = true })
+end
 
+----------------------------------------------------------------------------
+--
+-- Setup keybinding for clearing all dependencies (Ctrl-d key).
+--
+-- @param popup  Popup  Dependencies display popup
+--
+----------------------------------------------------------------------------
+local function setup_clear_all_dependencies_key(popup)
     popup:map("n", "<C-d>", function()
         clear_all_dependencies()
     end, { noremap = true, nowait = true })
@@ -368,15 +401,26 @@ end
 
 ----------------------------------------------------------------------------
 --
--- Setup buffer listeners for focus management and readonly warnings.
+-- Setup card navigation and deletion keybindings.
 --
 -- @param popup  Popup  Dependencies display popup
 --
 ----------------------------------------------------------------------------
-local function setup_listeners(popup)
-    local bufnr = popup.bufnr
+local function setup_card_keybindings(popup)
+    setup_navigation_down_key(popup)
+    setup_navigation_up_key(popup)
+    setup_remove_dependency_key(popup)
+    setup_clear_all_dependencies_key(popup)
+end
 
-    -- Focus management: Set initial focus when entering buffer
+----------------------------------------------------------------------------
+--
+-- Setup autocmd to set initial focus when entering buffer.
+--
+-- @param bufnr  number  Buffer number
+--
+----------------------------------------------------------------------------
+local function setup_focus_on_enter(bufnr)
     vim.api.nvim_create_autocmd("BufEnter", {
         buffer = bufnr,
         callback = function()
@@ -391,8 +435,16 @@ local function setup_listeners(popup)
         end,
         desc = "Set initial focus on dependency card",
     })
+end
 
-    -- Focus management: Clear focus when leaving buffer
+----------------------------------------------------------------------------
+--
+-- Setup autocmd to clear focus when leaving buffer.
+--
+-- @param bufnr  number  Buffer number
+--
+----------------------------------------------------------------------------
+local function setup_focus_on_leave(bufnr)
     vim.api.nvim_create_autocmd("BufLeave", {
         buffer = bufnr,
         callback = function()
@@ -401,8 +453,16 @@ local function setup_listeners(popup)
         end,
         desc = "Clear dependency card focus",
     })
+end
 
-    -- Readonly warning: Prevent insert mode
+----------------------------------------------------------------------------
+--
+-- Setup autocmd to prevent insert mode with warning.
+--
+-- @param bufnr  number  Buffer number
+--
+----------------------------------------------------------------------------
+local function setup_insert_mode_prevention(bufnr)
     vim.api.nvim_create_autocmd("InsertEnter", {
         buffer = bufnr,
         callback = function()
@@ -415,28 +475,21 @@ local function setup_listeners(popup)
         end,
         desc = "Prevent insert mode in dependency display",
     })
+end
 
-    -- Readonly warning: Warn on text modification
-    vim.api.nvim_create_autocmd("TextChanged", {
-        buffer = bufnr,
-        callback = function()
-            vim.schedule(function()
-                message_utils.show_warn_message("Dependency cards cannot be edited.")
-            end)
-        end,
-        desc = "Warn on dependency display modification attempt",
-    })
+----------------------------------------------------------------------------
+--
+-- Setup buffer listeners for focus management and readonly warnings.
+--
+-- @param popup  Popup  Dependencies display popup
+--
+----------------------------------------------------------------------------
+local function setup_listeners(popup)
+    local bufnr = popup.bufnr
 
-    -- Readonly warning: Warn on text modification in insert mode
-    vim.api.nvim_create_autocmd("TextChangedI", {
-        buffer = bufnr,
-        callback = function()
-            vim.schedule(function()
-                message_utils.show_warn_message("Dependency cards cannot be edited.")
-            end)
-        end,
-        desc = "Warn on dependency display modification attempt in insert mode",
-    })
+    setup_focus_on_enter(bufnr)
+    setup_focus_on_leave(bufnr)
+    setup_insert_mode_prevention(bufnr)
 end
 
 ----------------------------------------------------------------------------
@@ -512,9 +565,8 @@ function M.update_display()
         return
     end
 
-    -- Temporarily make buffer modifiable for updates
-    vim.api.nvim_buf_set_option(panel.bufnr, "modifiable", true)
-    vim.api.nvim_buf_set_option(panel.bufnr, "readonly", false)
+    vim.api.nvim_buf_set_option(panel.bufnr, MODIFIABLE, BUFFER_MODIFIABLE)
+    vim.api.nvim_buf_set_option(panel.bufnr, READONLY, BUFFER_READONLY)
 
     local lines = render_dependency_lines()
     vim.api.nvim_buf_set_lines(panel.bufnr, 0, -1, false, lines)
@@ -530,9 +582,8 @@ function M.update_display()
         )
     end
 
-    -- Set back to read-only
-    vim.api.nvim_buf_set_option(panel.bufnr, "modifiable", false)
-    vim.api.nvim_buf_set_option(panel.bufnr, "readonly", true)
+    vim.api.nvim_buf_set_option(panel.bufnr, MODIFIABLE, BUFFER_NOT_MODIFIABLE)
+    vim.api.nvim_buf_set_option(panel.bufnr, READONLY, BUFFER_READONLY_STRICT)
 end
 
 ----------------------------------------------------------------------------
