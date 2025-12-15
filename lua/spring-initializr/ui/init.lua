@@ -151,10 +151,10 @@ local function restore_saved_state()
 
     telescope.selected_dependencies_set = nil
 
-    if not telescope.selected_set then
-        telescope.selected_set = HashSet.new()
+    if not telescope.selected_dependencies_set then
+        telescope.selected_dependencies_set = HashSet.new()
     else
-        telescope.selected_set:clear()
+        telescope.selected_dependencies_set:clear()
     end
 
     if project.dependencies then

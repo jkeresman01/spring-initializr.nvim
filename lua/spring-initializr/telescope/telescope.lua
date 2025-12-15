@@ -186,8 +186,13 @@ function M.remove_dependency(dep_id)
     log.debug("Removing dependency:", dep_id)
     init_hashset()
 
+    if not M.selected_dependencies_set:has_key(dep_id) then
+        log.warn("Dependency not found in selection:", dep_id)
+        return false
+    end
+
     log.trace("Removing from set")
-    local removed = M.selected_dependencies_set:remove(dep_id)
+    local removed = M.selected_dependencies_set:remove_by_key(dep_id)
 
     if removed then
         log.info("Dependency removed successfully:", dep_id)
