@@ -19,6 +19,14 @@
 -- the Free Software Foundation, either version 3 of the License, or
 -- (at your option) any later version.
 --
+-- This program is distributed in the hope that it will be useful,
+-- but WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-- GNU General Public License for more details.
+
+-- You should have received a copy of the GNU General Public License
+-- along with this program.  If not, see <https://www.gnu.org/licenses/>.
+--
 ----------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------
@@ -27,8 +35,8 @@
 -- Provides configurable trace/debug/info/warn/error/fatal logging
 -- to console and/or file.
 --
--- Based on rxi/log.lua and tjdevries/vlog.nvim modifed by Josip Keresman for
--- spring-initalizr.nvim
+-- Based on rxi/log.lua and tjdevries/vlog.nvim modified by Josip Keresman for
+-- spring-initializr.nvim
 --
 ----------------------------------------------------------------------------
 
@@ -73,7 +81,9 @@ local level_colors = {
 
 ----------------------------------------------------------------------------
 --
--- Initialize logging based on global variables
+-- Initialize logging configuration based on global variables.
+-- Checks vim global variables to configure console output, file output,
+-- and log level settings.
 --
 ----------------------------------------------------------------------------
 local function init_config()
@@ -95,7 +105,7 @@ end
 
 ----------------------------------------------------------------------------
 --
--- Get the log file path
+-- Get the log file path.
 --
 -- @return string  Full path to log file
 --
@@ -107,9 +117,9 @@ end
 
 ----------------------------------------------------------------------------
 --
--- Format timestamp for log entry
+-- Format timestamp for log entry.
 --
--- @return string  Formatted timestamp
+-- @return string  Formatted timestamp (YYYY-MM-DD HH:MM:SS)
 --
 ----------------------------------------------------------------------------
 local function get_timestamp()
@@ -118,11 +128,11 @@ end
 
 ----------------------------------------------------------------------------
 --
--- Get debug info for caller location
+-- Get debug info for caller location.
 --
--- @param  level  number  Stack level to inspect
+-- @param  level  number  Stack level to inspect (default: 3)
 --
--- @return table         Debug info with source and line
+-- @return table          Debug info with source and line fields
 --
 ----------------------------------------------------------------------------
 local function get_caller_info(level)
@@ -141,11 +151,12 @@ end
 
 ----------------------------------------------------------------------------
 --
--- Format log message
+-- Format log message from arguments.
+-- Converts tables to strings using vim.inspect and other types using tostring.
 --
--- @param  args   table   Arguments to format
+-- @param  args   table   Array of arguments to format
 --
--- @return string         Formatted message
+-- @return string         Formatted message with arguments joined by spaces
 --
 ----------------------------------------------------------------------------
 local function format_message(args)
@@ -164,11 +175,11 @@ end
 
 ----------------------------------------------------------------------------
 --
--- Write to log file
+-- Write log entry to file.
 --
 -- @param  level    string  Log level name
 -- @param  message  string  Formatted message
--- @param  info     table   Caller info
+-- @param  info     table   Caller info with source and line
 --
 ----------------------------------------------------------------------------
 local function write_to_file(level, message, info)
@@ -193,11 +204,11 @@ end
 
 ----------------------------------------------------------------------------
 --
--- Write to console
+-- Write log entry to console using vim.api.nvim_echo.
 --
 -- @param  level    string  Log level name
 -- @param  message  string  Formatted message
--- @param  info     table   Caller info
+-- @param  info     table   Caller info with source and line
 --
 ----------------------------------------------------------------------------
 local function write_to_console(level, message, info)
@@ -214,9 +225,10 @@ end
 
 ----------------------------------------------------------------------------
 --
--- Core logging function
+-- Core logging function.
+-- Checks log level, formats message, and writes to configured outputs.
 --
--- @param  level  string  Log level name
+-- @param  level  string  Log level name (trace/debug/info/warn/error/fatal)
 -- @param  ...    any     Arguments to log
 --
 ----------------------------------------------------------------------------
@@ -241,7 +253,7 @@ local function log(level, ...)
     end
 
     local args = { ... }
-    local message = format_message(level, args)
+    local message = format_message(args)
     local info = get_caller_info(4)
 
     if M.config.use_file then
@@ -254,29 +266,67 @@ local function log(level, ...)
 end
 
 ----------------------------------------------------------------------------
--- Public API - Log level functions
+--
+-- Log a trace-level message.
+--
+-- @param  ...  any  Arguments to log
+--
 ----------------------------------------------------------------------------
-
 function M.trace(...)
     log("trace", ...)
 end
 
+----------------------------------------------------------------------------
+--
+-- Log a debug-level message.
+--
+-- @param  ...  any  Arguments to log
+--
+----------------------------------------------------------------------------
 function M.debug(...)
     log("debug", ...)
 end
 
+----------------------------------------------------------------------------
+--
+-- Log an info-level message.
+--
+-- @param  ...  any  Arguments to log
+--
+----------------------------------------------------------------------------
 function M.info(...)
     log("info", ...)
 end
 
+----------------------------------------------------------------------------
+--
+-- Log a warning-level message.
+--
+-- @param  ...  any  Arguments to log
+--
+----------------------------------------------------------------------------
 function M.warn(...)
     log("warn", ...)
 end
 
+----------------------------------------------------------------------------
+--
+-- Log an error-level message.
+--
+-- @param  ...  any  Arguments to log
+--
+----------------------------------------------------------------------------
 function M.error(...)
     log("error", ...)
 end
 
+----------------------------------------------------------------------------
+--
+-- Log a fatal-level message.
+--
+-- @param  ...  any  Arguments to log
+--
+----------------------------------------------------------------------------
 function M.fatal(...)
     log("fatal", ...)
 end
@@ -285,35 +335,83 @@ end
 -- Formatted variants (with string.format)
 ----------------------------------------------------------------------------
 
+----------------------------------------------------------------------------
+--
+-- Log a trace-level message with string.format formatting.
+--
+-- @param  fmt  string  Format string
+-- @param  ...  any     Arguments for format string
+--
+----------------------------------------------------------------------------
 function M.fmt_trace(fmt, ...)
     log("trace", string.format(fmt, ...))
 end
 
+----------------------------------------------------------------------------
+--
+-- Log a debug-level message with string.format formatting.
+--
+-- @param  fmt  string  Format string
+-- @param  ...  any     Arguments for format string
+--
+----------------------------------------------------------------------------
 function M.fmt_debug(fmt, ...)
     log("debug", string.format(fmt, ...))
 end
 
+----------------------------------------------------------------------------
+--
+-- Log an info-level message with string.format formatting.
+--
+-- @param  fmt  string  Format string
+-- @param  ...  any     Arguments for format string
+--
+----------------------------------------------------------------------------
 function M.fmt_info(fmt, ...)
     log("info", string.format(fmt, ...))
 end
 
+----------------------------------------------------------------------------
+--
+-- Log a warning-level message with string.format formatting.
+--
+-- @param  fmt  string  Format string
+-- @param  ...  any     Arguments for format string
+--
+----------------------------------------------------------------------------
 function M.fmt_warn(fmt, ...)
     log("warn", string.format(fmt, ...))
 end
 
+----------------------------------------------------------------------------
+--
+-- Log an error-level message with string.format formatting.
+--
+-- @param  fmt  string  Format string
+-- @param  ...  any     Arguments for format string
+--
+----------------------------------------------------------------------------
 function M.fmt_error(fmt, ...)
     log("error", string.format(fmt, ...))
 end
 
+----------------------------------------------------------------------------
+--
+-- Log a fatal-level message with string.format formatting.
+--
+-- @param  fmt  string  Format string
+-- @param  ...  any     Arguments for format string
+--
+----------------------------------------------------------------------------
 function M.fmt_fatal(fmt, ...)
     log("fatal", string.format(fmt, ...))
 end
 
 ----------------------------------------------------------------------------
 --
--- Set log level programmatically
+-- Set log level programmatically.
 --
--- @param  level  string  Log level name
+-- @param  level  string  Log level name (trace/debug/info/warn/error/fatal)
 --
 ----------------------------------------------------------------------------
 function M.set_level(level)
@@ -324,7 +422,7 @@ end
 
 ----------------------------------------------------------------------------
 --
--- Get current log level
+-- Get current log level.
 --
 -- @return string  Current log level name
 --

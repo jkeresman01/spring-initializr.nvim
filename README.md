@@ -1,28 +1,31 @@
 <div align="center">
 
   <h1>spring-initializr.nvim</h1>
+
+[![Mentioned in Awesome Neovim](https://awesome.re/mentioned-badge.svg)](https://github.com/rockerBOO/awesome-neovim)
+
   <h4>The easiest way to generate Spring Boot projects</h4>
   <h6><i>A Neovim plugin that lets you build and download fully configured Spring Boot projects inside the editor.</i></h6>
+  
 
 [![Lua](https://img.shields.io/badge/Lua-blue.svg?style=for-the-badge&logo=lua)](http://www.lua.org)
 [![Neovim 0.10](https://img.shields.io/badge/Neovim%200.10-green.svg?style=for-the-badge&logo=neovim)](https://neovim.io)
 
 </div>
 
+> [!NOTE]
+> The UI has been significantly improved since this initial demo video. See the Preview section below for current screenshots.
 
 [![asciicast](https://asciinema.org/a/723220.svg)](https://asciinema.org/a/723220)
 
 
 ## Preview ##
-<img width="1389" height="834" alt="image" src="https://github.com/user-attachments/assets/80756160-243a-4e9a-80ae-7a9ca95a0263" />
+<img width="1547" height="861" alt="image" src="https://github.com/user-attachments/assets/30ef3673-4eb2-4b6b-978b-048d0e11f836" />
 
+<img width="1467" height="842" alt="image" src="https://github.com/user-attachments/assets/2f99c130-d704-4501-a7fd-84105731e2c0" />
 
-## 🔧 Features
+<img width="1519" height="856" alt="image" src="https://github.com/user-attachments/assets/0b3b55a0-37f6-4ee7-96e3-0f9950e91947" />
 
-- [x] Full Spring Initializr metadata support  
-- [x] TUI-based UI for selecting project options  
-- [x] Fuzzy dependency selection with `telescope.nvim`  
-- [x] Tab and key-based navigation  
 
 
 ## 📁 Project Structure
@@ -49,13 +52,20 @@ spring-initializr.nvim/
 └── tests/
 ```
 
-## :star: <a name="installation"></a> Installation 
-
+> [!IMPORTANT]
+>
 > Requires **Neovim 0.9+**  
 > Dependencies:
 > - `nui.nvim`
 > - `plenary.nvim`
 > - `telescope.nvim`
+
+## :star: <a name="installation"></a> Installation 
+
+> [!TIP]
+> If you want to add instructions for your plugin manager of preference
+> please raise a [**ISSUE_REQUEST**].
+
 
 ### Vim Plug <a name="vimplug"></a>
 
@@ -95,16 +105,75 @@ use {
 }
 ```
 
-## Commands :wrench: <a name="commands"></a>
-
-```vim
-:SpringInitializr             -- Launch the UI to configure project
-:SpringGenerateProject        -- Download and extract Spring Boot project to current directory
+### pckr.nvim <a name="lazy"></a>
+```lua
+ require('pckr').add({
+    {
+      'jkeresman01/spring-initializr.nvim',
+      requires = {
+        'nvim-lua/plenary.nvim',
+        'MunifTanjim/nui.nvim',
+        'nvim-telescope/telescope.nvim',
+      },
+      config = function()
+        require('spring-initializr').setup()
+      end,
+    };
+  })
 ```
+
+### paq-nvim
+
+```lua
+local paq = require('paq')
+
+paq({
+  'jkeresman01/spring-initializr.nvim',
+
+  'nvim-lua/plenary.nvim',
+  'MunifTanjim/nui.nvim',
+  'nvim-telescope/telescope.nvim',
+})
+
+require('spring-initializr').setup()
+```
+
+## Commands
+
+These are the user commands you can call from the cmdline:
+
+### :SpringInitializr
+
+The `:SpringInitializr` command will open a UI window pointing to all the useful operations
+this plugin can provide.
+
+> [!TIP]
+> _See [`commands.lua`](./lua/spring-initializr/commands/commands.lua) for more info_.
+
+### :SpringGenerateProject
+
+The `:SpringGenerateProject` command will scaffold a new Spring Boot Project with selections from the UI to your current working directory.
+
+> [!TIP]
+> _See [`commands.lua`](./lua/spring-initializr/commands/commands.lua) for more info_.
+
+> [!IMPORTANT]
+> This is the list of planned commands that will be available soon:
+>
+> - `:SpringInitalizrHistory`
+> - `:SpringInitalizrHealth`
+> - `:SpringInitalizrLog`
+> - `:SpringPreviewProject`
 
 ## Setup :gear: <a name="setup"></a>
 
-Basic setup and keybindings:
+To enable the plugin you must call `setup()`:
+
+```lua
+require('spring-initializr').setup()
+```
+
+Minimal setup and keybindings:
 
 ```lua
 require("spring-initializr").setup()
@@ -113,7 +182,6 @@ vim.keymap.set("n", "<leader>si", "<CMD>SpringInitializr<CR>")
 vim.keymap.set("n", "<leader>sg", "<CMD>SpringGenerateProject<CR>")
 ```
 
-
 | Keybinding   | Action                                  |
 |--------------|-----------------------------------------|
 | `<leader>si` | Open Spring Initializr TUI              |
@@ -121,15 +189,21 @@ vim.keymap.set("n", "<leader>sg", "<CMD>SpringGenerateProject<CR>")
 | `<Tab>`      | Navigate forward between fields         |
 | `<S-Tab>`    | Navigate backward                       |
 | `<Ctrl-r>`   | Reset the form (selections && deps)     |
+| `<Ctrl-b>`   | Open dependency picker                  |
+| `<Ctrl-d>`   | Reset selected dependencies             |
 | `j` / `k`    | Move between radio options              |
 | `j` / `k`    | Move between selected dependencies      |
 | `<CR>`       | Confirm field selection or submit       |
 | `dd`         | Remove selected dependency              |
 | `q`          | Close Spring Initializr TUI             |
 
+
 ## Contributing
 
-Contributions are very welcome. You can help by:
+> [!IMPORTANT]
+> Contributions are very welcome
+
+You can help by:
 
 - Picking up an existing issue.
     - Issues marked with the label `good first issue` are ideal if you're new to contributing.
@@ -164,8 +238,22 @@ _First Donation 💛_ - Thanks Kevin we appreciate it a lot
 
 ## License
 
-This project is licensed under the terms of the [GNU General Public License v3.0](./LICENSE).
+```
+Copyright (C) 2025 Josip Keresman
 
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+```
+
+
+This project is licensed under the terms of the [GNU General Public License v3.0](./LICENSE).
 
 
 <div align="center">
