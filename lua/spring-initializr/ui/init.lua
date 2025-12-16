@@ -155,7 +155,7 @@ local function restore_saved_state()
         local key_fn = function(entry)
             return entry.id
         end
-        telescope.selected_dependencies_set = Hashset.new({ key_fn = key_fn })
+        telescope.selected_dependencies_set = HashSet.new({ key_fn = key_fn })
         for _, dep in ipairs(project.dependencies) do
             local entry
             if type(dep) == "table" and dep.id then
