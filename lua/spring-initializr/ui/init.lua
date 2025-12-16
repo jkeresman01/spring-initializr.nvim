@@ -149,20 +149,13 @@ local function restore_saved_state()
     M.state.selections.java_version = project.java_version or ""
     M.state.selections.configurationFileFormat = project.configurationFileFormat or "properties"
 
-    telescope.selected_dependencies_set = nil
-
-    if not telescope.selected_dependencies_set then
-        telescope.selected_dependencies_set = HashSet.new()
-    else
-        telescope.selected_dependencies_set:clear()
-    end
+    telescope.selected_dependencies_set = HashSet.new()
 
     if project.dependencies then
         local key_fn = function(entry)
             return entry.id
         end
-        telescope.selected_dependencies_set =
-            require("spring-initializr.algo.hashset").new({ key_fn = key_fn })
+        telescope.selected_dependencies_set = Hashset.new({ key_fn = key_fn })
         for _, dep in ipairs(project.dependencies) do
             local entry
             if type(dep) == "table" and dep.id then
@@ -173,7 +166,7 @@ local function restore_saved_state()
                     group = dep.group or "",
                     label = string.format("[%s] %s", dep.group or "", dep.name or dep.id),
                 }
-                telescope.selected_set:add(dep.id)
+                telescope.selected_dependencies_set:add(dep.id)
             elseif type(dep) == "string" then
                 entry = {
                     id = dep,
