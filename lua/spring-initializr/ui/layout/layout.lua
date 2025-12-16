@@ -136,6 +136,7 @@ local function create_outer_popup(content_height)
     return Popup({
         border = outer_border(),
         position = outer_position(),
+        relative = "editor",
         size = outer_size(content_height),
         win_options = outer_win_options(),
         focusable = false,
