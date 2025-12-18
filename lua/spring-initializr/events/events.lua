@@ -31,54 +31,24 @@
 
 ----------------------------------------------------------------------------
 --
--- Defines and applies highlight groups for the Spring Initializr UI.
+-- Provides centralized, type-safe references to event names used throughout
+-- the plugin to prevent typos and improve maintainability.
 --
 ----------------------------------------------------------------------------
 
-----------------------------------------------------------------------------
--- Dependencies
-----------------------------------------------------------------------------
-local events = require("spring-initializr.events.events")
+local M = {
+    BUF_ENTER = "BufEnter",
+    BUF_LEAVE = "BufLeave",
+    BUF_DELETE = "BufDelete",
+    BUF_WIPEOUT = "BufWipeout",
 
-----------------------------------------------------------------------------
--- Module table
-----------------------------------------------------------------------------
-local M = {}
+    INSERT_ENTER = "InsertEnter",
 
------------------------------------------------------------------------------
---
--- Sets highlight groups used by the plugin.
---
------------------------------------------------------------------------------
-local function set_highlight_groups()
-    vim.api.nvim_set_hl(0, "NormalFloat", { bg = "none" })
-    vim.api.nvim_set_hl(0, "FloatBorder", { bg = "none", fg = "#777777" })
-    vim.api.nvim_set_hl(0, "NuiMenuSel", { bg = "#44475a", fg = "#ffffff", bold = true })
-end
+    VIM_RESIZED = "VimResized",
+    WIN_RESIZED = "WinResized",
+    WIN_NEW = "WinNew",
 
------------------------------------------------------------------------------
---
--- Registers a ColorScheme autocmd to reapply highlights.
---
------------------------------------------------------------------------------
-local function register_colorscheme_autocmd()
-    vim.api.nvim_create_autocmd(events.COLOR_SCHEME, {
-        pattern = "*",
-        callback = M.configure,
-    })
-end
+    COLOR_SCHEME = "ColorScheme",
+}
 
------------------------------------------------------------------------------
---
--- Public method to configure all highlights and hooks.
---
------------------------------------------------------------------------------
-function M.configure()
-    set_highlight_groups()
-    register_colorscheme_autocmd()
-end
-
-----------------------------------------------------------------------------
--- Exports
-----------------------------------------------------------------------------
 return M

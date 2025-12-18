@@ -46,6 +46,7 @@ local focus_manager = require("spring-initializr.ui.managers.focus_manager")
 local reset_manager = require("spring-initializr.ui.managers.reset_manager")
 local message_utils = require("spring-initializr.utils.message_utils")
 local icons = require("spring-initializr.ui.icons.icons")
+local events = require("spring-initializr.events.events")
 
 ----------------------------------------------------------------------------
 -- Constants
@@ -349,7 +350,7 @@ end
 --
 ----------------------------------------------------------------------------
 local function disable_auto_insert(input_component)
-    vim.api.nvim_create_autocmd("BufEnter", {
+    vim.api.nvim_create_autocmd(events.BUF_ENTER, {
         buffer = input_component.bufnr,
         callback = function()
             -- Use vim.schedule to ensure this runs after any NUI auto-insert

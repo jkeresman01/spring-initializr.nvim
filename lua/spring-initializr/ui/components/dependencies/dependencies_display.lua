@@ -48,6 +48,7 @@ local message_utils = require("spring-initializr.utils.message_utils")
 local picker = require("spring-initializr.telescope.telescope")
 local dependency_card = require("spring-initializr.ui.components.dependencies.dependency_card")
 local icons = require("spring-initializr.ui.icons.icons")
+local events = require("spring-initializr.events.events")
 local log = require("spring-initializr.trace.log")
 
 ----------------------------------------------------------------------------
@@ -421,7 +422,7 @@ end
 --
 ----------------------------------------------------------------------------
 local function setup_focus_on_enter(bufnr)
-    vim.api.nvim_create_autocmd("BufEnter", {
+    vim.api.nvim_create_autocmd(events.BUF_ENTER, {
         buffer = bufnr,
         callback = function()
             if
@@ -445,7 +446,7 @@ end
 --
 ----------------------------------------------------------------------------
 local function setup_focus_on_leave(bufnr)
-    vim.api.nvim_create_autocmd("BufLeave", {
+    vim.api.nvim_create_autocmd(events.BUF_LEAVE, {
         buffer = bufnr,
         callback = function()
             M.state.focused_card_index = nil
@@ -463,7 +464,7 @@ end
 --
 ----------------------------------------------------------------------------
 local function setup_insert_mode_prevention(bufnr)
-    vim.api.nvim_create_autocmd("InsertEnter", {
+    vim.api.nvim_create_autocmd(events.INSERT_ENTER, {
         buffer = bufnr,
         callback = function()
             vim.schedule(function()

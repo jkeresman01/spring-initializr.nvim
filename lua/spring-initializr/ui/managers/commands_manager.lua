@@ -40,6 +40,7 @@
 -- Dependencies
 ----------------------------------------------------------------------------
 local log = require("spring-initializr.trace.log")
+local events = require("spring-initializr.events.events")
 
 ----------------------------------------------------------------------------
 -- Module table
@@ -121,7 +122,7 @@ local function setup_winnew_detector()
         return
     end
 
-    M.state.winnew_autocmd_id = vim.api.nvim_create_autocmd("WinNew", {
+    M.state.winnew_autocmd_id = vim.api.nvim_create_autocmd(events.WIN_NEW, {
         callback = function()
             -- Skip if already handling a split
             if M.state.is_handling_split then
