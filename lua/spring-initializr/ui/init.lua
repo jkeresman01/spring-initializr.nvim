@@ -49,6 +49,7 @@ local dependencies_display =
 local window_utils = require("spring-initializr.utils.window_utils")
 local message_utils = require("spring-initializr.utils.message_utils")
 local buffer_utils = require("spring-initializr.utils.buffer_utils")
+local events = require("spring-initializr.events.events")
 local repository_factory = require("spring-initializr.dao.dal.repository_factory")
 local Project = require("spring-initializr.dao.model.project")
 local HashSet = require("spring-initializr.algo.hashset")
@@ -283,7 +284,7 @@ local function reopen_after_resize(data)
     )
     focus_manager.focus_first()
 
-    M.state.resize_autocmd_id = vim.api.nvim_create_autocmd("VimResized", {
+    M.state.resize_autocmd_id = vim.api.nvim_create_autocmd(events.VIM_RESIZED, {
         callback = function()
             if M.state.is_open and M.state.metadata then
                 local saved_metadata = M.state.metadata
@@ -310,22 +311,25 @@ end
 ----------------------------------------------------------------------------
 local function setup_resize_autocmd()
     log.trace("Setting up resize autocmd")
-    M.state.resize_autocmd_id = vim.api.nvim_create_autocmd({ "VimResized", "WinResized" }, {
-        callback = function()
-            if M.state.is_open and M.state.metadata then
-                local saved_metadata = M.state.metadata
-                local saved_selections = vim.deepcopy(M.state.selections)
+    M.state.resize_autocmd_id = vim.api.nvim_create_autocmd(
+        { events.VIM_RESIZED, events.WIN_RESIZED },
+        {
+            callback = function()
+                if M.state.is_open and M.state.metadata then
+                    local saved_metadata = M.state.metadata
+                    local saved_selections = vim.deepcopy(M.state.selections)
 
-                close_for_resize()
+                    close_for_resize()
 
-                vim.defer_fn(function()
-                    M.state.selections = saved_selections
-                    reopen_after_resize(saved_metadata)
-                end, 50)
-            end
-        end,
-        desc = "Spring Initializr resize handler",
-    })
+                    vim.defer_fn(function()
+                        M.state.selections = saved_selections
+                        reopen_after_resize(saved_metadata)
+                    end, 50)
+                end
+            end,
+            desc = "Spring Initializr resize handler",
+        }
+    )
     log.debug("Resize autocmd created")
 end
 

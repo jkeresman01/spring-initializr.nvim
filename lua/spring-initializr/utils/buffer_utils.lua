@@ -36,6 +36,11 @@
 ----------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------
+-- Dependencies
+----------------------------------------------------------------------------
+local events = require("spring-initializr.events.events")
+
+----------------------------------------------------------------------------
 -- Module table
 ----------------------------------------------------------------------------
 local M = {}
@@ -108,7 +113,7 @@ end
 --
 ----------------------------------------------------------------------------
 local function setup_buffer_autocmd(bufnr, close_fn)
-    vim.api.nvim_create_autocmd({ "BufDelete", "BufWipeout" }, {
+    vim.api.nvim_create_autocmd({ events.BUF_DELETE, events.BUF_WIPEOUT }, {
         buffer = bufnr,
         once = true,
         callback = create_close_callback(close_fn),
