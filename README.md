@@ -44,6 +44,7 @@ spring-initializr.nvim/
 │       ├── styles/
 │       ├── telescope/
 │       ├── ui/
+│       ├── events/
 │       ├── dao/
 │       ├── trace/
 │       ├── utils/
