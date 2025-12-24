@@ -19,12 +19,10 @@ local HashSet = require("spring-initializr.algo.hashset")
 
 describe("duplicate dependency detection logic", function()
     describe("HashSet duplicate detection", function()
-        local selected_dependencies
-        local selected_set
+        local selected_dependencies_set
 
         before_each(function()
-            selected_dependencies = {}
-            selected_set = HashSet.new()
+            selected_dependencies_set = HashSet.new()
         end)
 
         it("allows first selection of a dependency", function()
@@ -32,37 +30,32 @@ describe("duplicate dependency detection logic", function()
             local dep_id = "web"
 
             -- Act - Simulate selection
-            local is_duplicate = selected_set:has(dep_id)
+            local is_duplicate = selected_dependencies_set:has(dep_id)
             if not is_duplicate then
-                selected_set:add(dep_id)
-                table.insert(selected_dependencies, dep_id)
+                selected_dependencies_set:add(dep_id)
             end
 
             -- Assert
             assert.is_false(is_duplicate)
-            assert.are.equal(1, #selected_dependencies)
-            assert.are.equal("web", selected_dependencies[1])
-            assert.is_true(selected_set:has("web"))
+            assert.is_true(selected_dependencies_set:has("web"))
+            assert.are.equal(1, selected_dependencies_set:size())
         end)
 
         it("detects duplicate selection", function()
             -- Arrange - Add first time
-            selected_set:add("web")
-            table.insert(selected_dependencies, "web")
+            selected_dependencies_set:add("web")
 
             -- Act - Try to add again
-            local is_duplicate = selected_set:has("web")
-            local initial_count = #selected_dependencies
+            local is_duplicate = selected_dependencies_set:has("web")
+            local initial_count = selected_dependencies_set:size()
 
             if not is_duplicate then
-                selected_set:add("web")
-                table.insert(selected_dependencies, "web")
+                selected_dependencies_set:add("web")
             end
 
             -- Assert
             assert.is_true(is_duplicate)
-            assert.are.equal(1, #selected_dependencies)
-            assert.are.equal(initial_count, #selected_dependencies)
+            assert.are.equal(initial_count, selected_dependencies_set:size())
         end)
 
         it("allows multiple different dependencies", function()
@@ -75,38 +68,16 @@ describe("duplicate dependency detection logic", function()
 
             -- Act
             for _, dep in ipairs(deps) do
-                if not selected_set:has(dep.id) then
-                    selected_set:add(dep.id)
-                    table.insert(selected_dependencies, dep.id)
+                if not selected_dependencies_set:has(dep.id) then
+                    selected_dependencies_set:add(dep.id)
                 end
             end
 
             -- Assert
-            assert.are.equal(3, #selected_dependencies)
-            assert.is_true(selected_set:has("web"))
-            assert.is_true(selected_set:has("data-jpa"))
-            assert.is_true(selected_set:has("security"))
-        end)
-
-        it("maintains consistency between array and HashSet", function()
-            -- Arrange
-            local deps = { "web", "data-jpa", "security", "actuator" }
-
-            -- Act
-            for _, dep in ipairs(deps) do
-                if not selected_set:has(dep) then
-                    selected_set:add(dep)
-                    table.insert(selected_dependencies, dep)
-                end
-            end
-
-            -- Assert - Same size
-            assert.are.equal(#selected_dependencies, selected_set:size())
-
-            -- Assert - All array items are in set
-            for _, dep in ipairs(selected_dependencies) do
-                assert.is_true(selected_set:has(dep))
-            end
+            assert.are.equal(3, selected_dependencies_set:size())
+            assert.is_true(selected_dependencies_set:has("web"))
+            assert.is_true(selected_dependencies_set:has("data-jpa"))
+            assert.is_true(selected_dependencies_set:has("security"))
         end)
 
         it("prevents duplicate when attempting multiple times", function()
@@ -116,59 +87,52 @@ describe("duplicate dependency detection logic", function()
             -- Act - Try to add 5 times
             local add_count = 0
             for i = 1, 5 do
-                if not selected_set:has(dep) then
-                    selected_set:add(dep)
-                    table.insert(selected_dependencies, dep)
+                if not selected_dependencies_set:has(dep) then
+                    selected_dependencies_set:add(dep)
                     add_count = add_count + 1
                 end
             end
 
             -- Assert
             assert.are.equal(1, add_count)
-            assert.are.equal(1, #selected_dependencies)
-            assert.are.equal(1, selected_set:size())
+            assert.are.equal(1, selected_dependencies_set:size())
         end)
     end)
 
     describe("selection workflow simulation", function()
-        local selected_dependencies
-        local selected_set
+        local selected_dependencies_set
 
         before_each(function()
-            selected_dependencies = {}
-            selected_set = HashSet.new()
+            selected_dependencies_set = HashSet.new()
         end)
 
         it("simulates complete selection workflow", function()
             -- Act & Assert - First selection
             local dep1 = "web"
-            local duplicate1 = selected_set:has(dep1)
+            local duplicate1 = selected_dependencies_set:has(dep1)
             if not duplicate1 then
-                selected_set:add(dep1)
-                table.insert(selected_dependencies, dep1)
+                selected_dependencies_set:add(dep1)
             end
             assert.is_false(duplicate1)
-            assert.are.equal(1, #selected_dependencies)
+            assert.are.equal(1, selected_dependencies_set:size())
 
             -- Act & Assert - Different selection
             local dep2 = "data-jpa"
-            local duplicate2 = selected_set:has(dep2)
+            local duplicate2 = selected_dependencies_set:has(dep2)
             if not duplicate2 then
-                selected_set:add(dep2)
-                table.insert(selected_dependencies, dep2)
+                selected_dependencies_set:add(dep2)
             end
             assert.is_false(duplicate2)
-            assert.are.equal(2, #selected_dependencies)
+            assert.are.equal(2, selected_dependencies_set:size())
 
             -- Act & Assert - Duplicate selection
             local dep3 = "web" -- Same as dep1
-            local duplicate3 = selected_set:has(dep3)
+            local duplicate3 = selected_dependencies_set:has(dep3)
             if not duplicate3 then
-                selected_set:add(dep3)
-                table.insert(selected_dependencies, dep3)
+                selected_dependencies_set:add(dep3)
             end
             assert.is_true(duplicate3)
-            assert.are.equal(2, #selected_dependencies)
+            assert.are.equal(2, selected_dependencies_set:size())
         end)
 
         it("handles mixed new and duplicate selections", function()
@@ -185,19 +149,15 @@ describe("duplicate dependency detection logic", function()
 
             -- Act
             for _, dep in ipairs(selections) do
-                if not selected_set:has(dep) then
-                    selected_set:add(dep)
-                    table.insert(selected_dependencies, dep)
-                end
+                selected_dependencies_set:add(dep)
             end
 
             -- Assert
-            assert.are.equal(4, #selected_dependencies) -- Only unique
-            assert.are.equal(4, selected_set:size())
-            assert.are.equal("web", selected_dependencies[1])
-            assert.are.equal("data-jpa", selected_dependencies[2])
-            assert.are.equal("security", selected_dependencies[3])
-            assert.are.equal("actuator", selected_dependencies[4])
+            assert.are.equal(4, selected_dependencies_set:size())
+            assert.is_true(selected_dependencies_set:has("web"))
+            assert.is_true(selected_dependencies_set:has("data-jpa"))
+            assert.is_true(selected_dependencies_set:has("security"))
+            assert.is_true(selected_dependencies_set:has("actuator"))
         end)
     end)
 
@@ -205,34 +165,33 @@ describe("duplicate dependency detection logic", function()
         it("resets properly when cleared", function()
             -- Arrange
             local selected_dependencies = { "web", "data-jpa", "security" }
-            local selected_set = HashSet.new()
+            local selected_dependencies_set = HashSet.new()
+
             for _, dep in ipairs(selected_dependencies) do
-                selected_set:add(dep)
+                selected_dependencies_set:add(dep)
             end
 
             -- Act
             selected_dependencies = {}
-            selected_set:clear()
+            selected_dependencies_set:clear()
 
             -- Assert
-            assert.are.equal(0, #selected_dependencies)
-            assert.are.equal(0, selected_set:size())
-            assert.is_true(selected_set:is_empty())
+            assert.are.equal(0, selected_dependencies_set:size())
+            assert.is_true(selected_dependencies_set:is_empty())
         end)
 
         it("handles lazy initialization", function()
             -- Arrange
-            local selected_set = nil
+            local selected_dependencies_set = nil
 
             -- Act - Lazy init
-            if not selected_set then
-                selected_set = HashSet.new()
+            if not selected_dependencies_set then
+                selected_dependencies_set = HashSet.new()
             end
 
             -- Assert
-            assert.is_not_nil(selected_set)
-            assert.are.equal(0, selected_set:size())
-            assert.is_true(selected_set:is_empty())
+            assert.is_not_nil(selected_dependencies_set)
+            assert.are.equal(0, selected_dependencies_set:size())
         end)
     end)
 
@@ -374,69 +333,61 @@ describe("duplicate dependency detection logic", function()
     describe("realistic integration scenarios", function()
         it("simulates user adding dependencies one by one", function()
             -- Arrange
-            local selected_dependencies = {}
-            local selected_set = HashSet.new()
+            local selected_dependencies_set = HashSet.new()
 
             -- Act & Assert - User's journey
             -- 1. Add Spring Web
-            if not selected_set:has("web") then
-                selected_set:add("web")
-                table.insert(selected_dependencies, "web")
+            if not selected_dependencies_set:has("web") then
+                selected_dependencies_set:add("web")
             end
-            assert.are.equal(1, #selected_dependencies)
+            assert.are.equal(1, selected_dependencies_set:size())
 
             -- 2. Add Spring Data JPA
-            if not selected_set:has("data-jpa") then
-                selected_set:add("data-jpa")
-                table.insert(selected_dependencies, "data-jpa")
+            if not selected_dependencies_set:has("data-jpa") then
+                selected_dependencies_set:add("data-jpa")
             end
-            assert.are.equal(2, #selected_dependencies)
+            assert.are.equal(2, selected_dependencies_set:size())
 
             -- 3. Try to add Spring Web again (duplicate)
-            local was_duplicate = selected_set:has("web")
+            local was_duplicate = selected_dependencies_set:has("web")
             if not was_duplicate then
-                selected_set:add("web")
-                table.insert(selected_dependencies, "web")
+                selected_dependencies_set:add("web")
             end
             assert.is_true(was_duplicate)
-            assert.are.equal(2, #selected_dependencies)
+            assert.are.equal(2, selected_dependencies_set:size())
 
             -- 4. Add Spring Security
-            if not selected_set:has("security") then
-                selected_set:add("security")
-                table.insert(selected_dependencies, "security")
+            if not selected_dependencies_set:has("security") then
+                selected_dependencies_set:add("security")
             end
-            assert.are.equal(3, #selected_dependencies)
+            assert.are.equal(3, selected_dependencies_set:size())
 
             -- Final check
-            assert.are.equal(3, selected_set:size())
-            assert.are.same({ "web", "data-jpa", "security" }, selected_dependencies)
+            assert.are.equal(3, selected_dependencies_set:size())
+            assert.is_true(selected_dependencies_set:has("web"))
+            assert.is_true(selected_dependencies_set:has("data-jpa"))
+            assert.is_true(selected_dependencies_set:has("security"))
         end)
 
         it("handles reset and reuse of structures", function()
             -- Arrange
-            local selected_dependencies = { "web", "data-jpa" }
-            local selected_set = HashSet.new()
-            selected_set:add("web")
-            selected_set:add("data-jpa")
+            local selected_dependencies_set = HashSet.new()
+            selected_dependencies_set:add("web")
+            selected_dependencies_set:add("data-jpa")
 
             -- Act - Reset
-            selected_dependencies = {}
-            selected_set:clear()
+            selected_dependencies_set:clear()
 
             -- Assert - Can be reused
-            assert.are.equal(0, #selected_dependencies)
-            assert.are.equal(0, selected_set:size())
+            assert.are.equal(0, selected_dependencies_set:size())
 
             -- Act - Add new dependencies
-            selected_set:add("security")
-            table.insert(selected_dependencies, "security")
+            selected_dependencies_set:add("security")
 
             -- Assert
-            assert.are.equal(1, #selected_dependencies)
-            assert.are.equal(1, selected_set:size())
-            assert.is_true(selected_set:has("security"))
-            assert.is_false(selected_set:has("web"))
+            assert.are.equal(1, selected_dependencies_set:size())
+            assert.is_true(selected_dependencies_set:has("security"))
+            assert.is_false(selected_dependencies_set:has("web"))
         end)
     end)
 end)
