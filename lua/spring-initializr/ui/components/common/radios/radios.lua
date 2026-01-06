@@ -33,6 +33,7 @@
 --
 -- Provides a reusable radio button UI component for selecting options
 -- in a popup. Supports flexible width for responsive layouts.
+-- Supports both j/k and arrow key navigation.
 --
 ----------------------------------------------------------------------------
 
@@ -218,28 +219,34 @@ end
 
 ----------------------------------------------------------------------------
 --
--- Map "j" key to move down handler.
+-- Map "j" and Down arrow keys to move down handler.
 --
 ----------------------------------------------------------------------------
 local function map_down_key(popup, state)
-    popup:map("n", "j", function()
+    local handler = function()
         state.selected[1] = handle_move_down(state.items, state.selected[1])
         state.selections[state.key] = state.items[state.selected[1]].value
         render_all_items(popup, state.items, state.selected[1])
-    end, { nowait = true, noremap = true })
+    end
+
+    popup:map("n", "j", handler, { nowait = true, noremap = true })
+    popup:map("n", "<Down>", handler, { nowait = true, noremap = true })
 end
 
 ----------------------------------------------------------------------------
 --
--- Map "k" key to move up handler.
+-- Map "k" and Up arrow keys to move up handler.
 --
 ----------------------------------------------------------------------------
 local function map_up_key(popup, state)
-    popup:map("n", "k", function()
+    local handler = function()
         state.selected[1] = handle_move_up(state.selected[1])
         state.selections[state.key] = state.items[state.selected[1]].value
         render_all_items(popup, state.items, state.selected[1])
-    end, { nowait = true, noremap = true })
+    end
+
+    popup:map("n", "k", handler, { nowait = true, noremap = true })
+    popup:map("n", "<Up>", handler, { nowait = true, noremap = true })
 end
 
 ----------------------------------------------------------------------------
