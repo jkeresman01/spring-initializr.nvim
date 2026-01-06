@@ -388,7 +388,7 @@ LICENSE                                     *spring-initializr-license*
 
 MIT License
 
-Copyright (c) 2024 Josip Keresman
+Copyright (c) 2025 Josip Keresman
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
