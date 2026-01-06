@@ -1,0 +1,382 @@
+*spring-initializr.txt*  Generate Spring Boot projects from Neovim
+
+==============================================================================
+CONTENTS                                    *spring-initializr-contents*
+
+    1. Introduction .................... |spring-initializr-introduction|
+    2. Requirements .................... |spring-initializr-requirements|
+    3. Installation .................... |spring-initializr-installation|
+    4. Quick Start ..................... |spring-initializr-quickstart|
+    5. Commands ........................ |spring-initializr-commands|
+    6. Keybindings ..................... |spring-initializr-keybindings|
+    7. Configuration ................... |spring-initializr-config|
+    8. Usage ........................... |spring-initializr-usage|
+    9. API ............................. |spring-initializr-api|
+   10. Troubleshooting ................. |spring-initializr-troubleshooting|
+
+==============================================================================
+INTRODUCTION                                *spring-initializr-introduction*
+                                            *spring-initializr.nvim*
+
+The easiest way to generate Spring Boot projects directly from Neovim.
+
+This plugin provides an interactive TUI (Text User Interface) for configuring
+and generating Spring Boot projects using the Spring Initializr API from
+start.spring.io.
+
+Features:~
+  • Interactive TUI with radio buttons and text inputs
+  • Telescope integration for dependency selection
+  • Dual navigation support (j/k and arrow keys)
+  • Project metadata persistence
+  • Support for all Spring Initializr configuration options
+  • Real-time validation
+  • Custom metadata file support
+
+==============================================================================
+REQUIREMENTS                                *spring-initializr-requirements*
+
+The following are required to use this plugin:
+
+    • Neovim 0.9.0 or higher
+    • Lua 5.1 or higher
+    • plenary.nvim - https://github.com/nvim-lua/plenary.nvim
+    • telescope.nvim - https://github.com/nvim-telescope/telescope.nvim
+    • curl (for API requests)
+
+Optional:~
+    • Nerd Fonts - for enhanced UI icons
+
+==============================================================================
+INSTALLATION                                *spring-initializr-installation*
+
+Using lazy.nvim:~
+>lua
+    {
+      'jkeresman01/spring-initializr.nvim',
+      dependencies = {
+        'nvim-lua/plenary.nvim',
+        'nvim-telescope/telescope.nvim',
+      },
+      config = function()
+        require('spring-initializr').setup()
+      end
+    }
+<
+
+Using packer.nvim:~
+>lua
+    use {
+      'jkeresman01/spring-initializr.nvim',
+      requires = {
+        'nvim-lua/plenary.nvim',
+        'nvim-telescope/telescope.nvim',
+      },
+      config = function()
+        require('spring-initializr').setup()
+      end
+    }
+<
+
+Using vim-plug:~
+>vim
+    Plug 'nvim-lua/plenary.nvim'
+    Plug 'nvim-telescope/telescope.nvim'
+    Plug 'jkeresman01/spring-initializr.nvim'
+<
+
+Then in your init.lua:
+>lua
+    require('spring-initializr').setup()
+<
+
+==============================================================================
+QUICK START                                 *spring-initializr-quickstart*
+
+1. Install the plugin (see |spring-initializr-installation|)
+
+2. Add keybindings to your configuration:
+>lua
+    vim.keymap.set("n", "<leader>si", "<CMD>SpringInitializr<CR>",
+      { desc = "Open Spring Initializr" })
+    vim.keymap.set("n", "<leader>sg", "<CMD>SpringGenerateProject<CR>",
+      { desc = "Generate Spring Boot Project" })
+<
+
+3. Open the TUI:
+    :SpringInitializr~
+
+4. Configure your project:
+    • Use <Tab>/<S-Tab> to navigate between fields
+    • Use j/k or arrow keys to select options
+    • Press <C-b> to add dependencies
+    • Press <CR> to confirm selections
+
+5. Generate the project:
+    :SpringGenerateProject~
+
+==============================================================================
+COMMANDS                                    *spring-initializr-commands*
+
+:SpringInitializr                           *:SpringInitializr*
+    Opens the Spring Initializr TUI for configuring a new Spring Boot
+    project. Navigate between fields using <Tab> and <S-Tab>.
+
+    The TUI includes fields for:
+    • Project Type (Maven/Gradle)
+    • Language (Java/Kotlin/Groovy)
+    • Spring Boot Version
+    • Packaging (Jar/War)
+    • Java Version
+    • Project Metadata (Group, Artifact, etc.)
+    • Dependencies
+
+:SpringGenerateProject                      *:SpringGenerateProject*
+    Generates and downloads a Spring Boot project based on the current
+    configuration to your current working directory.
+
+    The project will be downloaded as a .zip file and automatically
+    extracted to your CWD.
+
+==============================================================================
+KEYBINDINGS                                 *spring-initializr-keybindings*
+
+Global Keybindings~
+    <leader>si          Open Spring Initializr TUI
+    <leader>sg          Generate project to current directory
+
+    Note: These are recommended keybindings. You need to set them up
+    manually in your configuration.
+
+TUI Navigation~
+    <Tab>               Navigate forward between fields
+    <S-Tab>             Navigate backward between fields
+    j / <Down>          Move down in radio options or dependency cards
+    k / <Up>            Move up in radio options or dependency cards
+
+TUI Actions~
+    <CR>                Confirm field selection or submit form
+    <C-r>               Reset the entire form (all fields and dependencies)
+    <C-b>               Open dependency picker (Telescope)
+    <C-d>               Clear all selected dependencies
+    dd                  Remove the currently focused dependency card
+    q                   Close the Spring Initializr TUI
+    <Esc>               Cancel current action or close TUI
+
+Telescope Picker~
+    <CR>                Select dependency and add to project
+    <C-c>/<Esc>         Close picker without selecting
+    /                   Start fuzzy search
+    <C-n>/<Down>        Move to next item
+    <C-p>/<Up>          Move to previous item
+
+Note: Both Vim-style (j/k) and arrow keys work identically throughout the
+TUI for maximum accessibility.
+
+==============================================================================
+CONFIGURATION                               *spring-initializr-config*
+                                            *spring-initializr-setup*
+
+The plugin can be configured by passing a table to the setup() function.
+
+Available Options~
+
+config_format                               *spring-initializr-config-format*
+    Type: string
+    Default: "properties"
+    Values: "properties" | "yaml"
+
+    Determines the default configuration format for generated projects.
+
+    Example:
+>lua
+    local ConfigFormat = require("spring-initializr.constants.config_format")
+
+    require('spring-initializr').setup({
+      config_format = ConfigFormat.YAML,
+    })
+<
+
+use_nerd_fonts                              *spring-initializr-use-nerd-fonts*
+    Type: boolean
+    Default: true
+
+    Enable or disable Nerd Font icons in the TUI. Set to false if you
+    don't have Nerd Fonts installed.
+
+    Example:
+>lua
+    require('spring-initializr').setup({
+      use_nerd_fonts = false,
+    })
+<
+
+Full Configuration Example~
+>lua
+    local ConfigFormat = require("spring-initializr.constants.config_format")
+
+    require('spring-initializr').setup({
+      config_format = ConfigFormat.YAML,
+      use_nerd_fonts = true,
+    })
+
+    -- Recommended keybindings
+    vim.keymap.set("n", "<leader>si", "<CMD>SpringInitializr<CR>",
+      { desc = "Open Spring Initializr" })
+    vim.keymap.set("n", "<leader>sg", "<CMD>SpringGenerateProject<CR>",
+      { desc = "Generate Spring Boot Project" })
+<
+
+==============================================================================
+USAGE                                       *spring-initializr-usage*
+
+Creating a Basic Web Application~
+
+1. Open the TUI:
+    :SpringInitializr~
+
+2. Configure basic project settings:
+    • Select "Maven Project" as project type
+    • Choose "Java" as language
+    • Select desired Spring Boot version
+    • Choose "Jar" packaging
+    • Select Java version
+
+3. Add dependencies:
+    • Navigate to the dependencies field
+    • Press <C-b> to open Telescope picker
+    • Search for "Spring Web"
+    • Press <CR> to add it
+
+4. Fill in project metadata:
+    • Group: com.example
+    • Artifact: demo
+    • Name: demo
+    • Description: Demo project for Spring Boot
+    • Package Name: com.example.demo
+
+5. Generate the project:
+    :SpringGenerateProject~
+
+Working with Dependencies~
+
+Adding Dependencies:
+    1. Press <C-b> in the TUI to open the Telescope picker
+    2. Use fuzzy search to find dependencies (e.g., "web", "jpa")
+    3. Navigate with <C-n>/<C-p> or arrow keys
+    4. Press <CR> to add a dependency
+    5. Repeat for additional dependencies
+
+Removing Dependencies:
+    • Single: Focus a dependency card with j/k and press dd
+    • All: Press <C-d> to clear all dependencies
+
+Navigating Dependencies:
+    • Use j/k or arrow keys to move between dependency cards
+    • Each card shows the dependency name and description
+
+Resetting the Form~
+
+Press <C-r> to reset all form fields to their defaults, including:
+    • All text input fields (Group, Artifact, Name, etc.)
+    • All radio button selections
+    • All selected dependencies
+
+This is useful when starting a new project configuration.
+
+==============================================================================
+API                                         *spring-initializr-api*
+
+Public API functions for programmatic access:
+
+require('spring-initializr').setup({opts})  *spring-initializr.setup()*
+    Initialize the plugin with configuration options.
+
+    Parameters:~
+        {opts} (table|nil) Configuration options
+
+    Returns:~
+        nil
+
+require('spring-initializr').open()         *spring-initializr.open()*
+    Programmatically open the Spring Initializr TUI.
+
+    Returns:~
+        nil
+
+    Example:~
+>lua
+    vim.keymap.set("n", "<leader>si", function()
+      require('spring-initializr').open()
+    end, { desc = "Open Spring Initializr" })
+<
+
+require('spring-initializr').generate()     *spring-initializr.generate()*
+    Programmatically generate a Spring Boot project with current settings.
+
+    Returns:~
+        nil
+
+Constants~
+
+ConfigFormat                                *spring-initializr.ConfigFormat*
+    Configuration format constants.
+
+    Fields:~
+        PROPERTIES  - "properties"
+        YAML        - "yaml"
+
+    Example:~
+>lua
+    local ConfigFormat = require("spring-initializr.constants.config_format")
+    require('spring-initializr').setup({
+      config_format = ConfigFormat.YAML,
+    })
+<
+
+==============================================================================
+TROUBLESHOOTING                             *spring-initializr-troubleshooting*
+
+TUI doesn't open~
+
+Check that you have all required dependencies installed:
+    • plenary.nvim
+    • telescope.nvim
+    • Neovim >= 0.9.0
+
+Run `:checkhealth spring-initializr` to verify installation.
+
+Icons not displaying correctly~
+
+If icons appear as boxes or question marks:
+    1. Install a Nerd Font: https://www.nerdfonts.com/
+    2. Configure your terminal to use the Nerd Font
+    3. Or disable Nerd Fonts:
+>lua
+    require('spring-initializr').setup({
+      use_nerd_fonts = false,
+    })
+<
+
+Project generation fails~
+
+Common causes:
+    • No internet connection (required for start.spring.io)
+    • Firewall blocking the API request
+    • Invalid project configuration
+
+Check `:messages` for error details.
+
+Dependencies not showing in Telescope~
+
+Ensure Telescope is properly installed and loaded:
+>lua
+    require('telescope').setup()
+<
+
+Keybindings not working~
+
+Make sure you've set up keybindings in your configuration:
+>lua
+    vim.keymap.set("n", "<leader>si", "<CMD>SpringInitializr<CR>")
+    vim.keymap.set("n", "<leader>sg", "<CMD>SpringGenerateProject<CR>")
