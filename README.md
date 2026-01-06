@@ -183,21 +183,34 @@ vim.keymap.set("n", "<leader>si", "<CMD>SpringInitializr<CR>")
 vim.keymap.set("n", "<leader>sg", "<CMD>SpringGenerateProject<CR>")
 ```
 
-| Keybinding   | Action                                  |
-|--------------|-----------------------------------------|
-| `<leader>si` | Open Spring Initializr TUI              |
-| `<leader>sg` | Generate project to current directory   |
-| `<Tab>`      | Navigate forward between fields         |
-| `<S-Tab>`    | Navigate backward                       |
-| `<Ctrl-r>`   | Reset the form (selections && deps)     |
-| `<Ctrl-b>`   | Open dependency picker                  |
-| `<Ctrl-d>`   | Reset selected dependencies             |
-| `j` / `k`    | Move between radio options              |
-| `j` / `k`    | Move between selected dependencies      |
-| `<CR>`       | Confirm field selection or submit       |
-| `dd`         | Remove selected dependency              |
-| `q`          | Close Spring Initializr TUI             |
+## Keybindings
 
+### Global
+
+| Keybinding   | Action                                |
+|--------------|---------------------------------------|
+| `<leader>si` | Open Spring Initializr TUI            |
+| `<leader>sg` | Generate project to current directory |
+
+### Navigation
+
+| Keybinding     | Action                                |
+|----------------|---------------------------------------|
+| `<Tab>`        | Navigate forward between fields       |
+| `<S-Tab>`      | Navigate backward between fields      |
+| `j` / `<Down>` | Move down in radio options or cards   |
+| `k` / `<Up>`   | Move up in radio options or cards     |
+
+### Actions
+
+| Keybinding | Action                              |
+|------------|-------------------------------------|
+| `<CR>`     | Confirm field selection or submit   |
+| `<Ctrl-r>` | Reset the form (selections & deps)  |
+| `<Ctrl-b>` | Open dependency picker              |
+| `<Ctrl-d>` | Reset selected dependencies         |
+| `dd`       | Remove selected dependency          |
+| `q`        | Close Spring Initializr TUI         |
 
 ## Contributing
 

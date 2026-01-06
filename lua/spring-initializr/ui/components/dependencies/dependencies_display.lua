@@ -33,7 +33,7 @@
 --
 -- Manages the UI elements related to Spring Initializr dependency selection.
 -- Uses card-based view to display selected dependencies with full metadata.
--- Supports card navigation and removal with dd keybinding.
+-- Supports card navigation with j/k and arrow keys, and removal with dd keybinding.
 --
 ----------------------------------------------------------------------------
 
@@ -350,28 +350,32 @@ end
 
 ----------------------------------------------------------------------------
 --
--- Setup keybinding for navigation down (j key).
+-- Setup keybinding for navigation down (j and Down arrow keys).
 --
 -- @param popup  Popup  Dependencies display popup
 --
 ----------------------------------------------------------------------------
 local function setup_navigation_down_key(popup)
-    popup:map("n", "j", function()
+    local handler = function()
         focus_next_card()
-    end, { noremap = true, nowait = true })
+    end
+    popup:map("n", "j", handler, { noremap = true, nowait = true })
+    popup:map("n", "<Down>", handler, { noremap = true, nowait = true })
 end
 
 ----------------------------------------------------------------------------
 --
--- Setup keybinding for navigation up (k key).
+-- Setup keybinding for navigation up (k and Up arrow keys).
 --
 -- @param popup  Popup  Dependencies display popup
 --
 ----------------------------------------------------------------------------
 local function setup_navigation_up_key(popup)
-    popup:map("n", "k", function()
+    local handler = function()
         focus_prev_card()
-    end, { noremap = true, nowait = true })
+    end
+    popup:map("n", "k", handler, { noremap = true, nowait = true })
+    popup:map("n", "<Up>", handler, { noremap = true, nowait = true })
 end
 
 ----------------------------------------------------------------------------
