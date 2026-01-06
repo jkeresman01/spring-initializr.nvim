@@ -13,7 +13,6 @@ CONTENTS                                    *spring-initializr-contents*
     8. Usage ........................... |spring-initializr-usage|
     9. API ............................. |spring-initializr-api|
    10. Troubleshooting ................. |spring-initializr-troubleshooting|
-   11. License ......................... |spring-initializr-license|
 
 ==============================================================================
 INTRODUCTION                                *spring-initializr-introduction*
