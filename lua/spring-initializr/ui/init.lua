@@ -150,33 +150,36 @@ local function restore_saved_state()
     M.state.selections.java_version = project.java_version or ""
     M.state.selections.configurationFileFormat = project.configurationFileFormat or "properties"
 
-    telescope.selected_dependencies = {}
-    telescope.selected_dependencies_full = {}
-
-    if not telescope.selected_set then
-        telescope.selected_set = HashSet.new()
-    else
-        telescope.selected_set:clear()
+    local key_fn = function(entry)
+        return entry.id
     end
+    telescope.selected_dependencies_set = HashSet.new({ key_fn = key_fn })
 
     if project.dependencies then
         for _, dep in ipairs(project.dependencies) do
-            if type(dep) == "table" and dep.id then
-                table.insert(telescope.selected_dependencies, dep.id)
-                table.insert(telescope.selected_dependencies_full, {
-                    id = dep.id,
-                    name = dep.name or dep.id,
-                    description = dep.description or "",
-                })
-                telescope.selected_set:add(dep.id)
-            elseif type(dep) == "string" then
-                table.insert(telescope.selected_dependencies, dep)
-                table.insert(telescope.selected_dependencies_full, {
-                    id = dep,
-                    name = dep,
-                    description = "",
-                })
-                telescope.selected_set:add(dep)
+            if dep then
+                local entry
+                if type(dep) == "table" and dep.id then
+                    entry = {
+                        id = dep.id,
+                        name = dep.name or dep.id,
+                        description = dep.description or "",
+                        group = dep.group or "",
+                        label = string.format("[%s] %s", dep.group or "", dep.name or dep.id),
+                    }
+                elseif type(dep) == "string" and dep ~= "" then
+                    entry = {
+                        id = dep,
+                        name = dep,
+                        description = "",
+                        group = "",
+                        label = dep,
+                    }
+                end
+
+                if entry then
+                    telescope.selected_dependencies_set:add(entry)
+                end
             end
         end
     end
@@ -440,8 +443,10 @@ function M.close()
     if M.state.is_open then
         log.debug("Saving project state before close")
         local dependencies = {}
-        for _, dep in ipairs(telescope.selected_dependencies_full or {}) do
-            table.insert(dependencies, Dependency.new(dep.id, dep.name, dep.description))
+        if telescope.selected_dependencies_set then
+            for _, dep in ipairs(telescope.selected_dependencies_set:get_all() or {}) do
+                table.insert(dependencies, Dependency.new(dep.id, dep.name, dep.description))
+            end
         end
 
         local project = Project.new(M.state.selections, dependencies)
