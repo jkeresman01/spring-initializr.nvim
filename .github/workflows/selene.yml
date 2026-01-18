@@ -1,0 +1,51 @@
+name: Selene Lint
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  selene:
+    name: Selene lint
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          override: true
+
+      - name: Capture rustc version
+        id: rustc
+        run: echo "version=$(rustc --version | tr ' ' '-')" >> "$GITHUB_OUTPUT"
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target
+          key: ${{ runner.os }}-cargo-${{ steps.rustc.outputs.version }}-selene-0.27.1
+          restore-keys: |
+            ${{ runner.os }}-cargo-${{ steps.rustc.outputs.version }}-
+            ${{ runner.os }}-cargo-
+
+      - name: Install Selene (if missing)
+        run: |
+          if ! command -v selene >/dev/null 2>&1; then
+            cargo install selene --locked --version 0.27.1
+          fi
+          selene --version
+
+      - name: Run Selene
+        run: selene lua/
