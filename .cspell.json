@@ -70,6 +70,9 @@
     "newapp",
     "verylongcompanyname",
     "verylongdepartment",
-    "verylongprojectnamewithlotofcharacters"
+    "verylongprojectnamewithlotofcharacters",
+    "treesitter",
+    "startswith",
+    "endswith"
   ]
 }
