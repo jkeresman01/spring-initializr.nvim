@@ -1,0 +1,101 @@
+# Vim standard library for Selene
+# Based on Neovim API and common plugin patterns
+
+[vim]
+any = true
+
+[vim.api]
+any = true
+
+[vim.fn]
+any = true
+
+[vim.loop]
+any = true
+
+[vim.lsp]
+any = true
+
+[vim.diagnostic]
+any = true
+
+[vim.treesitter]
+any = true
+
+[vim.keymap]
+any = true
+
+[vim.cmd]
+any = true
+
+[vim.o]
+any = true
+
+[vim.bo]
+any = true
+
+[vim.wo]
+any = true
+
+[vim.g]
+any = true
+
+[vim.b]
+any = true
+
+[vim.w]
+any = true
+
+[vim.t]
+any = true
+
+[vim.v]
+any = true
+
+[vim.env]
+any = true
+
+[vim.log]
+any = true
+
+[vim.log.levels]
+any = true
+
+[vim.schedule]
+any = true
+
+[vim.defer_fn]
+any = true
+
+[vim.notify]
+any = true
+
+[vim.inspect]
+any = true
+
+[vim.tbl_contains]
+any = true
+
+[vim.tbl_map]
+any = true
+
+[vim.tbl_filter]
+any = true
+
+[vim.tbl_count]
+any = true
+
+[vim.deepcopy]
+any = true
+
+[vim.split]
+any = true
+
+[vim.startswith]
+any = true
+
+[vim.endswith]
+any = true
+
+[vim.trim]
+any = true
