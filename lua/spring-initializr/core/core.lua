@@ -44,7 +44,7 @@ local message_utils = require("spring-initializr.utils.message_utils")
 local log = require("spring-initializr.trace.log")
 local url_utils = require("spring-initializr.utils.url_utils")
 local http_utils = require("spring-initializr.utils.http_utils")
-local file_utils = require("spring-initializr.utils.file_utils")
+local zip_utils = require("spring-initializr.utils.zip_utils")
 
 ----------------------------------------------------------------------------
 -- Constants
@@ -105,7 +105,7 @@ end
 --
 ----------------------------------------------------------------------------
 local function extract_zip_to_dest(zip_path, dest)
-    file_utils.unzip(zip_path, dest, notify_success)
+    zip_utils.unzip(zip_path, dest, notify_success)
 end
 
 ----------------------------------------------------------------------------

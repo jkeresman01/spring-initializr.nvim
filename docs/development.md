@@ -207,7 +207,7 @@ function M.generate_project()
     local url = SPRING_DOWNLOAD_URL .. "?" .. encode_query(params)
     local zip_path = vim.fn.getcwd() .. "/spring-init.zip"
     http_utils.download_file(url, zip_path, function()
-        file_utils.unzip(zip_path, vim.fn.getcwd(), function()
+        zip_utils.unzip(zip_path, vim.fn.getcwd(), function()
             ui.close()
             message_utils.show_info_message("Done")
         end)
