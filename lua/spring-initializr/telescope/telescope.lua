@@ -60,9 +60,7 @@ local LAYOUT_STRATEGY = "vertical"
 -- Module table
 ----------------------------------------------------------------------------
 local M = {
-    selected_dependencies = {},
-    selected_dependencies_full = {},
-    selected_set = nil,
+    selected_dependencies_set = nil,
 }
 
 -------------------------------------------------------------------------------
@@ -71,8 +69,11 @@ local M = {
 --
 -------------------------------------------------------------------------------
 local function init_hashset()
-    if not M.selected_set then
-        M.selected_set = HashSet.new()
+    if not M.selected_dependencies_set then
+        local key_fn = function(entry)
+            return entry.id
+        end
+        M.selected_dependencies_set = HashSet.new({ key_fn = key_fn })
     end
 end
 
@@ -159,24 +160,17 @@ local function record_selection(entry)
     log.debug("Recording dependency selection:", entry.id)
     init_hashset()
 
-    if M.selected_set:has(entry.id) then
+    if M.selected_dependencies_set:has_key(entry.id) then
         log.warn("Dependency already selected:", entry.id)
         message_utils.show_warn_message("Already selected: " .. entry.id)
         return
     end
 
     log.trace("Adding dependency to set")
-    M.selected_set:add(entry.id)
-    table.insert(M.selected_dependencies, entry.id)
-
-    table.insert(M.selected_dependencies_full, {
-        id = entry.id,
-        name = entry.name,
-        description = entry.description,
-    })
+    M.selected_dependencies_set:add(entry)
 
     log.fmt_info("Dependency selected: %s (%s)", entry.name, entry.id)
-    log.fmt_debug("Total dependencies selected: %d", #M.selected_dependencies)
+    log.fmt_debug("Total dependencies selected: %d", M.selected_dependencies_set:size())
     message_utils.show_info_message("Selected: " .. entry.name)
 end
 
@@ -192,31 +186,21 @@ function M.remove_dependency(dep_id)
     log.debug("Removing dependency:", dep_id)
     init_hashset()
 
-    if not M.selected_set:has(dep_id) then
+    if not M.selected_dependencies_set:has_key(dep_id) then
         log.warn("Dependency not found in selection:", dep_id)
         return false
     end
 
     log.trace("Removing from set")
-    M.selected_set:remove(dep_id)
+    local removed = M.selected_dependencies_set:remove_by_key(dep_id)
 
-    for i = #M.selected_dependencies, 1, -1 do
-        if M.selected_dependencies[i] == dep_id then
-            table.remove(M.selected_dependencies, i)
-            log.trace("Removed from selected_dependencies array")
-        end
+    if removed then
+        log.info("Dependency removed successfully:", dep_id)
+        log.fmt_debug("Remaining dependencies: %d", M.selected_dependencies_set:size())
+        return true
     end
 
-    for i = #M.selected_dependencies_full, 1, -1 do
-        if M.selected_dependencies_full[i].id == dep_id then
-            table.remove(M.selected_dependencies_full, i)
-            log.trace("Removed from selected_dependencies_full array")
-        end
-    end
-
-    log.info("Dependency removed successfully:", dep_id)
-    log.fmt_debug("Remaining dependencies: %d", #M.selected_dependencies)
-    return true
+    return false
 end
 
 -------------------------------------------------------------------------------

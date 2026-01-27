@@ -147,6 +147,23 @@ end
 
 ----------------------------------------------------------------------------
 --
+-- Remove a value by key (bypasses key_fn).
+--
+-- @param  key    any     Key to remove
+-- @return bool           true if removed, false if absent
+--
+----------------------------------------------------------------------------
+function Set:remove_by_key(key)
+    if self._store[key] ~= nil then
+        self._store[key] = nil
+        self._size = self._size - 1
+        return true
+    end
+    return false
+end
+
+----------------------------------------------------------------------------
+--
 -- Check membership by value.
 --
 -- @param  value  any
@@ -180,6 +197,16 @@ end
 ----------------------------------------------------------------------------
 function Set:get(key)
     return self._store[key]
+end
+
+----------------------------------------------------------------------------
+--
+-- Get all stored values.
+--
+--
+----------------------------------------------------------------------------
+function Set:get_all()
+    return self:to_list()
 end
 
 ----------------------------------------------------------------------------

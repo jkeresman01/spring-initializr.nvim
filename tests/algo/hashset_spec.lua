@@ -203,4 +203,21 @@ describe("HashSet (tables with key_fn)", function()
         assert.is_true(found_a)
         assert.is_true(found_b)
     end)
+
+    it("remove_by_key removes item using key directly", function()
+        -- Arrange
+        local set = HashSet.new({ key_fn = by_id_lower })
+        local dep = { id = "Web", label = "Spring Web" }
+        set:add(dep)
+
+        -- Act
+        local removed = set:remove_by_key("web")
+        local removed_again = set:remove_by_key("web")
+
+        -- Assert
+        assert.is_true(removed)
+        assert.is_false(removed_again)
+        assert.is_true(set:is_empty())
+        assert.is_false(set:has(dep))
+    end)
 end)
