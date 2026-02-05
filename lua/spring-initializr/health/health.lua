@@ -31,25 +31,21 @@
 
 ----------------------------------------------------------------------------
 --
--- Registers custom Neovim commands for Spring Initializr UI and project
--- generation.
+-- Health check module for spring-initializr.nvim.
+-- Builds a chain of health-check handlers and runs them in order.
 --
 ----------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------
 -- Dependencies
 ----------------------------------------------------------------------------
-local ui = require("spring-initializr.ui.init")
-local spring_initializr = require("spring-initializr.core.core")
-
-----------------------------------------------------------------------------
--- Constants (enum-like command names)
-----------------------------------------------------------------------------
-local CMD = {
-    SPRING_INITIALIZR = "SpringInitializr",
-    SPRING_GENERATE_PROJECT = "SpringGenerateProject",
-    SPRING_INITIALIZR_HEALTH = "SpringInitializrHealth",
-}
+local log = require("spring-initializr.trace.log")
+local health_float = require("spring-initializr.ui.components.health.health_float")
+local nvim_version = require("spring-initializr.health.checks.nvim_version")
+local executable = require("spring-initializr.health.checks.executable")
+local plugin = require("spring-initializr.health.checks.plugin")
+local network = require("spring-initializr.health.checks.network")
+local config_check = require("spring-initializr.health.checks.config")
 
 ----------------------------------------------------------------------------
 -- Module table
@@ -57,52 +53,53 @@ local CMD = {
 local M = {}
 
 ----------------------------------------------------------------------------
+-- Chain of health-check handlers
+----------------------------------------------------------------------------
+local chain = {
+    nvim_version.new(),
+    executable.new("curl", "curl --version", "curl (%S+)"),
+    executable.new("unzip", "unzip -v", "UnZip (%S+)"),
+    plugin.new("plenary", "plenary.nvim", "nvim-lua/plenary.nvim"),
+    plugin.new("nui.popup", "nui.nvim", "MunifTanjim/nui.nvim"),
+    plugin.new("telescope", "telescope.nvim", "nvim-telescope/telescope.nvim"),
+    network.new(),
+    config_check.new(),
+}
+
+----------------------------------------------------------------------------
 --
--- Register :SpringInitializr
+-- Runs all health checks and returns structured results.
+--
+-- @return table  Array of { label, ok, detail } tables
+-- @return number Count of failures
 --
 ----------------------------------------------------------------------------
-function M.register_cmd_spring_initializr()
-    vim.api.nvim_create_user_command(CMD.SPRING_INITIALIZR, function()
-        ui.setup()
-    end, { desc = "Open Spring Initializr UI" })
+function M.collect_results()
+    local results = {}
+    local fail_count = 0
+    for _, handler in ipairs(chain) do
+        local ok, detail = handler.check()
+        table.insert(results, { label = handler.label, ok = ok, detail = detail })
+        if not ok then
+            fail_count = fail_count + 1
+        end
+    end
+    return results, fail_count
 end
 
 ----------------------------------------------------------------------------
 --
--- Register :SpringGenerateProject
+-- Entry point: runs all health checks and displays results in a float.
 --
 ----------------------------------------------------------------------------
-function M.register_cmd_spring_generate_project()
-    vim.api.nvim_create_user_command(CMD.SPRING_GENERATE_PROJECT, function()
-        spring_initializr.generate_project()
-    end, { desc = "Generate Spring Boot project to CWD" })
-end
+function M.run()
+    log.info("Running health check")
 
-----------------------------------------------------------------------------
---
--- Register :SpringInitializrHealth
---
-----------------------------------------------------------------------------
-function M.register_cmd_spring_initializr_health()
-    vim.api.nvim_create_user_command(CMD.SPRING_INITIALIZR_HEALTH, function()
-        require("spring-initializr.health.health").run()
-    end, { desc = "Run Spring Initializr health check" })
-end
+    local results, fail_count = M.collect_results()
+    local formatted = health_float.format_results(results, fail_count)
+    health_float.show_float(formatted)
 
-----------------------------------------------------------------------------
---
--- Register Neovim user commands for Spring Initializr.
---
--- Commands:
---   :SpringInitializr        Opens the Spring Initializr UI
---   :SpringGenerateProject   Generates a Spring Boot project
---   :SpringInitializrHealth  Runs health check diagnostics
---
-----------------------------------------------------------------------------
-function M.register()
-    M.register_cmd_spring_initializr()
-    M.register_cmd_spring_generate_project()
-    M.register_cmd_spring_initializr_health()
+    log.fmt_info("Health check complete: %d issue(s)", fail_count)
 end
 
 ----------------------------------------------------------------------------

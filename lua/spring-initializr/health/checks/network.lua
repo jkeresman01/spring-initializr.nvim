@@ -31,25 +31,9 @@
 
 ----------------------------------------------------------------------------
 --
--- Registers custom Neovim commands for Spring Initializr UI and project
--- generation.
+-- Health checker: start.spring.io reachability.
 --
 ----------------------------------------------------------------------------
-
-----------------------------------------------------------------------------
--- Dependencies
-----------------------------------------------------------------------------
-local ui = require("spring-initializr.ui.init")
-local spring_initializr = require("spring-initializr.core.core")
-
-----------------------------------------------------------------------------
--- Constants (enum-like command names)
-----------------------------------------------------------------------------
-local CMD = {
-    SPRING_INITIALIZR = "SpringInitializr",
-    SPRING_GENERATE_PROJECT = "SpringGenerateProject",
-    SPRING_INITIALIZR_HEALTH = "SpringInitializrHealth",
-}
 
 ----------------------------------------------------------------------------
 -- Module table
@@ -57,52 +41,47 @@ local CMD = {
 local M = {}
 
 ----------------------------------------------------------------------------
---
--- Register :SpringInitializr
---
+-- Constants
 ----------------------------------------------------------------------------
-function M.register_cmd_spring_initializr()
-    vim.api.nvim_create_user_command(CMD.SPRING_INITIALIZR, function()
-        ui.setup()
-    end, { desc = "Open Spring Initializr UI" })
-end
+local SPRING_INITIALIZR_URL = "https://start.spring.io"
+local NETWORK_TIMEOUT = 5000 -- 5 seconds
 
 ----------------------------------------------------------------------------
 --
--- Register :SpringGenerateProject
+-- Creates a network reachability checker.
+--
+-- @return table  Handler with label and check function
 --
 ----------------------------------------------------------------------------
-function M.register_cmd_spring_generate_project()
-    vim.api.nvim_create_user_command(CMD.SPRING_GENERATE_PROJECT, function()
-        spring_initializr.generate_project()
-    end, { desc = "Generate Spring Boot project to CWD" })
-end
+function M.new()
+    return {
+        label = "start.spring.io",
+        check = function()
+            local curl_ok, curl = pcall(require, "plenary.curl")
+            if not curl_ok then
+                return false, "cannot check (plenary.curl not available)"
+            end
 
-----------------------------------------------------------------------------
---
--- Register :SpringInitializrHealth
---
-----------------------------------------------------------------------------
-function M.register_cmd_spring_initializr_health()
-    vim.api.nvim_create_user_command(CMD.SPRING_INITIALIZR_HEALTH, function()
-        require("spring-initializr.health.health").run()
-    end, { desc = "Run Spring Initializr health check" })
-end
+            local ok, response = pcall(curl.get, SPRING_INITIALIZR_URL, {
+                timeout = NETWORK_TIMEOUT,
+            })
 
-----------------------------------------------------------------------------
---
--- Register Neovim user commands for Spring Initializr.
---
--- Commands:
---   :SpringInitializr        Opens the Spring Initializr UI
---   :SpringGenerateProject   Generates a Spring Boot project
---   :SpringInitializrHealth  Runs health check diagnostics
---
-----------------------------------------------------------------------------
-function M.register()
-    M.register_cmd_spring_initializr()
-    M.register_cmd_spring_generate_project()
-    M.register_cmd_spring_initializr_health()
+            if not ok then
+                return false, "unreachable (check internet connection / firewall)"
+            end
+
+            if response and response.status and response.status >= 200 and response.status < 400 then
+                return true, "reachable"
+            end
+
+            local status_info = ""
+            if response and response.status then
+                status_info = string.format(" (HTTP %d)", response.status)
+            end
+
+            return false, "unreachable" .. status_info .. " (check internet connection / firewall)"
+        end,
+    }
 end
 
 ----------------------------------------------------------------------------

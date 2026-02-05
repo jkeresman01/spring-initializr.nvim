@@ -31,25 +31,14 @@
 
 ----------------------------------------------------------------------------
 --
--- Registers custom Neovim commands for Spring Initializr UI and project
--- generation.
+-- Health checker: configuration validity.
 --
 ----------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------
 -- Dependencies
 ----------------------------------------------------------------------------
-local ui = require("spring-initializr.ui.init")
-local spring_initializr = require("spring-initializr.core.core")
-
-----------------------------------------------------------------------------
--- Constants (enum-like command names)
-----------------------------------------------------------------------------
-local CMD = {
-    SPRING_INITIALIZR = "SpringInitializr",
-    SPRING_GENERATE_PROJECT = "SpringGenerateProject",
-    SPRING_INITIALIZR_HEALTH = "SpringInitializrHealth",
-}
+local plugin_config = require("spring-initializr.config.config")
 
 ----------------------------------------------------------------------------
 -- Module table
@@ -57,52 +46,40 @@ local CMD = {
 local M = {}
 
 ----------------------------------------------------------------------------
---
--- Register :SpringInitializr
---
+-- Constants
 ----------------------------------------------------------------------------
-function M.register_cmd_spring_initializr()
-    vim.api.nvim_create_user_command(CMD.SPRING_INITIALIZR, function()
-        ui.setup()
-    end, { desc = "Open Spring Initializr UI" })
-end
+local VALID_CONFIG_FORMATS = { properties = true, yaml = true }
 
 ----------------------------------------------------------------------------
 --
--- Register :SpringGenerateProject
+-- Creates a configuration validity checker.
+--
+-- @return table  Handler with label and check function
 --
 ----------------------------------------------------------------------------
-function M.register_cmd_spring_generate_project()
-    vim.api.nvim_create_user_command(CMD.SPRING_GENERATE_PROJECT, function()
-        spring_initializr.generate_project()
-    end, { desc = "Generate Spring Boot project to CWD" })
-end
+function M.new()
+    return {
+        label = "Configuration",
+        check = function()
+            local issues = {}
 
-----------------------------------------------------------------------------
---
--- Register :SpringInitializrHealth
---
-----------------------------------------------------------------------------
-function M.register_cmd_spring_initializr_health()
-    vim.api.nvim_create_user_command(CMD.SPRING_INITIALIZR_HEALTH, function()
-        require("spring-initializr.health.health").run()
-    end, { desc = "Run Spring Initializr health check" })
-end
+            local fmt = plugin_config.get_config_format()
+            if not VALID_CONFIG_FORMATS[fmt] then
+                table.insert(issues, 'config_format "' .. tostring(fmt) .. '" is not "properties" or "yaml"')
+            end
 
-----------------------------------------------------------------------------
---
--- Register Neovim user commands for Spring Initializr.
---
--- Commands:
---   :SpringInitializr        Opens the Spring Initializr UI
---   :SpringGenerateProject   Generates a Spring Boot project
---   :SpringInitializrHealth  Runs health check diagnostics
---
-----------------------------------------------------------------------------
-function M.register()
-    M.register_cmd_spring_initializr()
-    M.register_cmd_spring_generate_project()
-    M.register_cmd_spring_initializr_health()
+            local nerd = plugin_config.get_use_nerd_fonts()
+            if type(nerd) ~= "boolean" then
+                table.insert(issues, "use_nerd_fonts is " .. type(nerd) .. ", expected boolean")
+            end
+
+            if #issues == 0 then
+                return true, "valid"
+            end
+
+            return false, table.concat(issues, "; ")
+        end,
+    }
 end
 
 ----------------------------------------------------------------------------

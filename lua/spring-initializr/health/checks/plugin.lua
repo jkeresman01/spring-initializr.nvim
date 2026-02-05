@@ -31,25 +31,9 @@
 
 ----------------------------------------------------------------------------
 --
--- Registers custom Neovim commands for Spring Initializr UI and project
--- generation.
+-- Health checker factory: Lua module (plugin) availability.
 --
 ----------------------------------------------------------------------------
-
-----------------------------------------------------------------------------
--- Dependencies
-----------------------------------------------------------------------------
-local ui = require("spring-initializr.ui.init")
-local spring_initializr = require("spring-initializr.core.core")
-
-----------------------------------------------------------------------------
--- Constants (enum-like command names)
-----------------------------------------------------------------------------
-local CMD = {
-    SPRING_INITIALIZR = "SpringInitializr",
-    SPRING_GENERATE_PROJECT = "SpringGenerateProject",
-    SPRING_INITIALIZR_HEALTH = "SpringInitializrHealth",
-}
 
 ----------------------------------------------------------------------------
 -- Module table
@@ -58,51 +42,27 @@ local M = {}
 
 ----------------------------------------------------------------------------
 --
--- Register :SpringInitializr
+-- Creates a checker for a Lua module.
+--
+-- @param  module_name   string  Module require path
+-- @param  label         string  Display name for this check
+-- @param  install_hint  string  Install instruction on failure
+--
+-- @return table  Handler with label and check function
 --
 ----------------------------------------------------------------------------
-function M.register_cmd_spring_initializr()
-    vim.api.nvim_create_user_command(CMD.SPRING_INITIALIZR, function()
-        ui.setup()
-    end, { desc = "Open Spring Initializr UI" })
-end
+function M.new(module_name, label, install_hint)
+    return {
+        label = label,
+        check = function()
+            local ok, _ = pcall(require, module_name)
+            if ok then
+                return true, "loaded"
+            end
 
-----------------------------------------------------------------------------
---
--- Register :SpringGenerateProject
---
-----------------------------------------------------------------------------
-function M.register_cmd_spring_generate_project()
-    vim.api.nvim_create_user_command(CMD.SPRING_GENERATE_PROJECT, function()
-        spring_initializr.generate_project()
-    end, { desc = "Generate Spring Boot project to CWD" })
-end
-
-----------------------------------------------------------------------------
---
--- Register :SpringInitializrHealth
---
-----------------------------------------------------------------------------
-function M.register_cmd_spring_initializr_health()
-    vim.api.nvim_create_user_command(CMD.SPRING_INITIALIZR_HEALTH, function()
-        require("spring-initializr.health.health").run()
-    end, { desc = "Run Spring Initializr health check" })
-end
-
-----------------------------------------------------------------------------
---
--- Register Neovim user commands for Spring Initializr.
---
--- Commands:
---   :SpringInitializr        Opens the Spring Initializr UI
---   :SpringGenerateProject   Generates a Spring Boot project
---   :SpringInitializrHealth  Runs health check diagnostics
---
-----------------------------------------------------------------------------
-function M.register()
-    M.register_cmd_spring_initializr()
-    M.register_cmd_spring_generate_project()
-    M.register_cmd_spring_initializr_health()
+            return false, "not found (install " .. install_hint .. ")"
+        end,
+    }
 end
 
 ----------------------------------------------------------------------------
