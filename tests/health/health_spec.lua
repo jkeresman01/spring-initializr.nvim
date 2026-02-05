@@ -15,6 +15,7 @@
 local health = require("spring-initializr.health.health")
 local health_float = require("spring-initializr.ui.components.health.health_float")
 local config = require("spring-initializr.config.config")
+local icons = require("spring-initializr.ui.icons.icons")
 
 local nvim_version = require("spring-initializr.health.checks.nvim_version")
 local executable = require("spring-initializr.health.checks.executable")
@@ -231,9 +232,10 @@ describe("health", function()
             for _, line in ipairs(lines) do
                 text = text .. line.text .. "\n"
             end
+            local checked = icons.get_dependency_checked()
             assert.is_true(text:find("All checks passed") ~= nil)
-            assert.is_true(text:find("✓ TestA: good") ~= nil)
-            assert.is_true(text:find("✓ TestB: fine") ~= nil)
+            assert.is_true(text:find(checked .. " TestA: good", 1, true) ~= nil)
+            assert.is_true(text:find(checked .. " TestB: fine", 1, true) ~= nil)
         end)
 
         it("formats failed results with failure count", function()
@@ -251,8 +253,9 @@ describe("health", function()
             for _, line in ipairs(lines) do
                 text = text .. line.text .. "\n"
             end
+            local checked = icons.get_dependency_checked()
             assert.is_true(text:find("1 issue%(s%) found") ~= nil)
-            assert.is_true(text:find("✓ TestA: good") ~= nil)
+            assert.is_true(text:find(checked .. " TestA: good", 1, true) ~= nil)
             assert.is_true(text:find("✗ TestB: broken") ~= nil)
         end)
 
