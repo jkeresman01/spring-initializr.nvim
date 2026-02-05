@@ -70,7 +70,12 @@ function M.new()
                 return false, "unreachable (check internet connection / firewall)"
             end
 
-            if response and response.status and response.status >= 200 and response.status < 400 then
+            if
+                response
+                and response.status
+                and response.status >= 200
+                and response.status < 400
+            then
                 return true, "reachable"
             end
 

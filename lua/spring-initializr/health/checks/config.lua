@@ -65,7 +65,10 @@ function M.new()
 
             local fmt = plugin_config.get_config_format()
             if not VALID_CONFIG_FORMATS[fmt] then
-                table.insert(issues, 'config_format "' .. tostring(fmt) .. '" is not "properties" or "yaml"')
+                table.insert(
+                    issues,
+                    'config_format "' .. tostring(fmt) .. '" is not "properties" or "yaml"'
+                )
             end
 
             local nerd = plugin_config.get_use_nerd_fonts()
