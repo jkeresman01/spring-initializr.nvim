@@ -31,25 +31,9 @@
 
 ----------------------------------------------------------------------------
 --
--- Registers custom Neovim commands for Spring Initializr UI and project
--- generation.
+-- Health checker: Neovim version >= 0.10.0
 --
 ----------------------------------------------------------------------------
-
-----------------------------------------------------------------------------
--- Dependencies
-----------------------------------------------------------------------------
-local ui = require("spring-initializr.ui.init")
-local spring_initializr = require("spring-initializr.core.core")
-
-----------------------------------------------------------------------------
--- Constants (enum-like command names)
-----------------------------------------------------------------------------
-local CMD = {
-    SPRING_INITIALIZR = "SpringInitializr",
-    SPRING_GENERATE_PROJECT = "SpringGenerateProject",
-    SPRING_INITIALIZR_HEALTH = "SpringInitializrHealth",
-}
 
 ----------------------------------------------------------------------------
 -- Module table
@@ -57,52 +41,38 @@ local CMD = {
 local M = {}
 
 ----------------------------------------------------------------------------
---
--- Register :SpringInitializr
---
+-- Constants
 ----------------------------------------------------------------------------
-function M.register_cmd_spring_initializr()
-    vim.api.nvim_create_user_command(CMD.SPRING_INITIALIZR, function()
-        ui.setup()
-    end, { desc = "Open Spring Initializr UI" })
-end
+local REQUIRED_NVIM_VERSION = { major = 0, minor = 10, patch = 0 }
 
 ----------------------------------------------------------------------------
 --
--- Register :SpringGenerateProject
+-- Creates a Neovim version checker.
+--
+-- @return table  Handler with label and check function
 --
 ----------------------------------------------------------------------------
-function M.register_cmd_spring_generate_project()
-    vim.api.nvim_create_user_command(CMD.SPRING_GENERATE_PROJECT, function()
-        spring_initializr.generate_project()
-    end, { desc = "Generate Spring Boot project to CWD" })
-end
+function M.new()
+    return {
+        label = "Neovim version",
+        check = function()
+            local v = vim.version()
+            local version_str = string.format("%d.%d.%d", v.major, v.minor, v.patch)
 
-----------------------------------------------------------------------------
---
--- Register :SpringInitializrHealth
---
-----------------------------------------------------------------------------
-function M.register_cmd_spring_initializr_health()
-    vim.api.nvim_create_user_command(CMD.SPRING_INITIALIZR_HEALTH, function()
-        require("spring-initializr.health.health").run()
-    end, { desc = "Run Spring Initializr health check" })
-end
+            local req = REQUIRED_NVIM_VERSION
+            if v.major > req.major then
+                return true, version_str
+            elseif v.major == req.major then
+                if v.minor > req.minor then
+                    return true, version_str
+                elseif v.minor == req.minor and v.patch >= req.patch then
+                    return true, version_str
+                end
+            end
 
-----------------------------------------------------------------------------
---
--- Register Neovim user commands for Spring Initializr.
---
--- Commands:
---   :SpringInitializr        Opens the Spring Initializr UI
---   :SpringGenerateProject   Generates a Spring Boot project
---   :SpringInitializrHealth  Runs health check diagnostics
---
-----------------------------------------------------------------------------
-function M.register()
-    M.register_cmd_spring_initializr()
-    M.register_cmd_spring_generate_project()
-    M.register_cmd_spring_initializr_health()
+            return false, version_str .. " (upgrade to 0.10.0+)"
+        end,
+    }
 end
 
 ----------------------------------------------------------------------------
