@@ -41,7 +41,7 @@
 local Layout = require("nui.layout")
 
 local inputs = require("spring-initializr.ui.components.common.inputs.inputs")
-local calc = require("spring-initializr.ui.layout.column_calculator")
+local calc = require("spring-initializr.ui.helpers.column_calculator")
 
 ----------------------------------------------------------------------------
 -- Module table

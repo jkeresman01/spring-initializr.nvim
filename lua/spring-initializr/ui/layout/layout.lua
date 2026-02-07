@@ -44,7 +44,7 @@ local Popup = require("nui.popup")
 
 local config = require("spring-initializr.config.config")
 local FormContext = require("spring-initializr.ui.context.form_context")
-local calc = require("spring-initializr.ui.layout.column_calculator")
+local calc = require("spring-initializr.ui.helpers.column_calculator")
 local panel_builder = require("spring-initializr.ui.layout.panel_builder")
 
 ----------------------------------------------------------------------------
