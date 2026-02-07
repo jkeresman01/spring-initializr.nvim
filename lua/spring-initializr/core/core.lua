@@ -145,6 +145,14 @@ end
 function M.generate_project()
     log.info("Starting project generation")
 
+    if not ui.state.is_open then
+        log.warn("Attempted to generate project without UI being open")
+        message_utils.show_warn_message(
+            "Please open Spring Initializr UI first with :SpringInitializr"
+        )
+        return
+    end
+
     local params = collect_params()
     log.debug("Project parameters:", params)
 
