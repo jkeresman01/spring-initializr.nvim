@@ -158,6 +158,13 @@ The `:SpringGenerateProject` command will scaffold a new Spring Boot Project wit
 > [!TIP]
 > _See [`commands.lua`](./lua/spring-initializr/commands/commands.lua) for more info_.
 
+### :SpringInitializrConfig
+
+The `:SpringInitializrConfig` command displays the current plugin configuration in a floating window, showing all settings with their current and default values.
+
+> [!TIP]
+> _See [`commands.lua`](./lua/spring-initializr/commands/commands.lua) for more info_.
+
 > [!IMPORTANT]
 > This is the list of planned commands that will be available soon:
 >
