@@ -31,27 +31,17 @@
 
 ----------------------------------------------------------------------------
 --
--- Registers custom Neovim commands for Spring Initializr UI and project
--- generation.
+-- Handles :SpringInitializrLog command logic: opening, splitting,
+-- and clearing the plugin log file.
 --
 ----------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------
 -- Dependencies
 ----------------------------------------------------------------------------
-local ui = require("spring-initializr.ui.init")
-local spring_initializr = require("spring-initializr.core.core")
-
-----------------------------------------------------------------------------
--- Constants (enum-like command names)
-----------------------------------------------------------------------------
-local CMD = {
-    SPRING_INITIALIZR = "SpringInitializr",
-    SPRING_GENERATE_PROJECT = "SpringGenerateProject",
-    SPRING_INITIALIZR_HEALTH = "SpringInitializrHealth",
-    SPRING_INITIALIZR_CONFIG = "SpringInitializrConfig",
-    SPRING_INITIALIZR_LOG = "SpringInitializrLog",
-}
+local log = require("spring-initializr.trace.log")
+local log_buffer = require("spring-initializr.ui.components.log.log_buffer")
+local message_utils = require("spring-initializr.utils.message_utils")
 
 ----------------------------------------------------------------------------
 -- Module table
@@ -60,86 +50,99 @@ local M = {}
 
 ----------------------------------------------------------------------------
 --
--- Register :SpringInitializr
+-- Returns the log file path.
+--
+-- @return string  Full path to the log file
 --
 ----------------------------------------------------------------------------
-function M.register_cmd_spring_initializr()
-    vim.api.nvim_create_user_command(CMD.SPRING_INITIALIZR, function()
-        ui.setup()
-    end, { desc = "Open Spring Initializr UI" })
+function M.get_log_path()
+    return string.format("%s/%s.log", vim.fn.stdpath("data"), "spring-initializr")
 end
 
 ----------------------------------------------------------------------------
 --
--- Register :SpringGenerateProject
+-- Checks whether file logging is enabled.
+--
+-- @return boolean  True if file logging is enabled
 --
 ----------------------------------------------------------------------------
-function M.register_cmd_spring_generate_project()
-    vim.api.nvim_create_user_command(CMD.SPRING_GENERATE_PROJECT, function()
-        spring_initializr.generate_project()
-    end, { desc = "Generate Spring Boot project to CWD" })
+function M.is_logging_enabled()
+    return log.config.use_file
 end
 
 ----------------------------------------------------------------------------
 --
--- Register :SpringInitializrHealth
+-- Checks whether the log file exists.
+--
+-- @param  path  string   Full path to the log file
+--
+-- @return boolean         True if the file exists
 --
 ----------------------------------------------------------------------------
-function M.register_cmd_spring_initializr_health()
-    vim.api.nvim_create_user_command(CMD.SPRING_INITIALIZR_HEALTH, function()
-        require("spring-initializr.health.health").run()
-    end, { desc = "Run Spring Initializr health check" })
+function M.file_exists(path)
+    return vim.fn.filereadable(path) == 1
 end
 
 ----------------------------------------------------------------------------
 --
--- Register :SpringInitializrConfig
+-- Clears the log file by truncating it.
+--
+-- @param  path  string  Full path to the log file
 --
 ----------------------------------------------------------------------------
-function M.register_cmd_spring_initializr_config()
-    vim.api.nvim_create_user_command(CMD.SPRING_INITIALIZR_CONFIG, function()
-        require("spring-initializr.config.config_display").run()
-    end, { desc = "Display Spring Initializr configuration" })
+function M.clear(path)
+    local file = io.open(path, "w")
+    if file then
+        file:close()
+        message_utils.show_info_message("Spring Initializr: Log file cleared")
+    else
+        message_utils.show_error_message("Spring Initializr: Failed to clear log file")
+    end
 end
 
 ----------------------------------------------------------------------------
 --
--- Register :SpringInitializrLog
+-- Entry point for :SpringInitializrLog command.
+--
+-- @param  args  string|nil  Optional subcommand: "split", "vsplit", "clear"
 --
 ----------------------------------------------------------------------------
-function M.register_cmd_spring_initializr_log()
-    local subcommands = { "split", "vsplit", "clear" }
+function M.run(args)
+    log.info("SpringInitializrLog command invoked", args or "")
 
-    vim.api.nvim_create_user_command(CMD.SPRING_INITIALIZR_LOG, function(opts)
-        local args = opts.args ~= "" and opts.args or nil
-        require("spring-initializr.trace.log_display").run(args)
-    end, {
-        desc = "View Spring Initializr log file",
-        nargs = "?",
-        complete = function()
-            return subcommands
-        end,
-    })
-end
+    local log_path = M.get_log_path()
 
-----------------------------------------------------------------------------
---
--- Register Neovim user commands for Spring Initializr.
---
--- Commands:
---   :SpringInitializr        Opens the Spring Initializr UI
---   :SpringGenerateProject   Generates a Spring Boot project
---   :SpringInitializrHealth  Runs health check diagnostics
---   :SpringInitializrConfig  Displays current configuration
---   :SpringInitializrLog     Views plugin log file
---
-----------------------------------------------------------------------------
-function M.register()
-    M.register_cmd_spring_initializr()
-    M.register_cmd_spring_generate_project()
-    M.register_cmd_spring_initializr_health()
-    M.register_cmd_spring_initializr_config()
-    M.register_cmd_spring_initializr_log()
+    if args == "clear" then
+        if not M.file_exists(log_path) then
+            message_utils.show_warn_message("Spring Initializr: Log file does not exist")
+            return
+        end
+        M.clear(log_path)
+        return
+    end
+
+    if not M.is_logging_enabled() then
+        message_utils.show_warn_message(
+            "Spring Initializr: File logging is disabled. "
+                .. "Set vim.g.spring_initializr_log_file = true to enable."
+        )
+        return
+    end
+
+    if not M.file_exists(log_path) then
+        message_utils.show_warn_message(
+            "Spring Initializr: Log file does not exist yet. "
+                .. "It will be created once a log message is written."
+        )
+        return
+    end
+
+    local mode = "edit"
+    if args == "split" or args == "vsplit" then
+        mode = args
+    end
+
+    log_buffer.open(log_path, mode)
 end
 
 ----------------------------------------------------------------------------
