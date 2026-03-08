@@ -77,6 +77,10 @@
     "verylongprojectnamewithlotofcharacters",
     "treesitter",
     "startswith",
-    "endswith"
+    "endswith",
+    "vsplit",
+    "nargs",
+    "filereadable",
+    "fnameescape"
   ]
 }
