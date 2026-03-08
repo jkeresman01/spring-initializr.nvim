@@ -49,6 +49,7 @@ local CMD = {
     SPRING_INITIALIZR = "SpringInitializr",
     SPRING_GENERATE_PROJECT = "SpringGenerateProject",
     SPRING_INITIALIZR_HEALTH = "SpringInitializrHealth",
+    SPRING_INITIALIZR_CONFIG = "SpringInitializrConfig",
 }
 
 ----------------------------------------------------------------------------
@@ -91,18 +92,31 @@ end
 
 ----------------------------------------------------------------------------
 --
+-- Register :SpringInitializrConfig
+--
+----------------------------------------------------------------------------
+function M.register_cmd_spring_initializr_config()
+    vim.api.nvim_create_user_command(CMD.SPRING_INITIALIZR_CONFIG, function()
+        require("spring-initializr.config.config_display").run()
+    end, { desc = "Display Spring Initializr configuration" })
+end
+
+----------------------------------------------------------------------------
+--
 -- Register Neovim user commands for Spring Initializr.
 --
 -- Commands:
 --   :SpringInitializr        Opens the Spring Initializr UI
 --   :SpringGenerateProject   Generates a Spring Boot project
 --   :SpringInitializrHealth  Runs health check diagnostics
+--   :SpringInitializrConfig  Displays current configuration
 --
 ----------------------------------------------------------------------------
 function M.register()
     M.register_cmd_spring_initializr()
     M.register_cmd_spring_generate_project()
     M.register_cmd_spring_initializr_health()
+    M.register_cmd_spring_initializr_config()
 end
 
 ----------------------------------------------------------------------------
