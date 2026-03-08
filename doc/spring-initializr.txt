@@ -211,6 +211,21 @@ use_nerd_fonts                              *spring-initializr-use-nerd-fonts*
     })
 <
 
+persist_state                               *spring-initializr-persist-state*
+    Type: boolean
+    Default: false
+
+    Enable or disable automatic saving and loading of project configuration
+    between sessions. When true, your selections (project type, language,
+    dependencies, etc.) are restored the next time you open Spring Initializr.
+
+    Example:
+>lua
+    require('spring-initializr').setup({
+      persist_state = true,
+    })
+<
+
 Full Configuration Example~
 >lua
     local ConfigFormat = require("spring-initializr.constants.config_format")
@@ -218,6 +233,7 @@ Full Configuration Example~
     require('spring-initializr').setup({
       config_format = ConfigFormat.YAML,
       use_nerd_fonts = true,
+      persist_state = true,
     })
 
     -- Recommended keybindings

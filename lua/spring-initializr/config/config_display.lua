@@ -64,6 +64,7 @@ function M.collect_config()
             entries = {
                 { label = "Config Format", value = config.config_format, default = "properties" },
                 { label = "Use Nerd Fonts", value = config.use_nerd_fonts, default = true },
+                { label = "Persist State", value = config.persist_state, default = false },
             },
         },
         {

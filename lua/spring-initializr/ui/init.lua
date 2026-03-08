@@ -56,6 +56,7 @@ local HashSet = require("spring-initializr.algo.hashset")
 local Dependency = require("spring-initializr.dao.model.dependency")
 local log = require("spring-initializr.trace.log")
 local telescope = require("spring-initializr.telescope.telescope")
+local config = require("spring-initializr.config.config")
 
 ----------------------------------------------------------------------------
 -- Module table
@@ -386,7 +387,9 @@ end
 ----------------------------------------------------------------------------
 local function mount_ui(data)
     store_metadata(data)
-    restore_saved_state()
+    if config.get_persist_state() then
+        restore_saved_state()
+    end
     setup_layout(data)
     activate_ui()
 end
@@ -437,7 +440,7 @@ function M.close()
     remove_resize_autocmd()
     commands_manager.unblock_splits()
 
-    if M.state.is_open then
+    if M.state.is_open and config.get_persist_state() then
         log.debug("Saving project state before close")
         local dependencies = {}
         for _, dep in ipairs(telescope.selected_dependencies_full or {}) do

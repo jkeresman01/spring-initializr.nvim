@@ -41,6 +41,7 @@
 local M = {
     config_format = "properties",
     use_nerd_fonts = true,
+    persist_state = false,
 }
 
 ----------------------------------------------------------------------------
@@ -51,6 +52,7 @@ local M = {
 --                                 Supported fields:
 --                                   - config_format: "properties" or "yaml"
 --                                   - use_nerd_fonts: boolean (default: true)
+--                                   - persist_state: boolean (default: false)
 --
 ----------------------------------------------------------------------------
 function M.setup(user_config)
@@ -60,6 +62,9 @@ function M.setup(user_config)
         end
         if user_config.use_nerd_fonts ~= nil then
             M.use_nerd_fonts = user_config.use_nerd_fonts
+        end
+        if user_config.persist_state ~= nil then
+            M.persist_state = user_config.persist_state
         end
     end
 end
@@ -84,6 +89,17 @@ end
 ----------------------------------------------------------------------------
 function M.get_use_nerd_fonts()
     return M.use_nerd_fonts
+end
+
+----------------------------------------------------------------------------
+--
+-- Gets whether state persistence is enabled.
+--
+-- @return boolean  True if state should be persisted between sessions
+--
+----------------------------------------------------------------------------
+function M.get_persist_state()
+    return M.persist_state
 end
 
 ----------------------------------------------------------------------------
