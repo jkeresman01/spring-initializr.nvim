@@ -165,12 +165,24 @@ The `:SpringInitializrConfig` command displays the current plugin configuration 
 > [!TIP]
 > _See [`commands.lua`](./lua/spring-initializr/commands/commands.lua) for more info_.
 
+### :SpringInitializrLog
+
+The `:SpringInitializrLog` command opens the plugin log file in a buffer, making it easy to view logs for debugging and troubleshooting without leaving Neovim.
+
+```vim
+:SpringInitializrLog           " Open in current window
+:SpringInitializrLog split     " Open in horizontal split
+:SpringInitializrLog vsplit    " Open in vertical split
+:SpringInitializrLog clear     " Clear log file
+```
+
+> [!TIP]
+> _See [`commands.lua`](./lua/spring-initializr/commands/commands.lua) for more info_.
+
 > [!IMPORTANT]
 > This is the list of planned commands that will be available soon:
 >
 > - `:SpringInitalizrHistory`
-> - `:SpringInitalizrHealth`
-> - `:SpringInitalizrLog`
 > - `:SpringPreviewProject`
 
 ## Setup :gear: <a name="setup"></a>
