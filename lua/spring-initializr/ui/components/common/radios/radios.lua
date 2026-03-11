@@ -42,6 +42,7 @@
 ----------------------------------------------------------------------------
 local Popup = require("nui.popup")
 
+local events = require("spring-initializr.events.events")
 local focus_manager = require("spring-initializr.ui.managers.focus_manager")
 local reset_manager = require("spring-initializr.ui.managers.reset_manager")
 local message_utils = require("spring-initializr.utils.message_utils")
@@ -147,7 +148,9 @@ local function render_all_items(popup, items, selected_index)
     for i, item in ipairs(items) do
         table.insert(lines, render_item_line(item, i == selected_index))
     end
+    vim.api.nvim_set_option_value("modifiable", true, { buf = popup.bufnr })
     vim.api.nvim_buf_set_lines(popup.bufnr, 0, -1, false, lines)
+    vim.api.nvim_set_option_value("modifiable", false, { buf = popup.bufnr })
 end
 
 ----------------------------------------------------------------------------
@@ -323,6 +326,28 @@ end
 
 ----------------------------------------------------------------------------
 --
+-- Setup autocmd to prevent insert mode with warning.
+--
+-- @param bufnr  number  Buffer number
+--
+----------------------------------------------------------------------------
+local function setup_insert_mode_prevention(bufnr)
+    vim.api.nvim_create_autocmd(events.INSERT_ENTER, {
+        buffer = bufnr,
+        callback = function()
+            vim.schedule(function()
+                vim.cmd("stopinsert")
+                message_utils.show_warn_message(
+                    "Radio options are read-only. Use 'j'/'k' to navigate and '<CR>' to confirm."
+                )
+            end)
+        end,
+        desc = "Prevent insert mode in radio popup",
+    })
+end
+
+----------------------------------------------------------------------------
+--
 -- Registers focus for provided component
 --
 -- @param component  component any component
@@ -382,6 +407,7 @@ function M.create_radio(config)
 
     map_keys(popup, state)
     schedule_initial_render(popup, items, selected[1])
+    setup_insert_mode_prevention(popup.bufnr)
     register_focus_for_components(popup)
 
     local reset_handler = create_reset_handler(popup, state)
