@@ -270,7 +270,7 @@ _First Donation 💛_ - Thanks Kevin we appreciate it a lot
 
 ## 💛 Similar project
 
-Here is the list of similar projects that might fit your usecase better, show them some love:
+Here is the list of similar projects that might fit your use case better, show them some love:
 - https://github.com/niT-Tin/springboot-start.nvim
 - https://github.com/javiorfo/nvim-springtime
 
