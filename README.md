@@ -268,6 +268,12 @@ _First Donation 💛_ - Thanks Kevin we appreciate it a lot
 > “Hey bro thanks a lot for your spring plugin on nvim, I loved it - that was exactly what I was looking for. The best for your project, I'll come back later :D Greetings from Mexico!”  
 > - **Kevin Lopez**
 
+## 💛 Similar project
+
+Here is the list of similar projects that might fit your usecase better, show them some love:
+- https://github.com/niT-Tin/springboot-start.nvim
+- https://github.com/javiorfo/nvim-springtime
+
 
 ## License
 
@@ -284,7 +290,6 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 ```
-
 
 This project is licensed under the terms of the [GNU General Public License v3.0](./LICENSE).
 
