@@ -45,9 +45,13 @@ describe("autocmd_manager", function()
     end)
 
     it("creates a resize autocmd using the VimResized event", function()
+        -- Arrange
         local callback = function() end
+
+        -- Act
         local id = autocmd_manager.setup_resize_autocmd(callback)
 
+        -- Assert
         assert.are.equal(43, id)
         assert.are.equal(1, #create_calls)
         assert.are.equal(events.VIM_RESIZED, create_calls[1].event)
@@ -56,26 +60,34 @@ describe("autocmd_manager", function()
     end)
 
     it("replaces an existing resize autocmd before creating a new one", function()
+        -- Arrange
         autocmd_manager.state.resize_autocmd_id = 99
 
+        -- Act
         autocmd_manager.setup_resize_autocmd(function() end)
 
+        -- Assert
         assert.are.same({ 99 }, delete_calls)
         assert.are.equal(43, autocmd_manager.state.resize_autocmd_id)
     end)
 
     it("removes the active resize autocmd", function()
+        -- Arrange
         autocmd_manager.state.resize_autocmd_id = 77
 
+        -- Act
         autocmd_manager.remove_resize_autocmd()
 
+        -- Assert
         assert.are.same({ 77 }, delete_calls)
         assert.is_nil(autocmd_manager.state.resize_autocmd_id)
     end)
 
     it("does nothing when there is no resize autocmd", function()
+        -- Act
         autocmd_manager.remove_resize_autocmd()
 
+        -- Assert
         assert.are.equal(0, #delete_calls)
     end)
 end)
