@@ -42,6 +42,7 @@ local layout_builder = require("spring-initializr.ui.layout.layout")
 local focus_manager = require("spring-initializr.ui.managers.focus_manager")
 local reset_manager = require("spring-initializr.ui.managers.reset_manager")
 local commands_manager = require("spring-initializr.ui.managers.commands_manager")
+local autocmd_manager = require("spring-initializr.ui.managers.autocmd_manager")
 local highlights = require("spring-initializr.styles.highlights")
 local metadata = require("spring-initializr.metadata.metadata")
 local dependencies_display =
@@ -71,7 +72,6 @@ local M = {
         },
         metadata = nil,
         is_open = false,
-        resize_autocmd_id = nil,
     },
 }
 
@@ -185,26 +185,13 @@ end
 
 ----------------------------------------------------------------------------
 --
--- Removes the resize autocmd.
---
-----------------------------------------------------------------------------
-local function remove_resize_autocmd()
-    if M.state.resize_autocmd_id then
-        log.trace("Removing resize autocmd")
-        vim.api.nvim_del_autocmd(M.state.resize_autocmd_id)
-        M.state.resize_autocmd_id = nil
-    end
-end
-
-----------------------------------------------------------------------------
---
 -- Closes UI without saving state (used internally for resize).
 --
 ----------------------------------------------------------------------------
 local function close_for_resize()
     log.trace("Closing UI for resize")
 
-    remove_resize_autocmd()
+    autocmd_manager.remove_resize_autocmd()
     commands_manager.unblock_splits()
 
     if M.state.layout then
@@ -307,35 +294,6 @@ end
 
 ----------------------------------------------------------------------------
 --
--- Sets up autocmd for VimResized and WinResized events to handle resizing.
---
-----------------------------------------------------------------------------
-local function setup_resize_autocmd()
-    log.trace("Setting up resize autocmd")
-    M.state.resize_autocmd_id = vim.api.nvim_create_autocmd(
-        { events.VIM_RESIZED, events.WIN_RESIZED },
-        {
-            callback = function()
-                if M.state.is_open and M.state.metadata then
-                    local saved_metadata = M.state.metadata
-                    local saved_selections = vim.deepcopy(M.state.selections)
-
-                    close_for_resize()
-
-                    vim.defer_fn(function()
-                        M.state.selections = saved_selections
-                        reopen_after_resize(saved_metadata)
-                    end, 50)
-                end
-            end,
-            desc = "Spring Initializr resize handler",
-        }
-    )
-    log.debug("Resize autocmd created")
-end
-
-----------------------------------------------------------------------------
---
 -- Mounts the layout, sets focus_manager behavior and updates dependency display.
 --
 ----------------------------------------------------------------------------
@@ -374,7 +332,14 @@ local function activate_ui()
     log.trace("Focusing first component")
     focus_manager.focus_first()
     log.trace("Setting up resize handler")
-    setup_resize_autocmd()
+    autocmd_manager.setup_resize_autocmd(function()
+        if not M.state.is_open then
+            return
+        end
+        log.debug("Resize detected, remounting UI")
+        M.close()
+        M.setup()
+    end)
     log.info("UI activated successfully")
 end
 
@@ -437,7 +402,7 @@ end
 function M.close()
     log.info("Closing Spring Initializr UI")
 
-    remove_resize_autocmd()
+    autocmd_manager.remove_resize_autocmd()
     commands_manager.unblock_splits()
 
     if M.state.is_open and config.get_persist_state() then
