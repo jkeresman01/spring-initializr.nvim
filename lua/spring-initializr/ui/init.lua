@@ -185,19 +185,6 @@ end
 
 ----------------------------------------------------------------------------
 --
--- Removes the resize autocmd.
---
-----------------------------------------------------------------------------
-local function remove_resize_autocmd()
-    if M.state.resize_autocmd_id then
-        log.trace("Removing resize autocmd")
-        vim.api.nvim_del_autocmd(M.state.resize_autocmd_id)
-        M.state.resize_autocmd_id = nil
-    end
-end
-
-----------------------------------------------------------------------------
---
 -- Closes UI without saving state (used internally for resize).
 --
 ----------------------------------------------------------------------------
@@ -303,35 +290,6 @@ local function reopen_after_resize(data)
     })
 
     log.info("UI reopened after resize")
-end
-
-----------------------------------------------------------------------------
---
--- Sets up autocmd for VimResized and WinResized events to handle resizing.
---
-----------------------------------------------------------------------------
-local function setup_resize_autocmd()
-    log.trace("Setting up resize autocmd")
-    M.state.resize_autocmd_id = vim.api.nvim_create_autocmd(
-        { events.VIM_RESIZED, events.WIN_RESIZED },
-        {
-            callback = function()
-                if M.state.is_open and M.state.metadata then
-                    local saved_metadata = M.state.metadata
-                    local saved_selections = vim.deepcopy(M.state.selections)
-
-                    close_for_resize()
-
-                    vim.defer_fn(function()
-                        M.state.selections = saved_selections
-                        reopen_after_resize(saved_metadata)
-                    end, 50)
-                end
-            end,
-            desc = "Spring Initializr resize handler",
-        }
-    )
-    log.debug("Resize autocmd created")
 end
 
 ----------------------------------------------------------------------------
