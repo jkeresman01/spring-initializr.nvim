@@ -8,11 +8,11 @@
 -- ╚═╝  ╚═══╝╚══════╝ ╚═════╝   ╚═══╝  ╚═╝╚═╝     ╚═╝
 --
 --
--- Unit tests for spring-initializr/utils/error_handler.lua
+-- Unit tests for spring-initializr/utils/error_handler_utils.lua
 --
 ----------------------------------------------------------------------------
 
-local error_handler = require("spring-initializr.utils.error_handler")
+local error_handler = require("spring-initializr.utils.error_handler_utils")
 local log = require("spring-initializr.trace.log")
 
 describe("error_handler", function()

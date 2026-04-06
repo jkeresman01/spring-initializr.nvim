@@ -40,7 +40,7 @@
 -- Dependencies
 ----------------------------------------------------------------------------
 local message_utils = require("spring-initializr.utils.message_utils")
-local error_handler = require("spring-initializr.utils.error_handler")
+local error_handler = require("spring-initializr.utils.error_handler_utils")
 
 ----------------------------------------------------------------------------
 -- Constants
