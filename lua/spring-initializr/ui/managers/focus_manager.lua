@@ -41,7 +41,7 @@
 ----------------------------------------------------------------------------
 local window_utils = require("spring-initializr.utils.window_utils")
 local log = require("spring-initializr.trace.log")
-local buffer_manager = require("spring-initializr.ui.managers.buffer_manager")
+local keymap_manager = require("spring-initializr.ui.managers.keymap_manager")
 local reset_manager = require("spring-initializr.ui.managers.reset_manager")
 
 ----------------------------------------------------------------------------
@@ -96,28 +96,22 @@ end
 
 ----------------------------------------------------------------------------
 --
--- Map navigation keys to a component.
+-- Register common keybinding groups on a component.
 --
--- @param comp  table  Component to map keys for
+-- @param comp            table      Component to map keys for
+-- @param close_fn        function   Function to close UI
+-- @param reset_fn        function   Function to reset form
+-- @param open_picker_fn  function?  Function to open dependency picker
 --
 ----------------------------------------------------------------------------
-local function map_navigation_keys(comp)
-    comp:map("n", "<Tab>", focus_next, { noremap = true, nowait = true })
-    comp:map("n", "<S-Tab>", focus_prev, { noremap = true, nowait = true })
-end
+local function register_component_keymaps(comp, close_fn, reset_fn, open_picker_fn)
+    keymap_manager.register_navigation_keys(comp, focus_next, focus_prev)
+    keymap_manager.register_close_key(comp, close_fn)
+    keymap_manager.register_reset_key(comp, reset_fn)
 
-----------------------------------------------------------------------------
---
--- Map dependency picker key to a component.
---
--- @param comp            table     Component to map key for
--- @param open_picker_fn  function  Function to open the picker
---
-----------------------------------------------------------------------------
-local function map_picker_key(comp, open_picker_fn)
-    comp:map("n", "<C-b>", function()
-        open_picker_fn()
-    end, { noremap = true, nowait = true })
+    if open_picker_fn then
+        keymap_manager.register_picker_key(comp, open_picker_fn)
+    end
 end
 
 ----------------------------------------------------------------------------
@@ -157,13 +151,7 @@ function M.enable_navigation(close_fn, selections, open_picker_fn)
     local reset_fn = create_reset_handler(selections)
 
     for _, comp in ipairs(M.focusables) do
-        map_navigation_keys(comp)
-        buffer_manager.register_close_key(comp, close_fn)
-        buffer_manager.register_reset_key(comp, reset_fn)
-
-        if open_picker_fn then
-            map_picker_key(comp, open_picker_fn)
-        end
+        register_component_keymaps(comp, close_fn, reset_fn, open_picker_fn)
     end
 
     log.trace("Navigation enabled successfully")

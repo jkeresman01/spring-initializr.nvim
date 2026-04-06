@@ -31,11 +31,20 @@
 
 ----------------------------------------------------------------------------
 --
--- Provides compatibility wrappers around centralized UI keymap registration.
+-- Manages centralized keybinding registration for Spring Initializr UI
+-- components.
 --
 ----------------------------------------------------------------------------
 
-local keymap_manager = require("spring-initializr.ui.managers.keymap_manager")
+----------------------------------------------------------------------------
+-- Dependencies
+----------------------------------------------------------------------------
+local log = require("spring-initializr.trace.log")
+
+----------------------------------------------------------------------------
+-- Constants
+----------------------------------------------------------------------------
+local DEFAULT_OPTS = { noremap = true, nowait = true }
 
 ----------------------------------------------------------------------------
 -- Module table
@@ -44,26 +53,67 @@ local M = {}
 
 ----------------------------------------------------------------------------
 --
--- Register the close key ('q') to close UI in normal mode.
+-- Register a normal-mode keybinding on a component.
 --
--- @param comp      table      Component to register
--- @param close_fn  function   Function to close the UI
+-- @param comp     table           Component to map key on
+-- @param key      string          Keybinding to register
+-- @param handler  function        Callback to execute
+-- @param opts     table|nil       Mapping options
 --
 ----------------------------------------------------------------------------
-function M.register_close_key(comp, close_fn)
-    keymap_manager.register_close_key(comp, close_fn)
+local function map(comp, key, handler, opts)
+    log.fmt_trace("Registering keymap: %s", key)
+    comp:map("n", key, handler, opts or DEFAULT_OPTS)
 end
 
 ----------------------------------------------------------------------------
 --
--- Register the reset key ('<C-r>') to reset form in normal mode.
+-- Register focus navigation keybindings on a component.
 --
--- @param comp      table      Component to register
--- @param reset_fn  function   Function to reset the form
+-- @param comp           table     Component to map keys on
+-- @param focus_next_fn  function  Focus next callback
+-- @param focus_prev_fn  function  Focus previous callback
+--
+----------------------------------------------------------------------------
+function M.register_navigation_keys(comp, focus_next_fn, focus_prev_fn)
+    map(comp, "<Tab>", focus_next_fn)
+    map(comp, "<S-Tab>", focus_prev_fn)
+end
+
+----------------------------------------------------------------------------
+--
+-- Register the close keybinding on a component.
+--
+-- @param comp      table     Component to map key on
+-- @param close_fn  function  Close callback
+--
+----------------------------------------------------------------------------
+function M.register_close_key(comp, close_fn)
+    map(comp, "q", close_fn)
+end
+
+----------------------------------------------------------------------------
+--
+-- Register the reset keybinding on a component.
+--
+-- @param comp      table     Component to map key on
+-- @param reset_fn  function  Reset callback
 --
 ----------------------------------------------------------------------------
 function M.register_reset_key(comp, reset_fn)
-    keymap_manager.register_reset_key(comp, reset_fn)
+    map(comp, "<C-r>", reset_fn)
+end
+
+----------------------------------------------------------------------------
+--
+-- Register the dependency picker keybinding on a component.
+--
+-- @param comp            table     Component to map key on
+-- @param open_picker_fn  function  Picker callback
+--
+----------------------------------------------------------------------------
+function M.register_picker_key(comp, open_picker_fn)
+    map(comp, "<C-b>", open_picker_fn)
 end
 
 ----------------------------------------------------------------------------
