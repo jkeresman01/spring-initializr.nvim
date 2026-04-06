@@ -40,6 +40,7 @@
 -- Dependencies
 ----------------------------------------------------------------------------
 local message_utils = require("spring-initializr.utils.message_utils")
+local error_handler = require("spring-initializr.utils.error_handler")
 
 ----------------------------------------------------------------------------
 -- Constants
@@ -119,7 +120,7 @@ end
 ----------------------------------------------------------------------------
 local function execute_handlers()
     for _, handler in ipairs(M.state.reset_handlers) do
-        pcall(handler)
+        error_handler.safe_call(handler, "Reset handler failed:")
     end
 end
 
