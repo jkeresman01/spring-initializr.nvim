@@ -31,9 +31,11 @@
 
 ----------------------------------------------------------------------------
 --
--- Provides functionality to map close and reset keys to UI components.
+-- Provides compatibility wrappers around centralized UI keymap registration.
 --
 ----------------------------------------------------------------------------
+
+local keymap_manager = require("spring-initializr.ui.managers.keymap_manager")
 
 ----------------------------------------------------------------------------
 -- Module table
@@ -49,9 +51,7 @@ local M = {}
 --
 ----------------------------------------------------------------------------
 function M.register_close_key(comp, close_fn)
-    comp:map("n", "q", function()
-        close_fn()
-    end, { noremap = true, nowait = true })
+    keymap_manager.register_close_key(comp, close_fn)
 end
 
 ----------------------------------------------------------------------------
@@ -63,9 +63,7 @@ end
 --
 ----------------------------------------------------------------------------
 function M.register_reset_key(comp, reset_fn)
-    comp:map("n", "<C-r>", function()
-        reset_fn()
-    end, { noremap = true, nowait = true })
+    keymap_manager.register_reset_key(comp, reset_fn)
 end
 
 ----------------------------------------------------------------------------
