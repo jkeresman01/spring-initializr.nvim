@@ -63,7 +63,7 @@ local M = {}
 -- Register :SpringInitializr
 --
 ----------------------------------------------------------------------------
-function M.register_cmd_spring_initializr()
+local function register_cmd_spring_initializr()
     vim.api.nvim_create_user_command(CMD.SPRING_INITIALIZR, function()
         ui.setup()
     end, { desc = "Open Spring Initializr UI" })
@@ -74,7 +74,7 @@ end
 -- Register :SpringGenerateProject
 --
 ----------------------------------------------------------------------------
-function M.register_cmd_spring_generate_project()
+local function register_cmd_spring_generate_project()
     vim.api.nvim_create_user_command(CMD.SPRING_GENERATE_PROJECT, function()
         spring_initializr.generate_project()
     end, { desc = "Generate Spring Boot project to CWD" })
@@ -85,7 +85,7 @@ end
 -- Register :SpringInitializrHealth
 --
 ----------------------------------------------------------------------------
-function M.register_cmd_spring_initializr_health()
+local function register_cmd_spring_initializr_health()
     vim.api.nvim_create_user_command(CMD.SPRING_INITIALIZR_HEALTH, function()
         require("spring-initializr.health.health").run()
     end, { desc = "Run Spring Initializr health check" })
@@ -96,7 +96,7 @@ end
 -- Register :SpringInitializrConfig
 --
 ----------------------------------------------------------------------------
-function M.register_cmd_spring_initializr_config()
+local function register_cmd_spring_initializr_config()
     vim.api.nvim_create_user_command(CMD.SPRING_INITIALIZR_CONFIG, function()
         require("spring-initializr.config.config_display").run()
     end, { desc = "Display Spring Initializr configuration" })
@@ -107,7 +107,7 @@ end
 -- Register :SpringInitializrLog
 --
 ----------------------------------------------------------------------------
-function M.register_cmd_spring_initializr_log()
+local function register_cmd_spring_initializr_log()
     local subcommands = { "split", "vsplit", "clear" }
 
     vim.api.nvim_create_user_command(CMD.SPRING_INITIALIZR_LOG, function(opts)
@@ -135,11 +135,11 @@ end
 --
 ----------------------------------------------------------------------------
 function M.register()
-    M.register_cmd_spring_initializr()
-    M.register_cmd_spring_generate_project()
-    M.register_cmd_spring_initializr_health()
-    M.register_cmd_spring_initializr_config()
-    M.register_cmd_spring_initializr_log()
+    register_cmd_spring_initializr()
+    register_cmd_spring_generate_project()
+    register_cmd_spring_initializr_health()
+    register_cmd_spring_initializr_config()
+    register_cmd_spring_initializr_log()
 end
 
 ----------------------------------------------------------------------------
