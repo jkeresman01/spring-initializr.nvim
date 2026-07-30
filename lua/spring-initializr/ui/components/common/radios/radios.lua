@@ -58,13 +58,14 @@ local M = {}
 ----------------------------------------------------------------------------
 
 M.RadioState = {}
-function M.RadioState.new(config, items, selected)
+function M.RadioState.new(config, items, selected_index)
     return {
         title = config.title,
         key = config.key,
         selections = config.selections,
         items = items,
-        selected = selected,
+        selected_index = selected_index,
+        cursor_index = selected_index,
     }
 end
 
@@ -125,13 +126,16 @@ end
 --
 -- @param  item         table    Radio item
 -- @param  is_selected  boolean  Whether the item is selected
+-- @param  is_cursor    boolean  Whether the cursor is on the item
 --
 -- @return string                Formatted line
 --
 ----------------------------------------------------------------------------
-local function render_item_line(item, is_selected)
-    local prefix = is_selected and icons.get_radio_selected() or icons.get_radio_unselected()
-    return string.format("%s %s", prefix, item.label)
+local function render_item_line(item, is_selected, is_cursor)
+    local cursor_prefix = is_cursor and ">   " or "    "
+    local selection_prefix = is_selected and icons.get_radio_selected()
+        or icons.get_radio_unselected()
+    return string.format("%s%s %s", cursor_prefix, selection_prefix, item.label)
 end
 
 ----------------------------------------------------------------------------
@@ -141,12 +145,13 @@ end
 -- @param  popup           Popup   Nui popup instance
 -- @param  items           table   List of items
 -- @param  selected_index  number  Currently selected item index
+-- @param  cursor_index    number  Current cursor index
 --
 ----------------------------------------------------------------------------
-local function render_all_items(popup, items, selected_index)
+local function render_all_items(popup, items, selected_index, cursor_index)
     local lines = {}
     for i, item in ipairs(items) do
-        table.insert(lines, render_item_line(item, i == selected_index))
+        table.insert(lines, render_item_line(item, i == selected_index, i == cursor_index))
     end
     vim.api.nvim_set_option_value("modifiable", true, { buf = popup.bufnr })
     vim.api.nvim_buf_set_lines(popup.bufnr, 0, -1, false, lines)
@@ -160,11 +165,12 @@ end
 -- @param  popup           Popup
 -- @param  items           table
 -- @param  selected_index  number
+-- @param  cursor_index    number
 --
 ----------------------------------------------------------------------------
-local function schedule_initial_render(popup, items, selected_index)
+local function schedule_initial_render(popup, items, selected_index, cursor_index)
     vim.schedule(function()
-        render_all_items(popup, items, selected_index)
+        render_all_items(popup, items, selected_index, cursor_index)
     end)
 end
 
@@ -172,13 +178,16 @@ end
 --
 -- Handle selection confirmation with <CR>.
 --
+-- @param  popup   Popup        Nui popup instance
 -- @param  state   RadioState   ConfigurationObject with title, key,
 -- selections, items, and selected values
 --
 ----------------------------------------------------------------------------
-local function handle_enter(state)
-    local selected_item = state.items[state.selected[1]]
+local function handle_enter(popup, state)
+    state.selected_index = state.cursor_index
+    local selected_item = state.items[state.selected_index]
     state.selections[state.key] = selected_item.value
+    render_all_items(popup, state.items, state.selected_index, state.cursor_index)
     message_utils.show_info_message(string.format("%s: %s", state.title, selected_item.label))
 end
 
@@ -216,7 +225,7 @@ end
 ----------------------------------------------------------------------------
 local function map_enter_key(popup, state)
     popup:map("n", "<CR>", function()
-        handle_enter(state)
+        handle_enter(popup, state)
     end, { nowait = true, noremap = true })
 end
 
@@ -227,9 +236,8 @@ end
 ----------------------------------------------------------------------------
 local function map_down_key(popup, state)
     local handler = function()
-        state.selected[1] = handle_move_down(state.items, state.selected[1])
-        state.selections[state.key] = state.items[state.selected[1]].value
-        render_all_items(popup, state.items, state.selected[1])
+        state.cursor_index = handle_move_down(state.items, state.cursor_index)
+        render_all_items(popup, state.items, state.selected_index, state.cursor_index)
     end
 
     popup:map("n", "j", handler, { nowait = true, noremap = true })
@@ -243,9 +251,8 @@ end
 ----------------------------------------------------------------------------
 local function map_up_key(popup, state)
     local handler = function()
-        state.selected[1] = handle_move_up(state.selected[1])
-        state.selections[state.key] = state.items[state.selected[1]].value
-        render_all_items(popup, state.items, state.selected[1])
+        state.cursor_index = handle_move_up(state.cursor_index)
+        render_all_items(popup, state.items, state.selected_index, state.cursor_index)
     end
 
     popup:map("n", "k", handler, { nowait = true, noremap = true })
@@ -373,9 +380,10 @@ local function create_reset_handler(popup, state)
             if not vim.api.nvim_buf_is_valid(popup.bufnr) then
                 return
             end
-            state.selected[1] = 1
+            state.selected_index = 1
+            state.cursor_index = 1
             state.selections[state.key] = state.items[1].value
-            render_all_items(popup, state.items, state.selected[1])
+            render_all_items(popup, state.items, state.selected_index, state.cursor_index)
         end)
     end
 end
@@ -398,15 +406,13 @@ function M.create_radio(config)
         initial_index = find_item_index(items, config.selections[config.key])
     end
 
-    local selected = { initial_index }
-
-    config.selections[config.key] = items[selected[1]].value
+    config.selections[config.key] = items[initial_index].value
 
     local popup = create_radio_popup(config.title, #items)
-    local state = M.RadioState.new(config, items, selected)
+    local state = M.RadioState.new(config, items, initial_index)
 
     map_keys(popup, state)
-    schedule_initial_render(popup, items, selected[1])
+    schedule_initial_render(popup, items, state.selected_index, state.cursor_index)
     setup_insert_mode_prevention(popup.bufnr)
     register_focus_for_components(popup)
 
