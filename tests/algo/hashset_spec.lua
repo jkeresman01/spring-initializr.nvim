@@ -19,8 +19,24 @@
 
 local HashSet = require("spring-initializr.algo.hashset")
 
+describe("HashSet API", function()
+    it("only exposes operations used by the plugin", function()
+        local set = HashSet.new()
+
+        assert.is_nil(HashSet.from_list)
+        assert.is_nil(set.toggle)
+        assert.is_nil(set.has_key)
+        assert.is_nil(set.get)
+        assert.is_nil(set.to_list)
+        assert.is_nil(set.iter)
+        assert.is_nil(set.union)
+        assert.is_nil(set.intersection)
+        assert.is_nil(set.difference)
+    end)
+end)
+
 describe("HashSet (primitives)", function()
-    it("adds unique values and reports size", function()
+    it("adds unique values and reports membership", function()
         -- Arrange
         local set = HashSet.new()
 
@@ -33,11 +49,13 @@ describe("HashSet (primitives)", function()
         assert.is_true(first_add)
         assert.is_false(second_add)
         assert.is_true(third_add)
+        assert.is_true(set:has("a"))
+        assert.is_true(set:has("b"))
         assert.are.equal(2, set:size())
         assert.is_false(set:is_empty())
     end)
 
-    it("has / remove / clear work as expected", function()
+    it("removes individual values and clears the set", function()
         -- Arrange
         local set = HashSet.new()
         set:add("x")
@@ -55,78 +73,9 @@ describe("HashSet (primitives)", function()
         assert.is_true(removed_x)
         assert.is_false(has_x_after)
         assert.is_false(removed_x_again)
+        assert.is_false(set:has("y"))
         assert.are.equal(0, set:size())
         assert.is_true(set:is_empty())
-    end)
-
-    it("toggle adds then removes", function()
-        -- Arrange
-        local set = HashSet.new()
-
-        -- Act
-        local added = set:toggle("k")
-        local removed = set:toggle("k")
-
-        -- Assert
-        assert.is_true(added)
-        assert.is_false(removed)
-        assert.is_false(set:has("k"))
-    end)
-
-    it("from_list deduplicates", function()
-        -- Arrange
-        local input = { "a", "a", "b", "b", "c" }
-
-        -- Act
-        local set = HashSet.from_list(input)
-
-        -- Assert
-        assert.are.equal(3, set:size())
-        assert.is_true(set:has("a"))
-        assert.is_true(set:has("b"))
-        assert.is_true(set:has("c"))
-    end)
-
-    it("iter and to_list return all elements (order not guaranteed)", function()
-        -- Arrange
-        local set = HashSet.from_list({ "d", "c", "b", "a" })
-
-        -- Act
-        local seen = {}
-        for v in set:iter() do
-            seen[v] = true
-        end
-        local list = set:to_list()
-
-        -- Assert
-        for _, v in ipairs({ "a", "b", "c", "d" }) do
-            assert.is_true(seen[v])
-        end
-        assert.are.equal(4, #list)
-    end)
-
-    it("set algebra union / intersection / difference", function()
-        -- Arrange
-        local a = HashSet.from_list({ "a", "b", "c" })
-        local b = HashSet.from_list({ "b", "c", "d" })
-
-        -- Act
-        local inter = a:intersection(b)
-        local diff = a:difference(b)
-        a:union(b)
-
-        -- Assert
-        assert.are.equal(2, inter:size())
-        assert.is_true(inter:has("b"))
-        assert.is_true(inter:has("c"))
-
-        assert.are.equal(1, diff:size())
-        assert.is_true(diff:has("a"))
-
-        for _, v in ipairs({ "a", "b", "c", "d" }) do
-            assert.is_true(a:has(v))
-        end
-        assert.are.equal(4, a:size())
     end)
 end)
 
@@ -136,7 +85,7 @@ describe("HashSet (tables with key_fn)", function()
         return type(id) == "string" and id:lower() or id
     end
 
-    it("deduplicates by canonical id", function()
+    it("deduplicates, finds, and removes by canonical id", function()
         -- Arrange
         local set = HashSet.new({ key_fn = by_id_lower })
 
@@ -147,60 +96,8 @@ describe("HashSet (tables with key_fn)", function()
         -- Assert
         assert.is_true(first)
         assert.is_false(second)
-        assert.are.equal(1, set:size())
-    end)
-
-    it("toggle respects key_fn", function()
-        -- Arrange
-        local set = HashSet.new({ key_fn = by_id_lower })
-        local dep = { id = "DATA-JPA", label = "Spring Data JPA" }
-
-        -- Act
-        local added = set:toggle(dep)
-        local removed = set:toggle({ id = "data-jpa" })
-
-        -- Assert
-        assert.is_true(added)
-        assert.is_false(removed)
-        assert.is_true(set:is_empty())
-    end)
-
-    it("has_key / get access by precomputed key", function()
-        -- Arrange
-        local set = HashSet.new({ key_fn = by_id_lower })
-        local dep = { id = "Actuator" }
-        set:add(dep)
-
-        -- Act
-        local present = set:has_key("actuator")
-        local stored = set:get("actuator")
-
-        -- Assert
-        assert.is_true(present)
-        assert.are.same(dep, stored)
-    end)
-
-    it("to_list / iter return original stored tables", function()
-        -- Arrange
-        local set = HashSet.new({ key_fn = by_id_lower })
-        local a = { id = "a" }
-        local b = { id = "b" }
-        set:add(a)
-        set:add(b)
-
-        -- Act
-        local found_a, found_b = false, false
-        for v in set:iter() do
-            if v == a then
-                found_a = true
-            end
-            if v == b then
-                found_b = true
-            end
-        end
-
-        -- Assert
-        assert.is_true(found_a)
-        assert.is_true(found_b)
+        assert.is_true(set:has({ id = "WEB" }))
+        assert.is_true(set:remove({ id = "web" }))
+        assert.is_false(set:has({ id = "Web" }))
     end)
 end)
