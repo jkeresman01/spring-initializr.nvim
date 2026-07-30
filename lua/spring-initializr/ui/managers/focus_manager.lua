@@ -101,13 +101,15 @@ end
 -- @param comp            table      Component to map keys for
 -- @param close_fn        function   Function to close UI
 -- @param reset_fn        function   Function to reset form
+-- @param clear_fn        function   Function to clear dependencies
 -- @param open_picker_fn  function?  Function to open dependency picker
 --
 ----------------------------------------------------------------------------
-local function register_component_keymaps(comp, close_fn, reset_fn, open_picker_fn)
+local function register_component_keymaps(comp, close_fn, reset_fn, clear_fn, open_picker_fn)
     keymap_manager.register_navigation_keys(comp, focus_next, focus_prev)
     keymap_manager.register_close_key(comp, close_fn)
     keymap_manager.register_reset_key(comp, reset_fn)
+    keymap_manager.register_clear_dependencies_key(comp, clear_fn)
 
     if open_picker_fn then
         keymap_manager.register_picker_key(comp, open_picker_fn)
@@ -136,6 +138,24 @@ end
 
 ----------------------------------------------------------------------------
 --
+-- Create a handler that clears dependencies and refreshes their display.
+--
+-- @return function  Clear dependencies handler
+--
+----------------------------------------------------------------------------
+local function create_clear_dependencies_handler()
+    return function()
+        reset_manager.reset_dependencies_only()
+        -- Lazy require to avoid circular dependency
+        local dependencies_display =
+            require("spring-initializr.ui.components.dependencies.dependencies_display")
+        dependencies_display.state.focused_card_index = nil
+        dependencies_display.update_display()
+    end
+end
+
+----------------------------------------------------------------------------
+--
 -- Enable focus navigation across all registered components and register
 -- close, reset, and picker keys.
 --
@@ -149,9 +169,10 @@ function M.enable_navigation(close_fn, selections, open_picker_fn)
     log.fmt_debug("Enabling for %d components", #M.focusables)
     M._selections = selections
     local reset_fn = create_reset_handler(selections)
+    local clear_fn = create_clear_dependencies_handler()
 
     for _, comp in ipairs(M.focusables) do
-        register_component_keymaps(comp, close_fn, reset_fn, open_picker_fn)
+        register_component_keymaps(comp, close_fn, reset_fn, clear_fn, open_picker_fn)
     end
 
     log.trace("Navigation enabled successfully")

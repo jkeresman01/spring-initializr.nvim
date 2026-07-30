@@ -9,11 +9,15 @@
 --
 --
 -- Unit tests for spring-initializr/ui/managers/focus_manager.lua
--- Updated to test the new <C-b> keybinding for dependency picker
+-- Covers shared navigation, dependency picker, and dependency reset keybindings.
 --
 ----------------------------------------------------------------------------
 
 local focus_manager = require("spring-initializr.ui.managers.focus_manager")
+local reset_manager = require("spring-initializr.ui.managers.reset_manager")
+
+local DEPENDENCIES_DISPLAY_MODULE =
+    "spring-initializr.ui.components.dependencies.dependencies_display"
 
 describe("focus_manager management", function()
     local original_set_current_win
@@ -21,6 +25,8 @@ describe("focus_manager management", function()
     local mock_components
     local mock_close_fn
     local mock_selections
+    local original_reset_dependencies_only
+    local original_dependencies_display
 
     before_each(function()
         -- Reset focus_manager state
@@ -60,10 +66,15 @@ describe("focus_manager management", function()
             description = "Demo project for Spring Boot",
             packageName = "com.example.demo",
         }
+
+        original_reset_dependencies_only = reset_manager.reset_dependencies_only
+        original_dependencies_display = package.loaded[DEPENDENCIES_DISPLAY_MODULE]
     end)
 
     after_each(function()
         vim.api.nvim_set_current_win = original_set_current_win
+        reset_manager.reset_dependencies_only = original_reset_dependencies_only
+        package.loaded[DEPENDENCIES_DISPLAY_MODULE] = original_dependencies_display
         focus_manager.reset()
     end)
 
@@ -134,8 +145,8 @@ describe("focus_manager management", function()
             -- Act
             focus_manager.enable_navigation(mock_close_fn, mock_selections)
 
-            -- Assert - 4 keys per component: <Tab>, <S-Tab>, q (close), <C-r> (reset)
-            assert.are.equal(8, #map_calls)
+            -- Assert - 5 keys per component: navigation, close, reset, and dependency clear
+            assert.are.equal(10, #map_calls)
             local keys = vim.tbl_map(function(c)
                 return c.key
             end, map_calls)
@@ -143,6 +154,7 @@ describe("focus_manager management", function()
             assert.is_true(vim.tbl_contains(keys, "<S-Tab>"))
             assert.is_true(vim.tbl_contains(keys, "q"))
             assert.is_true(vim.tbl_contains(keys, "<C-r>"))
+            assert.is_true(vim.tbl_contains(keys, "<C-d>"))
         end)
 
         it("registers close key on all components", function()
@@ -179,6 +191,38 @@ describe("focus_manager management", function()
 
             -- Assert
             assert.is_true(reset_key_mapped)
+        end)
+
+        it("clears dependencies and refreshes their display from any component", function()
+            -- Arrange
+            local clear_handler
+            local reset_calls = 0
+            local update_calls = 0
+
+            mock_components[1].map = function(_, _, key, handler)
+                if key == "<C-d>" then
+                    clear_handler = handler
+                end
+            end
+            reset_manager.reset_dependencies_only = function()
+                reset_calls = reset_calls + 1
+            end
+            package.loaded[DEPENDENCIES_DISPLAY_MODULE] = {
+                state = { focused_card_index = 2 },
+                update_display = function()
+                    update_calls = update_calls + 1
+                end,
+            }
+            focus_manager.register_component(mock_components[1])
+
+            -- Act
+            focus_manager.enable_navigation(mock_close_fn, mock_selections)
+            clear_handler()
+
+            -- Assert
+            assert.are.equal(1, reset_calls)
+            assert.are.equal(1, update_calls)
+            assert.is_nil(package.loaded[DEPENDENCIES_DISPLAY_MODULE].state.focused_card_index)
         end)
 
         -- NEW TEST: Verify picker key is mapped when open_picker_fn is provided

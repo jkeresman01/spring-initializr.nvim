@@ -106,6 +106,18 @@ end
 
 ----------------------------------------------------------------------------
 --
+-- Register the clear dependencies keybinding on a component.
+--
+-- @param comp      table     Component to map key on
+-- @param clear_fn  function  Clear dependencies callback
+--
+----------------------------------------------------------------------------
+function M.register_clear_dependencies_key(comp, clear_fn)
+    map(comp, "<C-d>", clear_fn)
+end
+
+----------------------------------------------------------------------------
+--
 -- Register the dependency picker keybinding on a component.
 --
 -- @param comp            table     Component to map key on

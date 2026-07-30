@@ -49,7 +49,6 @@ local picker = require("spring-initializr.telescope.telescope")
 local dependency_card = require("spring-initializr.ui.components.dependencies.dependency_card")
 local icons = require("spring-initializr.ui.icons.icons")
 local events = require("spring-initializr.events.events")
-local log = require("spring-initializr.trace.log")
 
 ----------------------------------------------------------------------------
 -- Module
@@ -233,26 +232,6 @@ local function display_popup_config()
     }
 end
 
-----------------------------------------------------------------------------
---
--- Clear all selected dependencies.
---
-----------------------------------------------------------------------------
-local function clear_all_dependencies()
-    log.info("Clearing all dependencies")
-
-    local reset_manager = require("spring-initializr.ui.managers.reset_manager")
-    reset_manager.reset_dependencies_only()
-
-    M.state.focused_card_index = nil
-
-    M.update_display()
-
-    log.debug("All dependencies cleared")
-end
-
-----------------------------------------------------------------------------
---
 -- Move focus to a specific card index.
 --
 -- @param  card_index  number  1-indexed card index
@@ -391,21 +370,6 @@ local function setup_remove_dependency_key(popup)
     end, { noremap = true, nowait = true })
 end
 
-----------------------------------------------------------------------------
---
--- Setup keybinding for clearing all dependencies (Ctrl-d key).
---
--- @param popup  Popup  Dependencies display popup
---
-----------------------------------------------------------------------------
-local function setup_clear_all_dependencies_key(popup)
-    popup:map("n", "<C-d>", function()
-        clear_all_dependencies()
-    end, { noremap = true, nowait = true })
-end
-
-----------------------------------------------------------------------------
---
 -- Setup card navigation and deletion keybindings.
 --
 -- @param popup  Popup  Dependencies display popup
@@ -415,7 +379,6 @@ local function setup_card_keybindings(popup)
     setup_navigation_down_key(popup)
     setup_navigation_up_key(popup)
     setup_remove_dependency_key(popup)
-    setup_clear_all_dependencies_key(popup)
 end
 
 ----------------------------------------------------------------------------
