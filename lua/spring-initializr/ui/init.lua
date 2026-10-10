@@ -50,7 +50,6 @@ local dependencies_display =
 local window_utils = require("spring-initializr.utils.window_utils")
 local message_utils = require("spring-initializr.utils.message_utils")
 local buffer_utils = require("spring-initializr.utils.buffer_utils")
-local events = require("spring-initializr.events.events")
 local repository_factory = require("spring-initializr.dao.dal.repository_factory")
 local Project = require("spring-initializr.dao.model.project")
 local HashSet = require("spring-initializr.algo.hashset")
@@ -185,38 +184,6 @@ end
 
 ----------------------------------------------------------------------------
 --
--- Closes UI without saving state (used internally for resize).
---
-----------------------------------------------------------------------------
-local function close_for_resize()
-    log.trace("Closing UI for resize")
-
-    autocmd_manager.remove_resize_autocmd()
-    commands_manager.unblock_splits()
-
-    if M.state.layout then
-        pcall(function()
-            M.state.layout:unmount()
-        end)
-        M.state.layout = nil
-    end
-
-    -- Explicitly unmount the outer popup (Layout doesn't do this automatically)
-    if M.state.outer_popup then
-        pcall(function()
-            M.state.outer_popup:unmount()
-        end)
-        M.state.outer_popup = nil
-    end
-
-    M.state.is_open = false
-
-    focus_manager.reset()
-    reset_manager.clear_handlers()
-end
-
-----------------------------------------------------------------------------
---
 -- Creates a function to open the dependency picker.
 --
 -- @return function  Function that opens the picker and updates display
@@ -226,70 +193,6 @@ local function create_open_picker_fn()
     return function()
         telescope.pick_dependencies({}, dependencies_display.update_display)
     end
-end
-
-----------------------------------------------------------------------------
---
--- Reopens the UI with existing metadata (used for resize).
---
--- @param  data  table  Metadata to use
---
-----------------------------------------------------------------------------
-local function reopen_after_resize(data)
-    if M.state.is_open then
-        return
-    end
-
-    log.trace("Reopening UI after resize")
-    store_metadata(data)
-    setup_layout(data)
-
-    log.trace("Mounting layout")
-    M.state.layout:mount()
-    M.state.is_open = true
-
-    local open_picker_fn = create_open_picker_fn()
-    focus_manager.enable_navigation(M.close, M.state.selections, open_picker_fn)
-
-    local ui_windows = {}
-    if M.state.outer_popup and M.state.outer_popup.winid then
-        table.insert(ui_windows, M.state.outer_popup.winid)
-    end
-    for _, focusable in ipairs(focus_manager.focusables) do
-        if focusable.winid then
-            table.insert(ui_windows, focusable.winid)
-        end
-    end
-
-    commands_manager.set_callbacks_and_windows(M.close, M.setup, ui_windows)
-    commands_manager.block_splits()
-
-    dependencies_display.update_display()
-    buffer_utils.setup_close_on_buffer_delete(
-        focus_manager.focusables,
-        M.state.outer_popup,
-        M.close
-    )
-    focus_manager.focus_first()
-
-    M.state.resize_autocmd_id = vim.api.nvim_create_autocmd(events.VIM_RESIZED, {
-        callback = function()
-            if M.state.is_open and M.state.metadata then
-                local saved_metadata = M.state.metadata
-                local saved_selections = vim.deepcopy(M.state.selections)
-
-                close_for_resize()
-
-                vim.defer_fn(function()
-                    M.state.selections = saved_selections
-                    reopen_after_resize(saved_metadata)
-                end, 50)
-            end
-        end,
-        desc = "Spring Initializr resize handler",
-    })
-
-    log.info("UI reopened after resize")
 end
 
 ----------------------------------------------------------------------------
