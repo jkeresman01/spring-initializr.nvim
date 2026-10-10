@@ -550,7 +550,10 @@ end
 ----------------------------------------------------------------------------
 local function render_dependency_lines()
     if not picker.selected_dependencies_full or #picker.selected_dependencies_full == 0 then
-        return { "No dependencies selected" }
+        return {
+            "No dependencies selected",
+            "Press <CR> on Add Dependencies to select dependencies.",
+        }
     end
 
     local panel_width = get_panel_width()
