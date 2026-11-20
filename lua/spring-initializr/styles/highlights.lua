@@ -54,6 +54,11 @@ local function set_highlight_groups()
     vim.api.nvim_set_hl(0, "NormalFloat", { bg = "none" })
     vim.api.nvim_set_hl(0, "FloatBorder", { bg = "none", fg = "#777777" })
     vim.api.nvim_set_hl(0, "NuiMenuSel", { bg = "#44475a", fg = "#ffffff", bold = true })
+    vim.api.nvim_set_hl(0, "SpringInitializrDepName", { bold = true })
+    -- Foreground only, so the tag does not replace the focused card's Visual background.
+    local normal = vim.api.nvim_get_hl(0, { name = "Normal", link = false })
+    vim.api.nvim_set_hl(0, "SpringInitializrDepTag", { fg = normal.fg })
+    vim.api.nvim_set_hl(0, "SpringInitializrDepDesc", { link = "Comment" })
 end
 
 -----------------------------------------------------------------------------

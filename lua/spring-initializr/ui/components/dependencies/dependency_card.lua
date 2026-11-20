@@ -54,6 +54,7 @@ local MIN_DESC_LENGTH = 10
 local TAG_MAX_LENGTH = 8
 local CARD_BORDER_WIDTH = 2
 local DESC_INDENT = 2
+local BORDER_CHAR = "│" -- Multi-byte; #BORDER_CHAR is its byte length
 
 ----------------------------------------------------------------------------
 --
@@ -383,6 +384,86 @@ end
 
 ----------------------------------------------------------------------------
 --
+-- Highlight the dependency name (bold) and ID tag (normal foreground)
+-- on the header line of a card.
+--
+-- @param  bufnr      number  Buffer number
+-- @param  namespace  number  Highlight namespace
+-- @param  line_num   number  Header line number (0-indexed)
+--
+----------------------------------------------------------------------------
+local function highlight_header_line(bufnr, namespace, line_num)
+    local line = vim.api.nvim_buf_get_lines(bufnr, line_num, line_num + 1, false)[1]
+    if not line then
+        return
+    end
+
+    -- Locate the last "[ID]" tag; it is always the rightmost element before the border.
+    local tag_start, tag_end
+    local pos = 1
+    while true do
+        local s, e = line:find("%[[^%[%]]*%]", pos)
+        if not s then
+            break
+        end
+        tag_start, tag_end = s, e
+        pos = e + 1
+    end
+    if not tag_start then
+        return
+    end
+
+    -- Name begins after the left border, checkbox, and one space.
+    local name_start = #BORDER_CHAR + #get_checkbox() + 1
+    local name = line:sub(name_start + 1, tag_start - 1):gsub("%s+$", "")
+    if #name > 0 then
+        vim.api.nvim_buf_add_highlight(
+            bufnr,
+            namespace,
+            "SpringInitializrDepName",
+            line_num,
+            name_start,
+            name_start + #name
+        )
+    end
+
+    vim.api.nvim_buf_add_highlight(
+        bufnr,
+        namespace,
+        "SpringInitializrDepTag",
+        line_num,
+        tag_start - 1,
+        tag_end
+    )
+end
+
+----------------------------------------------------------------------------
+--
+-- Dim the description text on the description line of a card.
+--
+-- @param  bufnr      number  Buffer number
+-- @param  namespace  number  Highlight namespace
+-- @param  line_num   number  Description line number (0-indexed)
+--
+----------------------------------------------------------------------------
+local function highlight_description_line(bufnr, namespace, line_num)
+    local line = vim.api.nvim_buf_get_lines(bufnr, line_num, line_num + 1, false)[1]
+    if not line then
+        return
+    end
+
+    vim.api.nvim_buf_add_highlight(
+        bufnr,
+        namespace,
+        "SpringInitializrDepDesc",
+        line_num,
+        #BORDER_CHAR,
+        #line - #BORDER_CHAR
+    )
+end
+
+----------------------------------------------------------------------------
+--
 -- Highlight all lines of a single dependency card.
 --
 -- @param  bufnr       number      Buffer number
@@ -404,6 +485,9 @@ local function highlight_card(bufnr, namespace, card_start, is_focused)
 
         highlight_line_borders(bufnr, namespace, line_num, hl_group)
     end
+
+    highlight_header_line(bufnr, namespace, card_start + 1)
+    highlight_description_line(bufnr, namespace, card_start + 2)
 end
 
 ----------------------------------------------------------------------------
